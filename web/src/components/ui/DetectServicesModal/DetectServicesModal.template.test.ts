@@ -5,7 +5,7 @@ const t: T = (key, params) => `[${key}${params ? ':' + JSON.stringify(params) : 
 const evil = '<img src=x onerror=alert(1)>';
 
 const row = (o: Partial<RowView> = {}): RowView => ({
-    key: 'h1/plex', checked: true, name: 'Plex', url: 'http://nas:32400', candidates: ['http://nas:32400'], note: '', linkedTo: '', iconUrl: '', health: '', ...o,
+    key: 'h1/plex', checked: true, name: 'Plex', url: 'http://nas:32400', candidates: ['http://nas:32400'], note: '', linkedTo: '', iconUrl: '', health: '', dismissed: false, ...o,
 });
 const view = (o: Partial<WindowView> = {}): WindowView => ({
     source: 'docker', state: 'ready', hostName: 'Home', hosts: [{ id: 'h1', name: 'Home' }], hostId: 'h1', address: 'nas', groupBy: 'host', rows: [row()],
@@ -123,5 +123,14 @@ describe('whether the address answers', () => {
         expect(rowHtml(row({ health: 'up' }), en)).toContain('data-h="up">Responds<');
         expect(rowHtml(row({ health: 'down' }), en)).toContain('data-h="down">No response<');
         expect(rowHtml(row(), en)).toContain('data-h=""></div>');
+    });
+});
+
+describe('what was left out last time', () => {
+    test('says so, unless a bookmark already serves it', () => {
+        const en = (k: string) => k;
+        expect(rowHtml(row({ dismissed: true }), en)).toContain('detect.dismissed');
+        expect(rowHtml(row({ dismissed: true, linkedTo: 'X' }), en)).not.toContain('detect.dismissed');
+        expect(rowHtml(row(), en)).not.toContain('detect.dismissed');
     });
 });

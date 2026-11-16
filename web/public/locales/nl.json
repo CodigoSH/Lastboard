@@ -180,6 +180,8 @@
   "detect.note_host_network": "Op het netwerk van de host: typ het adres",
   "detect.note_stopped": "Gestopt",
   "detect.already": "Heeft al een bladwijzer: {name}",
+  "detect.pending": "Diensten zonder bladwijzer: {count}",
+  "detect.dismissed": "De vorige keer weggelaten",
   "detect.reachable": "Reageert",
   "detect.unreachable": "Geen reactie",
   "detect.hidden": "Niet getoond, niets om te openen: {count}",

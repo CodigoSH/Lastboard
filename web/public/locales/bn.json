@@ -180,6 +180,8 @@
   "detect.note_host_network": "হোস্টের নেটওয়ার্কে: এর ঠিকানা লিখুন",
   "detect.note_stopped": "বন্ধ",
   "detect.already": "আগেই বুকমার্ক আছে: {name}",
+  "detect.pending": "বুকমার্ক ছাড়া পরিষেবা: {count}",
+  "detect.dismissed": "আগে বাদ দেওয়া হয়েছিল",
   "detect.reachable": "সাড়া দিচ্ছে",
   "detect.unreachable": "সাড়া নেই",
   "detect.hidden": "তালিকায় নেই, খোলার কিছু নেই: {count}",

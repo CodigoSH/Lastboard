@@ -17,6 +17,7 @@ import { resolveIconUrl } from '../../../services/iconUrl';
 import { retryOnRateLimit } from '../../../services/retryOnRateLimit';
 import { bookmarkContent } from '../../../services/bookmarkContent';
 import { probeAddresses } from '../../../services/probeAddresses';
+import { dismissKey, dismissalChanges, fetchDismissed, saveDismissals } from '../../../services/dismissedServices';
 import {
     candidateUrl, discoverDocker, discoverProxmox, pickIconName, planServices,
     type Discovery, type GroupBy, type NewService, type ServiceProposal,
@@ -36,6 +37,10 @@ interface RowState {
     /** True once the person typed in the address box: a new host address no longer rewrites it. */
     edited: boolean;
     iconUrl: string;
+    /** An earlier window left it out on purpose, so it starts unticked. */
+    dismissed: boolean;
+    /** It was proposed ticked. */
+    proposedTicked: boolean;
 }
 
 const t = (key: string, params?: Record<string, string>) => i18n.t(key, params);
@@ -126,7 +131,8 @@ class DetectServicesModal extends HTMLElement {
         try {
             const found = this.source === 'docker' ? await this.readDocker(hostId) : await this.readProxmox(hostId);
             if (token !== this.loadToken) return;
-            if (found) { this.health = new Map(); this.adopt(found); }
+            if (found) { this.health = new Map(); this.adopt(found, await fetchDismissed()); }
+            if (token !== this.loadToken) return;
         } catch (err) {
             if (token !== this.loadToken) return;
             this.rows = new Map();
@@ -192,13 +198,17 @@ class DetectServicesModal extends HTMLElement {
     }
 
     /** Makes the proposals the rows of the window. */
-    private adopt(found: Discovery): void {
+    private adopt(found: Discovery, dismissed: Set<string>): void {
         this.view.withoutAddress = found.withoutAddress;
         this.rows = new Map(found.proposals.map(p => {
             const urls = p.candidates.map(c => candidateUrl(c, this.view.address));
             const lib = pickIconName(p.iconNames, this.iconIndex);
             const libUrl = lib ? this.iconIndex.get(lib) ?? this.iconIndex.get(lib.replace(/_/g, '-')) ?? '' : '';
-            return [p.key, { proposal: p, checked: p.selected, name: p.name, url: urls[0] ?? '', edited: false, iconUrl: p.chosenIcon || p.labelIcon || libUrl }];
+            const left = dismissed.has(dismissKey(p.link));
+            return [p.key, {
+                proposal: p, checked: p.selected && !left, name: p.name, url: urls[0] ?? '', edited: false,
+                iconUrl: p.chosenIcon || p.labelIcon || libUrl, dismissed: left, proposedTicked: p.selected && !left,
+            }];
         }));
         this.view.state = this.rows.size === 0 ? 'empty' : 'ready';
     }
@@ -241,6 +251,7 @@ class DetectServicesModal extends HTMLElement {
             linkedTo: r.proposal.linkedTo,
             iconUrl: r.iconUrl,
             health: this.health.get(r.url) ?? '',
+            dismissed: r.dismissed,
         }));
     }
 
@@ -439,6 +450,13 @@ class DetectServicesModal extends HTMLElement {
         this.view.busy = false;
         this.forgetLinks();
         if (open) await dashboardStore.fetchItems();
+        // What was proposed ticked and has been left out is remembered, so it comes back unticked.
+        if (result.created > 0) {
+            await saveDismissals(dismissalChanges([...this.rows.values()].map(r => ({
+                key: dismissKey(r.proposal.link), proposedTicked: r.proposedTicked, dismissed: r.dismissed, checked: r.checked,
+            }))));
+        }
+        this.announce();
         await this.loadHost(host.id, {
             created: result.created, failed: result.failed, notFit: result.notFit,
             undoable: result.log.bookmarkIds.length, undone: null,
@@ -451,6 +469,11 @@ class DetectServicesModal extends HTMLElement {
         clearProxmoxLinks();
     }
 
+    /** The pages count what is left to add; they read it again. */
+    private announce(): void {
+        document.dispatchEvent(new CustomEvent('services-detected'));
+    }
+
     private async undo(): Promise<void> {
         const run = this.lastRun;
         const host = this.host;
@@ -459,6 +482,7 @@ class DetectServicesModal extends HTMLElement {
         const removed = await undoCreated(run);
         this.forgetLinks();
         if (this.view.boardId === dashboardStore.getState().currentDashboardId) await dashboardStore.fetchItems();
+        this.announce();
         await this.loadHost(host.id, { created: 0, failed: 0, notFit: 0, undoable: 0, undone: removed });
     }
 }

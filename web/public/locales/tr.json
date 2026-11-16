@@ -180,6 +180,8 @@
   "detect.note_host_network": "Ana makinenin ağında: adresini yazın",
   "detect.note_stopped": "Durduruldu",
   "detect.already": "Zaten yer imi var: {name}",
+  "detect.pending": "Yer imi olmayan hizmetler: {count}",
+  "detect.dismissed": "Geçen sefer dışarıda bırakıldı",
   "detect.reachable": "Yanıt veriyor",
   "detect.unreachable": "Yanıt yok",
   "detect.hidden": "Listelenmedi, açılacak bir şey yok: {count}",

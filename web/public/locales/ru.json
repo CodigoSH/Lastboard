@@ -180,6 +180,8 @@
   "detect.note_host_network": "В сети хоста: введите его адрес",
   "detect.note_stopped": "Остановлен",
   "detect.already": "Уже есть закладка: {name}",
+  "detect.pending": "Сервисы без закладки: {count}",
+  "detect.dismissed": "Исключено в прошлый раз",
   "detect.reachable": "Отвечает",
   "detect.unreachable": "Нет ответа",
   "detect.hidden": "Не показаны, открывать нечего: {count}",

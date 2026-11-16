@@ -180,6 +180,8 @@
   "detect.note_host_network": "Di jaringan host: ketik alamatnya",
   "detect.note_stopped": "Berhenti",
   "detect.already": "Sudah punya markah: {name}",
+  "detect.pending": "Layanan tanpa markah: {count}",
+  "detect.dismissed": "Dilewati sebelumnya",
   "detect.reachable": "Merespons",
   "detect.unreachable": "Tidak merespons",
   "detect.hidden": "Tidak dicantumkan, tidak ada yang dibuka: {count}",

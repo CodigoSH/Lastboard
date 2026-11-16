@@ -4,6 +4,7 @@ import { i18n } from '../../../services/i18n';
 import { eventBus, EVENTS } from '../../../services/EventBus';
 import { escapeHtml } from '../../../services/escape';
 import { loadProxmoxLinks, linkFor } from '../../../services/proxmoxLinks';
+import { countPending, fetchDismissed } from '../../../services/dismissedServices';
 import { resolveIconUrl } from '../../../services/iconUrl';
 import { loadProxmox, loadProxmoxHostList, chosenIcon, withIcon, type PxGuest, type PxHost } from '../../../services/proxmoxApi';
 import { curveQuery, hostError, mergeHosts, type PxHostRef } from '../../../services/proxmoxHosts';
@@ -95,6 +96,8 @@ const blank = (): Written => ({ head: '', tabs: '', body: '', list: '', tools: '
  */
 class ProxmoxPage extends HTMLElement {
     private hosts: PxHost[] = [];
+    /** How many machines the detector could still add, for the badge on its button; 0 until it is known. */
+    private pending = 0;
     private loaded = false;
     private error = '';
     private loading = false;
@@ -241,6 +244,9 @@ class ProxmoxPage extends HTMLElement {
         };
     }
 
+    /** The detector's window added or took back bookmarks: the count is read again. */
+    private readonly _detected = () => { void this.countPending(); };
+
     connectedCallback() {
         if (!this._listening) {
             this._listening = true;
@@ -255,6 +261,7 @@ class ProxmoxPage extends HTMLElement {
         window.addEventListener('keydown', this._keydown);
         window.addEventListener('popstate', this._popstate);
         window.addEventListener('resize', this._resize);
+        document.addEventListener('services-detected', this._detected);
         this._unsubscribeI18n = i18n.subscribe(() => {
             // Every label is written into the shell, so a language change is one of the two moments it is written again.
             this.build();
@@ -268,6 +275,7 @@ class ProxmoxPage extends HTMLElement {
         window.removeEventListener('keydown', this._keydown);
         window.removeEventListener('popstate', this._popstate);
         window.removeEventListener('resize', this._resize);
+        document.removeEventListener('services-detected', this._detected);
         this.stopTimers();
         this.stopPanels();
         if (this._unsubscribeI18n) this._unsubscribeI18n();
@@ -745,8 +753,27 @@ class ProxmoxPage extends HTMLElement {
             if (!h || !h.error) { this.sel = null; this.hideDrawer(); this.navReplace(); }
         }
         this.paintAll();
+        void this.countPending();
         void this.loadCurve();
         void this.loadLatest();
+    }
+
+    /**
+     * How many running machines no bookmark serves and nobody left out, from what this page
+     * already has. A machine that is off is not counted: the window offers it, but never ticked.
+     */
+    private async countPending(): Promise<void> {
+        if (!accessAllows(userStore.getUser(), 'board_edit')) return;
+        const [dismissed] = await Promise.all([fetchDismissed(), loadProxmoxLinks().catch(() => null)]);
+        const machines = this.hosts.filter(h => !h.error).flatMap(h => h.guests.filter(g => g.running).map(g => ({
+            link: { proxmox: { host: h.id, node: g.node, kind: g.kind, vmid: g.vmid } },
+            linkedTo: linkFor({ vmid: g.vmid, node: g.node, name: g.name, host: h.id })?.label ?? '',
+        })));
+        const n = countPending(machines, dismissed);
+        if (n !== this.pending) {
+            this.pending = n;
+            if (this.hasAttribute('open')) this.paintHead();
+        }
     }
 
     /**
@@ -948,7 +975,7 @@ class ProxmoxPage extends HTMLElement {
             <div class="psum">${summary}</div>
             <span class="pspacer"></span>
             ${hosts}
-            ${accessAllows(userStore.getUser(), 'board_edit') ? `<button type="button" class="ibtn" id="hp-detect" aria-label="${escapeHtml(t('detect.open'))}" title="${escapeHtml(t('detect.open'))}">${icon('bookmark', 16)}</button>` : ''}
+            ${accessAllows(userStore.getUser(), 'board_edit') ? `<button type="button" class="ibtn" id="hp-detect" aria-label="${escapeHtml(this.pending ? t('detect.pending', { count: String(this.pending) }) : t('detect.open'))}" title="${escapeHtml(this.pending ? t('detect.pending', { count: String(this.pending) }) : t('detect.open'))}">${icon('bookmark', 16)}${this.pending ? `<span class="pend">${this.pending}</span>` : ''}</button>` : ''}
             <button type="button" class="ibtn" id="hp-refresh" aria-label="${escapeHtml(t('infra.refresh'))}" title="${escapeHtml(t('infra.refresh'))}">${icon('refresh', 16)}</button>
             <button type="button" class="ibtn" id="hp-close" aria-label="${escapeHtml(t('general.close'))}" title="${escapeHtml(t('general.close'))}">${icon('x', 16)}</button>`;
         if (html !== this.last.head) {

@@ -180,6 +180,8 @@
   "detect.note_host_network": "ہوسٹ کے نیٹ ورک پر: اس کا پتہ لکھیں",
   "detect.note_stopped": "رکا ہوا",
   "detect.already": "پہلے سے بُک مارک ہے: {name}",
+  "detect.pending": "بُک مارک کے بغیر سروسز: {count}",
+  "detect.dismissed": "پچھلی بار چھوڑا گیا",
   "detect.reachable": "جواب دیتا ہے",
   "detect.unreachable": "کوئی جواب نہیں",
   "detect.hidden": "فہرست میں نہیں، کھولنے کو کچھ نہیں: {count}",

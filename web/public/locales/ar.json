@@ -180,6 +180,8 @@
   "detect.note_host_network": "على شبكة المضيف: اكتب عنوانه",
   "detect.note_stopped": "متوقف",
   "detect.already": "لها إشارة مرجعية: {name}",
+  "detect.pending": "خدمات بلا إشارة مرجعية: {count}",
+  "detect.dismissed": "تم استبعاده سابقًا",
   "detect.reachable": "يستجيب",
   "detect.unreachable": "لا توجد استجابة",
   "detect.hidden": "غير مدرجة، لا شيء لفتحه: {count}",

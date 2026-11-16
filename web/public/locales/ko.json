@@ -180,6 +180,8 @@
   "detect.note_host_network": "호스트의 네트워크에서: 주소를 입력하세요",
   "detect.note_stopped": "중지됨",
   "detect.already": "이미 북마크 있음: {name}",
+  "detect.pending": "북마크 없는 서비스: {count}",
+  "detect.dismissed": "지난번에 제외함",
   "detect.reachable": "응답함",
   "detect.unreachable": "응답 없음",
   "detect.hidden": "표시 안 함, 열 항목 없음: {count}",

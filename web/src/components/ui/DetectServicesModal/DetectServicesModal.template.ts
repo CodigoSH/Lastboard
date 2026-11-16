@@ -23,6 +23,8 @@ export interface RowView {
     iconUrl: string;
     /** Whether the address in the box answered when it was asked, or '' when it was not asked. */
     health: 'up' | 'down' | '';
+    /** Left out on purpose the last time. */
+    dismissed: boolean;
 }
 
 /** The words for a probe's answer; '' for none. */
@@ -76,7 +78,7 @@ export function rowHtml(r: RowView, t: T): string {
     const choose = r.candidates.length > 1
         ? `<select class="alt" aria-label="${e(t('detect.url'))}">${r.candidates.map(c => `<option value="${e(c)}"${c === r.url ? ' selected' : ''}>${e(c)}</option>`).join('')}</select>`
         : '';
-    const notes = [noteText(r.note, t), r.linkedTo ? t('detect.already', { name: r.linkedTo }) : ''].filter(Boolean);
+    const notes = [noteText(r.note, t), r.linkedTo ? t('detect.already', { name: r.linkedTo }) : '', r.dismissed && !r.linkedTo ? t('detect.dismissed') : ''].filter(Boolean);
     return `<div class="row${r.linkedTo ? ' is-linked' : ''}" data-key="${e(r.key)}" data-search="${e(`${r.name} ${r.key}`.toLowerCase())}">
         <input type="checkbox" class="pick" aria-label="${e(r.name)}"${r.checked ? ' checked' : ''}>
         ${face}

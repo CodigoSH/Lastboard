@@ -180,6 +180,8 @@
   "detect.note_host_network": "होस्ट के नेटवर्क पर: उसका पता लिखें",
   "detect.note_stopped": "रुका हुआ",
   "detect.already": "बुकमार्क पहले से है: {name}",
+  "detect.pending": "बिना बुकमार्क की सेवाएँ: {count}",
+  "detect.dismissed": "पिछली बार छोड़ा गया",
   "detect.reachable": "जवाब देता है",
   "detect.unreachable": "कोई जवाब नहीं",
   "detect.hidden": "सूचीबद्ध नहीं, खोलने को कुछ नहीं: {count}",

@@ -116,6 +116,7 @@ svg { display: block; flex: none; }
     text-transform: uppercase;
     transition: border-color 0.15s, color 0.15s, background 0.15s;
 }
+.ibtn .pend { color: var(--accent); }
 .ibtn:hover { color: var(--text-main); border-color: rgba(var(--accent-rgb), 0.35); }
 .ibtn svg.spin { animation: spin 0.8s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }

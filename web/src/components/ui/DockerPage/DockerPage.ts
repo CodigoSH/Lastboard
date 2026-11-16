@@ -14,6 +14,10 @@ import { accessAllows } from '../../../services/access';
 import { fetchDockerSettings, hostsForWidget, saveDockerIcon } from '../../../services/dockerHosts';
 import { chosenDockerIcon, withDockerIcon } from '../../../services/dockerIcons';
 import { dockerLinkFor, loadDockerLinks } from '../../../services/dockerLinks';
+import { loadProxmoxLinks } from '../../../services/proxmoxLinks';
+import { containerServedBy } from '../../../services/serviceLinks';
+import { countPending, fetchDismissed } from '../../../services/dismissedServices';
+import { discoverDocker } from '../../../services/discoverServices';
 import { resolveIconUrl } from '../../../services/iconUrl';
 import { materializeIcon } from '../../../services/iconStore';
 import { fetchContainers, hostErrorKey, containerName, defaultContainerUrl } from '../../../services/dockerShared';
@@ -100,6 +104,8 @@ let sessionHistory: HistoryPoint[] = [];
  */
 class DockerPage extends HTMLElement {
     private groups: HostRows[] = [];
+    /** How many services the detector could still add, for the badge on its button; 0 until it is known. */
+    private pending = 0;
     private stats = new Map<string, ContainerStats>();
     /** How big each host is, once it has said. Not kept for one that could not: it is asked again on the next opening. */
     private sizes = new Map<string, HostSize>();
@@ -225,6 +231,9 @@ class DockerPage extends HTMLElement {
         };
     }
 
+    /** The detector's window added or took back bookmarks: the count is read again. */
+    private readonly _detected = () => { void this.countPending(); };
+
     connectedCallback() {
         if (!this._listening) {
             this._listening = true;
@@ -239,6 +248,7 @@ class DockerPage extends HTMLElement {
         window.addEventListener('keydown', this._keydown);
         window.addEventListener('popstate', this._popstate);
         document.addEventListener('visibilitychange', this._visibility);
+        document.addEventListener('services-detected', this._detected);
         this._unsubscribeI18n = i18n.subscribe(() => {
             // Every label is written into the shell, so a language change is one of the two moments it is written again.
             this.build();
@@ -250,6 +260,7 @@ class DockerPage extends HTMLElement {
         window.removeEventListener('keydown', this._keydown);
         window.removeEventListener('popstate', this._popstate);
         document.removeEventListener('visibilitychange', this._visibility);
+        document.removeEventListener('services-detected', this._detected);
         this.stopTimers();
         if (this._unsubscribeI18n) this._unsubscribeI18n();
     }
@@ -713,10 +724,33 @@ class DockerPage extends HTMLElement {
             }
         }
         this.paintAll();
+        void this.countPending();
         void this.loadSizes();
         void this.loadDisks(fresh);
         await this.loadStats();
         if (this.current()) void this.loadDetail();
+    }
+
+    /**
+     * How many services the detector would still propose: from the containers this
+     * page already has, against the bookmarks of every board and what was left out.
+     * The same reading as its window, so the badge and the window agree.
+     */
+    private async countPending(): Promise<void> {
+        if (!accessAllows(userStore.getUser(), 'board_edit')) return;
+        const [dismissed] = await Promise.all([fetchDismissed(), loadDockerLinks().catch(() => null), loadProxmoxLinks().catch(() => null)]);
+        let n = 0;
+        for (const g of this.groups) {
+            if (g.error) continue;
+            const found = discoverDocker(g.containers, {
+                host: g.host, linkedLabel: name => containerServedBy(g.host.id, name), chosenIcon: () => '',
+            });
+            n += countPending(found.proposals, dismissed);
+        }
+        if (n !== this.pending) {
+            this.pending = n;
+            if (this.hasAttribute('open')) this.paintHead();
+        }
     }
 
     /** What the storage card says: the sum, or why there is none. */
@@ -991,7 +1025,7 @@ class DockerPage extends HTMLElement {
             <div class="psum">${summary}</div>
             <span class="pspacer"></span>
             ${hosts}
-            ${ready && accessAllows(userStore.getUser(), 'board_edit') ? `<button type="button" class="ibtn" id="hp-detect" aria-label="${escapeHtml(t('detect.open'))}" title="${escapeHtml(t('detect.open'))}">${icon('bookmark', 16)}</button>` : ''}
+            ${ready && accessAllows(userStore.getUser(), 'board_edit') ? `<button type="button" class="ibtn" id="hp-detect" aria-label="${escapeHtml(this.pending ? t('detect.pending', { count: String(this.pending) }) : t('detect.open'))}" title="${escapeHtml(this.pending ? t('detect.pending', { count: String(this.pending) }) : t('detect.open'))}">${icon('bookmark', 16)}${this.pending ? `<span class="pend">${this.pending}</span>` : ''}</button>` : ''}
             <button type="button" class="ibtn" id="hp-refresh" aria-label="${escapeHtml(t('infra.refresh'))}" title="${escapeHtml(t('infra.refresh'))}">${icon('refresh', 16)}</button>
             <button type="button" class="ibtn" id="hp-close" aria-label="${escapeHtml(t('general.close'))}" title="${escapeHtml(t('general.close'))}">${icon('x', 16)}</button>`;
         if (html !== this.last.head) {
