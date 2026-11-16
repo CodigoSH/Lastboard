@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test';
-import { detectHtml, resultHtml, rowHtml, type RowView, type T, type WindowView } from './DetectServicesModal.template';
+import { countHtml, detectHtml, eyebrowText, initialOf, resultHtml, rowHtml, type RowView, type T, type WindowView } from './DetectServicesModal.template';
 
 const t: T = (key, params) => `[${key}${params ? ':' + JSON.stringify(params) : ''}]`;
 const evil = '<img src=x onerror=alert(1)>';
@@ -122,7 +122,7 @@ describe('whether the address answers', () => {
         const en = (k: string) => ({ 'detect.reachable': 'Responds', 'detect.unreachable': 'No response' } as Record<string, string>)[k] ?? k;
         expect(rowHtml(row({ health: 'up' }), en)).toContain('data-h="up">Responds<');
         expect(rowHtml(row({ health: 'down' }), en)).toContain('data-h="down">No response<');
-        expect(rowHtml(row(), en)).toContain('data-h=""></div>');
+        expect(rowHtml(row(), en)).toContain('data-h=""></span>');
     });
 });
 
@@ -132,5 +132,42 @@ describe('what was left out last time', () => {
         expect(rowHtml(row({ dismissed: true }), en)).toContain('detect.dismissed');
         expect(rowHtml(row({ dismissed: true, linkedTo: 'X' }), en)).not.toContain('detect.dismissed');
         expect(rowHtml(row(), en)).not.toContain('detect.dismissed');
+    });
+});
+
+describe('how the window reads', () => {
+    test('a service without an icon wears the first letter of its name, past the ordinal it is filed under', () => {
+        expect(initialOf('05 Bookorbit')).toBe('B');
+        expect(initialOf('  jellyfin')).toBe('J');
+        expect(initialOf('12')).toBe('');
+        expect(initialOf('')).toBe('');
+        expect(initialOf('émile')).toBe('É');
+        expect(rowHtml(row({ iconUrl: '', name: '05 Bookorbit' }), (k) => k)).toContain('face--none" aria-hidden="true">B<');
+        expect(rowHtml(row({ iconUrl: '', name: evil }), (k) => k)).not.toContain('<img src=x');
+    });
+    test('the window says which host it is listing, under the right product', () => {
+        expect(detectHtml(view({ source: 'docker', hostName: 'Podman' }), (k) => k)).toContain('eyebrow">widget.docker.name · Podman<');
+        expect(detectHtml(view({ source: 'proxmox', hostName: 'Home' }), (k) => k)).toContain('eyebrow">widget.proxmox.name · Home<');
+        expect(detectHtml(view({ hostName: '' }), (k) => k)).not.toContain('eyebrow');
+    });
+    test('a host named after the product is not said twice', () => {
+        const t = (k: string) => (k === 'widget.docker.name' ? 'Docker' : 'Proxmox');
+        expect(eyebrowText('docker', 'Podman', t)).toBe('Docker · Podman');
+        expect(eyebrowText('proxmox', 'Proxmox', t)).toBe('Proxmox');
+        expect(eyebrowText('proxmox', 'my proxmox lab', t)).toBe('my proxmox lab');
+    });
+    test('how many are ticked of how many are listed', () => {
+        expect(countHtml(3, 12)).toBe('<b>3</b> / 12');
+        expect(detectHtml(view({ selected: 2, rows: [row(), row({ key: 'h1/b' })] }), (k) => k)).toContain('id="dt-count"><b>2</b> / 2<');
+    });
+    test('notes are chips, and a bookmark already serving it says so in the accent one', () => {
+        const html = rowHtml(row({ linkedTo: 'My Plex', note: 'stopped' }), (k) => k);
+        expect(html).toContain('class="chip chip--linked"');
+        expect(html).toContain('<span class="chip">detect.note_stopped</span>');
+    });
+    test('the loading state draws placeholders, and still says what it waits for', () => {
+        const html = detectHtml(view({ state: 'loading', hostName: 'Home' }), (k) => k);
+        expect(html).toContain('list--skeleton');
+        expect(html).toContain('detect.loading');
     });
 });

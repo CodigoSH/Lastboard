@@ -25,7 +25,7 @@ import {
 } from '../../../services/discoverServices';
 import { createDetected, undoCreated, type CreateLog, type NewBookmark } from '../../../services/createDetected';
 import type { BoardItem, SectionToPlace } from '../../../services/placeServices';
-import { detectHtml, healthText, type RowView, type Source, type WindowView } from './DetectServicesModal.template';
+import { countHtml, detectHtml, healthText, type RowView, type Source, type WindowView } from './DetectServicesModal.template';
 import css from './DetectServicesModal.css' with { type: 'text' };
 
 /** What a row holds while the window is open: what the person typed is kept apart from what was proposed. */
@@ -292,6 +292,8 @@ class DetectServicesModal extends HTMLElement {
         const n = this.selectedCount();
         btn.textContent = t('detect.create', { count: String(n) });
         btn.disabled = this.view.busy || n === 0;
+        const count = this.$<HTMLElement>('dt-count');
+        if (count) count.innerHTML = countHtml(n, this.rows.size);
     }
 
     // ── Events ───────────────────────────────────────────────────────────────

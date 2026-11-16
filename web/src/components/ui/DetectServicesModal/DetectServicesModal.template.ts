@@ -71,22 +71,33 @@ const noteText = (n: ProposalNote, t: T): string =>
         : n === 'stopped' ? t('detect.note_stopped')
             : n === 'no_ip' ? t('detect.note_no_ip') : '';
 
+/** The letter a service wears until it has an icon: its first, past the ordinal a machine is filed under ("05 Bookorbit"). */
+export function initialOf(name: string): string {
+    const first = [...name.trim().replace(/^[\d\s._-]+/, '')][0] ?? '';
+    return first.toUpperCase();
+}
+
 export function rowHtml(r: RowView, t: T): string {
     const face = r.iconUrl
         ? `<span class="face"><img src="${e(safeImageSrc(r.iconUrl))}" alt="" loading="lazy"></span>`
-        : '<span class="face face--none"></span>';
+        : `<span class="face face--none" aria-hidden="true">${e(initialOf(r.name))}</span>`;
     const choose = r.candidates.length > 1
         ? `<select class="alt" aria-label="${e(t('detect.url'))}">${r.candidates.map(c => `<option value="${e(c)}"${c === r.url ? ' selected' : ''}>${e(c)}</option>`).join('')}</select>`
         : '';
-    const notes = [noteText(r.note, t), r.linkedTo ? t('detect.already', { name: r.linkedTo }) : '', r.dismissed && !r.linkedTo ? t('detect.dismissed') : ''].filter(Boolean);
+    const chips = [
+        noteText(r.note, t) ? `<span class="chip">${e(noteText(r.note, t))}</span>` : '',
+        r.linkedTo ? `<span class="chip chip--linked">${e(t('detect.already', { name: r.linkedTo }))}</span>` : '',
+        r.dismissed && !r.linkedTo ? `<span class="chip">${e(t('detect.dismissed'))}</span>` : '',
+    ].join('');
     return `<div class="row${r.linkedTo ? ' is-linked' : ''}" data-key="${e(r.key)}" data-search="${e(`${r.name} ${r.key}`.toLowerCase())}">
         <input type="checkbox" class="pick" aria-label="${e(r.name)}"${r.checked ? ' checked' : ''}>
         ${face}
         <div class="row__main">
-            <input type="text" class="name" value="${e(r.name)}" aria-label="${e(t('detect.name'))}" maxlength="80">
-            <div class="row__url">${choose}<input type="text" class="addr" value="${e(r.url)}" aria-label="${e(t('detect.url'))}" spellcheck="false" autocomplete="off"></div>
-            <div class="row__health" data-h="${e(r.health)}">${e(healthText(r.health, t))}</div>
-            ${notes.length ? `<div class="row__note">${notes.map(e).join(' · ')}</div>` : ''}
+            <div class="row__fields">
+                <input type="text" class="name" value="${e(r.name)}" aria-label="${e(t('detect.name'))}" maxlength="80">
+                <div class="row__url">${choose}<input type="text" class="addr" value="${e(r.url)}" aria-label="${e(t('detect.url'))}" spellcheck="false" autocomplete="off"></div>
+            </div>
+            <div class="row__meta"><span class="row__health" data-h="${e(r.health)}">${e(healthText(r.health, t))}</span>${chips}</div>
         </div>
     </div>`;
 }
@@ -103,6 +114,17 @@ export function resultHtml(r: ResultView, t: T): string {
     return `<div class="result" role="status">${lines.join('')}${undo}</div>`;
 }
 
+/** The product and the host, unless the host is already named after the product. */
+export function eyebrowText(source: Source, host: string, t: T): string {
+    const product = t(source === 'proxmox' ? 'widget.proxmox.name' : 'widget.docker.name');
+    return host.toLowerCase().includes(product.toLowerCase()) ? host : `${product} · ${host}`;
+}
+
+/** How many are ticked of how many there are: the figures are the same in every language. */
+export function countHtml(selected: number, total: number): string {
+    return `<b>${selected}</b> / ${total}`;
+}
+
 export function detectHtml(v: WindowView, t: T): string {
     const hostPick = v.hosts.length > 1
         ? `<label class="field"><span>${e(t('detect.host'))}</span><select id="dt-host">${v.hosts.map(h => `<option value="${e(h.id)}"${h.id === v.hostId ? ' selected' : ''}>${e(h.name)}</option>`).join('')}</select></label>`
@@ -112,14 +134,15 @@ export function detectHtml(v: WindowView, t: T): string {
         : '';
 
     let body: string;
-    if (v.state === 'loading') body = `<p class="state">${e(t('detect.loading', { host: v.hostName }))}</p>`;
+    if (v.state === 'loading') body = `<div class="list list--skeleton" aria-hidden="true"><div class="sk"></div><div class="sk"></div><div class="sk"></div><div class="sk"></div></div><p class="state" role="status">${e(t('detect.loading', { host: v.hostName }))}</p>`;
     else if (v.state === 'nohost') body = `<p class="state">${e(t(v.source === 'proxmox' ? 'detect.no_hypervisor' : 'detect.no_host'))}</p>`;
     else if (v.state === 'empty') body = `<p class="state">${e(v.error || t('detect.empty'))}</p>`;
     else {
         body = `<div class="tools">
-                <input type="search" id="dt-search" placeholder="${e(t('detect.search'))}" aria-label="${e(t('detect.search'))}">
+                <label class="search"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.5-3.5"></path></svg><input type="search" id="dt-search" placeholder="${e(t('detect.search'))}" aria-label="${e(t('detect.search'))}"></label>
                 <button type="button" class="link" id="dt-all">${e(t('detect.all'))}</button>
                 <button type="button" class="link" id="dt-none">${e(t('detect.none'))}</button>
+                <span class="count" id="dt-count">${countHtml(v.selected, v.rows.length)}</span>
             </div>
             <div class="list" id="dt-list">${v.rows.map(r => rowHtml(r, t)).join('')}</div>
             ${v.withoutAddress ? `<p class="hint">${e(t('detect.hidden', { count: String(v.withoutAddress) }))}</p>` : ''}`;
@@ -134,9 +157,10 @@ export function detectHtml(v: WindowView, t: T): string {
                 <option value="project"${v.groupBy === 'project' ? ' selected' : ''}>${e(t('detect.group_project'))}</option>
             </select></label>`
         : '';
+    const eyebrow = v.hostName ? `<span class="eyebrow">${e(eyebrowText(v.source, v.hostName, t))}</span>` : '';
     return `<div class="header">
-            <div class="title-group"><h3 id="dt-title">${e(t('detect.title'))}</h3><p>${e(t('detect.subtitle'))}</p></div>
-            <button type="button" class="close-btn" id="dt-close" aria-label="${e(t('general.close'))}">&times;</button>
+            <div class="title-group">${eyebrow}<h3 id="dt-title">${e(t('detect.title'))}</h3><p>${e(t('detect.subtitle'))}</p></div>
+            <button type="button" class="close-btn" id="dt-close" aria-label="${e(t('general.close'))}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg></button>
         </div>
         ${showControls ? `<div class="controls">
             ${hostPick}
