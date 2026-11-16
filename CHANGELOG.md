@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/spec/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.10.6] - 2026-11-16
+
+### Changed
+- An installed Lastboard app is named after your panel — the name you set in **Preferences → Personalization**, the one in the top bar — instead of always "Lastboard", so two servers installed on one phone can be told apart. Install it signed in: from the login page it is still called "Lastboard". An app installed before this keeps its old name until the browser checks it again, or until you install it once more.
+
+### Fixed
+- A panel name with quotes in it shows whole in its field in Preferences.
+
 ## [1.10.5] - 2026-11-15
 
 ### Added
