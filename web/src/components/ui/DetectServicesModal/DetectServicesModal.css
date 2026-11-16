@@ -45,7 +45,7 @@ dialog::backdrop { background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(8px); }
 }
 
 /* ── Fields: the same inputs and the same dropdowns wherever they are ─────── */
-.controls { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; padding: 12px 28px 0; }
+.controls { display: grid; grid-template-columns: minmax(200px, 280px); gap: 12px; padding: 12px 28px 0; }
 .field { display: flex; flex-direction: column; gap: 5px; min-inline-size: 0; }
 .field > span { font: 600 10.5px/1.2 var(--font-mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--label-text, var(--text-dim)); }
 /* The product's own dropdown, sized to sit on a line with the inputs. */
@@ -359,9 +359,7 @@ app-select.alt { flex: none; inline-size: 38px; --select-padding: 0 10px; --sele
     .title-group h3 { font-size: 20px; }
     /* Room for the list matters more than the sentence under the title on a phone. */
     .title-group p { display: none; }
-    /* Two to a line, with the address — the long one — across both. */
-    .controls { grid-template-columns: 1fr 1fr; padding: 12px 18px 0; gap: 10px; }
-    .controls > label.field { grid-column: 1 / -1; }
+    .controls { grid-template-columns: 1fr; padding: 12px 18px 0; }
     .tools { padding: 12px 18px 0; gap: 8px; }
     /* Wrapped, not scrolled: a label cut at the edge looks like a mistake, not like something to swipe. */
     .tools__group { flex: 1 1 100%; }
