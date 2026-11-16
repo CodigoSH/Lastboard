@@ -609,6 +609,42 @@ func (h *DashboardHandler) MoveItem(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(map[string]string{"status": "moved"})
 }
 
+// deleteSectionKeepingChildren removes a section and leaves what was inside it on
+// the board, in the cells it was drawn on. Children keep their place relative to
+// the section (1,1 is its top-left cell), so each takes the section's own place
+// plus that offset; they have no parent after it. Anything that is not a section
+// has no children and is just removed. One transaction: the children are never
+// left without a parent that is still there, nor the section gone with them still in it.
+func (h *DashboardHandler) deleteSectionKeepingChildren(id, userID int) error {
+	tx, err := h.DB.Begin()
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	var typ string
+	var sx, sy int
+	err = tx.QueryRow("SELECT type, x, y FROM items WHERE id=? AND user_id=?", id, userID).Scan(&typ, &sx, &sy)
+	if err == sql.ErrNoRows {
+		return nil // already gone, or not this account's: nothing to do, like a plain delete
+	}
+	if err != nil {
+		return err
+	}
+	if typ == "section" {
+		if _, err := tx.Exec(
+			"UPDATE items SET parent_id=NULL, x=x+?-1, y=y+?-1 WHERE parent_id=? AND user_id=?",
+			sx, sy, id, userID,
+		); err != nil {
+			return err
+		}
+	}
+	if _, err := tx.Exec("DELETE FROM items WHERE id=? AND user_id=?", id, userID); err != nil {
+		return err
+	}
+	return tx.Commit()
+}
+
 func (h *DashboardHandler) DeleteItem(w http.ResponseWriter, r *http.Request) {
 	userID := middleware.GetUserIDFromContext(r)
 	parts := strings.Split(r.URL.Path, "/")
@@ -623,7 +659,13 @@ func (h *DashboardHandler) DeleteItem(w http.ResponseWriter, r *http.Request) {
 	// an optimistic delete and rolls back (re-adds the item) on any error, so
 	// 404-ing an already-deleted item (e.g. stale multi-device cache) would make
 	// it reappear. The user_id clause already guarantees ownership.
-	if _, err = h.DB.Exec("DELETE FROM items WHERE id=? AND user_id=?", id, userID); err != nil {
+	if r.URL.Query().Get("keep_children") == "1" {
+		// "Only the section": what is inside stays on the board where it is drawn.
+		if err := h.deleteSectionKeepingChildren(id, userID); err != nil {
+			http.Error(w, "general.db_error", http.StatusInternalServerError)
+			return
+		}
+	} else if _, err = h.DB.Exec("DELETE FROM items WHERE id=? AND user_id=?", id, userID); err != nil {
 		http.Error(w, "general.db_error", http.StatusInternalServerError)
 		return
 	}

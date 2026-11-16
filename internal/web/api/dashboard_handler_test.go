@@ -1,6 +1,7 @@
 package api_test
 
 import (
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -489,6 +490,90 @@ func TestDeleteItem_SectionTakesItsChildren(t *testing.T) {
 	}
 	if left != 3 {
 		t.Errorf("something outside the section was deleted too: %d of 3 survive", left)
+	}
+}
+
+// "Only the section": the section goes, and what was inside stays on the board in the
+// cells it was drawn on. A child's place is relative to its section (1,1 is the
+// section's top-left cell), so it takes the section's own place plus that offset.
+func TestDeleteItem_OnlyTheSectionKeepsItsChildrenWhereTheyAre(t *testing.T) {
+	server, db, cleanup := setupDashServer(t)
+	defer cleanup()
+
+	createUser(t, db.DB, "alice", "password", "user")
+	createUser(t, db.DB, "bob", "password", "user")
+	var aliceID int
+	db.DB.QueryRow("SELECT id FROM users WHERE username='alice'").Scan(&aliceID)
+	insert := func(typ string, parent any, x, y, w, h int) int64 {
+		res, err := db.DB.Exec(`INSERT INTO items (user_id, parent_id, type, x, y, w, h, content) VALUES (?, ?, ?, ?, ?, ?, ?, '{}')`, aliceID, parent, typ, x, y, w, h)
+		if err != nil {
+			t.Fatalf("insert: %v", err)
+		}
+		id, _ := res.LastInsertId()
+		return id
+	}
+	section := insert("section", nil, 3, 4, 4, 2)
+	a := insert("bookmark", section, 1, 1, 1, 1)
+	b := insert("bookmark", section, 2, 1, 1, 1)
+	c := insert("bookmark", section, 1, 2, 1, 1)
+	other := insert("section", nil, 9, 4, 4, 2)
+	kept := insert("bookmark", other, 1, 1, 1, 1)
+
+	del := func(user string, id int64) int {
+		s := doLogin(t, server.URL, user, "password")
+		req, _ := http.NewRequest("DELETE", fmt.Sprintf("%s/api/dashboard/item/%d?keep_children=1", server.URL, id), nil)
+		s.attach(req)
+		resp, err := http.DefaultClient.Do(req)
+		if err != nil {
+			t.Fatalf("request failed: %v", err)
+		}
+		defer resp.Body.Close()
+		return resp.StatusCode
+	}
+
+	// Another account cannot reach it, and nothing moves.
+	del("bob", section)
+	var still int
+	db.DB.QueryRow("SELECT COUNT(*) FROM items WHERE id=? OR parent_id=?", section, section).Scan(&still)
+	if still != 4 {
+		t.Fatalf("another account changed the section: %d of 4 remain", still)
+	}
+
+	if code := del("alice", section); code != http.StatusOK {
+		t.Fatalf("expected 200, got %d", code)
+	}
+	var gone int
+	db.DB.QueryRow("SELECT COUNT(*) FROM items WHERE id=?", section).Scan(&gone)
+	if gone != 0 {
+		t.Error("the section is still there")
+	}
+	want := map[int64][2]int{a: {3, 4}, b: {4, 4}, c: {3, 5}}
+	for id, xy := range want {
+		var parent sql.NullInt64
+		var x, y int
+		if err := db.DB.QueryRow("SELECT parent_id, x, y FROM items WHERE id=?", id).Scan(&parent, &x, &y); err != nil {
+			t.Fatalf("a bookmark of the section is gone: %v", err)
+		}
+		if parent.Valid || x != xy[0] || y != xy[1] {
+			t.Errorf("bookmark %d: parent=%v at (%d,%d), want no parent at (%d,%d)", id, parent, x, y, xy[0], xy[1])
+		}
+	}
+	// What was in another section is not touched.
+	var parent sql.NullInt64
+	var kx, ky int
+	db.DB.QueryRow("SELECT parent_id, x, y FROM items WHERE id=?", kept).Scan(&parent, &kx, &ky)
+	if !parent.Valid || parent.Int64 != other || kx != 1 || ky != 1 {
+		t.Errorf("a bookmark of another section was changed: parent=%v at (%d,%d)", parent, kx, ky)
+	}
+
+	// A bookmark has no children: the flag just removes it.
+	if code := del("alice", kept); code != http.StatusOK {
+		t.Fatalf("expected 200, got %d", code)
+	}
+	var left int
+	db.DB.QueryRow("SELECT COUNT(*) FROM items WHERE id=?", kept).Scan(&left)
+	if left != 0 {
+		t.Error("a bookmark deleted with the flag is still there")
 	}
 }
 
