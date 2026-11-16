@@ -164,6 +164,7 @@
   "infra.filter_up": "Çalışan",
   "infra.filter_off": "Durdurulan",
   "infra.filter_warn": "Uyarılar",
+  "infra.no_bookmark": "Yer imi yok",
   "infra.refresh": "Yenile",
   "infra.sort": "Sırala",
   "infra.sort_cpu": "CPU",

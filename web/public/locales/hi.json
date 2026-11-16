@@ -164,6 +164,7 @@
   "infra.filter_up": "चालू",
   "infra.filter_off": "रुके हुए",
   "infra.filter_warn": "चेतावनियाँ",
+  "infra.no_bookmark": "कोई बुकमार्क नहीं",
   "infra.refresh": "रीफ़्रेश करें",
   "infra.sort": "क्रमबद्ध करें",
   "infra.sort_cpu": "सीपीयू",

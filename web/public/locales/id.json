@@ -164,6 +164,7 @@
   "infra.filter_up": "Berjalan",
   "infra.filter_off": "Berhenti",
   "infra.filter_warn": "Peringatan",
+  "infra.no_bookmark": "Tanpa markah",
   "infra.refresh": "Segarkan",
   "infra.sort": "Urutkan",
   "infra.sort_cpu": "CPU",

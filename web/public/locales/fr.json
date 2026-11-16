@@ -164,6 +164,7 @@
   "infra.filter_up": "En marche",
   "infra.filter_off": "Arrêtés",
   "infra.filter_warn": "Alertes",
+  "infra.no_bookmark": "Aucun signet",
   "infra.refresh": "Actualiser",
   "infra.sort": "Trier par",
   "infra.sort_cpu": "CPU",

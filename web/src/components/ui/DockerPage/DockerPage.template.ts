@@ -285,7 +285,7 @@ export function cardHtml(v: UnitView, t: T, fmt: Fmt): string {
             : meterRow('CPU', 0, '—') + meterRow('RAM', 0, '—')}</div>`
         : `<div class="unit__off">${stoppedLine(c, v.link, t, fmt)}</div>`;
     return `<button type="button" class="card card--btn unit${up ? '' : ' is-off'}${v.selected ? ' is-sel' : ''}" ${dataAttrs(v)}>
-        <div class="unit__h">${faceHtml(v.face)}<span class="unit__n">${e(containerName(c)) || '—'}</span><span class="unit__tail">${healthChip(c.Health, t)}${bookmarkChipHtml(v.link)}${dotHtml(c, !!v.link)}</span></div>
+        <div class="unit__h">${faceHtml(v.face)}<span class="unit__n">${e(containerName(c)) || '—'}</span><span class="unit__tail">${healthChip(c.Health, t)}${bookmarkChipHtml(v.link, t('infra.no_bookmark'))}${dotHtml(c, !!v.link)}</span></div>
         <div class="unit__sub">${tech(c.Image || '—')}${v.showHost ? `<span>· ${e(v.hostName)}</span>` : ''}</div>
         ${meters}
     </button>`;
@@ -349,7 +349,7 @@ export function drawerHeadHtml(d: DrawerHeadData, t: T): string {
     const tone = dotTone(c, !!d.link);
     return `<div class="dr__t">
             <button type="button" class="face face--edit" data-icon="1" title="${e(t('proxmox.icon_set'))}" aria-label="${e(t('proxmox.icon_set'))}">${d.face ? `<img src="${e(d.face)}" alt="">` : FACE_NONE}<span class="face__pen">${icon('pen', 11)}</span></button>
-            <h2 title="${e(containerName(c))}">${e(containerName(c)) || '—'}</h2>${bookmarkChipHtml(d.link)}
+            <h2 title="${e(containerName(c))}">${e(containerName(c)) || '—'}</h2>${bookmarkChipHtml(d.link, t('infra.no_bookmark'))}
             <button type="button" class="ibtn" id="dr-close" aria-label="${e(t('general.close'))}" title="${e(t('general.close'))}">${icon('x', 16)}</button></div>
         <div class="dr__chips"><span class="dot state-dot${tone ? ' dot--' + tone : ''}" role="img" tabindex="0" title="${e(label)}" aria-label="${e(label)}"></span>${healthChip(c.Health, t)}${d.showHost ? `<span class="chip">${e(d.host.name)}</span>` : ''}${c.Project ? `<span class="chip">${tech(c.Project)}</span>` : ''}</div>`;
 }

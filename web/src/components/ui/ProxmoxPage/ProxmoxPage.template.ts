@@ -235,7 +235,7 @@ export function stateDot(tone: 'ok' | 'warn' | 'bad' | '', label: string): strin
 
 const kindText = (g: PxGuest): string => `${g.kind === 'lxc' ? 'LXC' : 'VM'} ${g.vmid}`;
 const attrs = (v: GuestView): string => `data-host="${e(v.hostId)}" data-vmid="${v.guest.vmid}"`;
-const bookmarkChip = (v: GuestView): string => bookmarkChipHtml(v.link);
+const bookmarkChip = (v: GuestView, t: T): string => bookmarkChipHtml(v.link, t('infra.no_bookmark'));
 const ramPct = guestRam;
 
 export function cardHtml(v: GuestView, t: T, fmt: Fmt): string {
@@ -246,7 +246,7 @@ export function cardHtml(v: GuestView, t: T, fmt: Fmt): string {
             <div class="mrow"><span>RAM</span>${barHtml(ramPct(g))}<b>${e(fmt.bytes(g.mem))}</b></div></div>`
         : `<div class="unit__off">${e(t('docker.state_stopped'))}${v.link ? ` · ${e(t('proxmox.stopped_breaks'))} ${e(v.link)}` : ''}</div>`;
     return `<button type="button" class="card card--btn unit${g.running ? '' : ' is-off'}${v.selected ? ' is-sel' : ''}" ${attrs(v)}>
-        <div class="unit__h">${faceHtml(v.face)}<span class="unit__n">${e(g.name) || '—'}</span><span class="unit__tail">${bookmarkChip(v)}${dotOf(v)}</span></div>
+        <div class="unit__h">${faceHtml(v.face)}<span class="unit__n">${e(g.name) || '—'}</span><span class="unit__tail">${bookmarkChip(v, t)}${dotOf(v)}</span></div>
         <div class="unit__sub">${tech(kindText(g))}<span>· ${e(g.node)}</span>${v.showHost ? `<span>· ${e(v.hostName)}</span>` : ''}</div>
         ${meters}
     </button>`;
@@ -320,7 +320,7 @@ export function guestHeadHtml(d: GuestDrawer, t: T): string {
     const kind = t(g.kind === 'lxc' ? 'proxmox.container' : 'proxmox.vm');
     return `<div class="dr__t">
             <button type="button" class="face face--edit" data-icon="${g.vmid}" title="${e(t('proxmox.icon_set'))}" aria-label="${e(t('proxmox.icon_set'))}">${d.view.face ? `<img src="${e(d.view.face)}" alt="">` : FACE_NONE}<span class="face__pen">${icon('pen', 11)}</span></button>
-            <h2 title="${e(g.name)}">${e(g.name) || '—'}</h2>${bookmarkChip(d.view)}
+            <h2 title="${e(g.name)}">${e(g.name) || '—'}</h2>${bookmarkChip(d.view, t)}
             <button type="button" class="ibtn" id="dr-close" aria-label="${e(t('general.close'))}" title="${e(t('general.close'))}">${icon('x', 16)}</button></div>
         <div class="dr__chips">${stateDot(dotTone(d.view), t(g.running ? 'docker.state_running' : 'docker.state_stopped'))}
             <span class="chip">${e(kind)} ${tech(String(g.vmid))}</span><span class="chip">${e(g.node)}</span>${d.view.showHost ? `<span class="chip">${e(d.hostName)}</span>` : ''}</div>`;

@@ -164,6 +164,7 @@
   "infra.filter_up": "运行中",
   "infra.filter_off": "已停止",
   "infra.filter_warn": "警告",
+  "infra.no_bookmark": "无书签",
   "infra.refresh": "刷新",
   "infra.sort": "排序方式",
   "infra.sort_cpu": "CPU",

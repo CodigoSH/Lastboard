@@ -367,3 +367,15 @@ describe('the header and the groups', () => {
         for (const id of ['lg-follow', 'lg-ts', 'lg-more', 'lg-copy', 'lg-box', 'lg-state', 'lg-note']) expect(html).toContain(`id="${id}"`);
     });
 });
+
+describe('the bookmark mark of a container', () => {
+    test('a card and the head of its panel show the pill with a bookmark and the struck-through icon without', () => {
+        expect(cardHtml(view(ctr(), { link: 'Plex' }), t, fmt)).not.toContain('chip--none');
+        const bare = cardHtml(view(ctr()), t, fmt);
+        expect(bare).toContain('chip--none');
+        expect(bare).toContain('[infra.no_bookmark]');
+        expect(bare).not.toContain('chip--link');
+        expect(drawerHeadHtml({ host, container: ctr(), showHost: false, link: '', face: '' }, t)).toContain('chip--none');
+        expect(drawerHeadHtml({ host, container: ctr(), showHost: false, link: 'Plex', face: '' }, t)).toContain('chip--link');
+    });
+});

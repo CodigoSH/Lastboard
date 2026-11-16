@@ -569,6 +569,7 @@ app-select {
 /* The state of whatever the panel shows, as a dot; the pointer brings up its words. */
 .state-dot { align-self: center; margin-inline: 3px 5px; }
 .dr__t .chip--link { flex: 0 1 auto; max-width: 42%; }
+.dr__t .chip--none { flex: none; }
 
 /* A machine's or container's face: the icon somebody chose, or the one its bookmark wears. */
 .face { width: 22px; height: 22px; flex: none; display: grid; place-items: center; border-radius: 6px; overflow: hidden; background: var(--surface-solid); border: 1px solid var(--card-border); }
@@ -580,6 +581,9 @@ app-select {
 .tr .nm .face { display: inline-grid; vertical-align: middle; margin-inline-end: 6px; }
 .chip--link { color: var(--accent); border-color: rgba(var(--accent-rgb), 0.3); background: rgba(var(--accent-rgb), 0.07); max-width: 140px; }
 .chip__t { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* A machine or container with no bookmark: the bookmark struck through, quiet, with no pill around it. */
+.chip--none { padding: 2px 3px; border-color: transparent; background: none; color: var(--text-dim); opacity: 0.55; }
+.chip--none:hover { opacity: 0.9; }
 
 /* Nodes and stores, as rows of a box. */
 .nrow, .srow { display: grid; align-items: center; gap: 12px; width: 100%; padding: 9px 0; border-block-start: 1px solid var(--card-border); }

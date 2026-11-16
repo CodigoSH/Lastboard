@@ -164,6 +164,7 @@
   "infra.filter_up": "Laufend",
   "infra.filter_off": "Gestoppt",
   "infra.filter_warn": "Warnungen",
+  "infra.no_bookmark": "Kein Lesezeichen",
   "infra.refresh": "Aktualisieren",
   "infra.sort": "Sortieren nach",
   "infra.sort_cpu": "CPU",

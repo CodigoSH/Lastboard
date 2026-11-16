@@ -164,6 +164,7 @@
   "infra.filter_up": "En marcha",
   "infra.filter_off": "Detenidos",
   "infra.filter_warn": "Avisos",
+  "infra.no_bookmark": "Sin marcador",
   "infra.refresh": "Actualizar",
   "infra.sort": "Ordenar por",
   "infra.sort_cpu": "CPU",

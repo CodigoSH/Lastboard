@@ -164,6 +164,7 @@
   "infra.filter_up": "Запущены",
   "infra.filter_off": "Остановлены",
   "infra.filter_warn": "Предупреждения",
+  "infra.no_bookmark": "Нет закладки",
   "infra.refresh": "Обновить",
   "infra.sort": "Сортировка",
   "infra.sort_cpu": "ЦП",

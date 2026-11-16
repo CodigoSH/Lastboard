@@ -164,6 +164,7 @@
   "infra.filter_up": "در حال اجرا",
   "infra.filter_off": "متوقف",
   "infra.filter_warn": "هشدارها",
+  "infra.no_bookmark": "بدون نشانک",
   "infra.refresh": "به‌روزرسانی",
   "infra.sort": "مرتب‌سازی بر اساس",
   "infra.sort_cpu": "پردازنده",

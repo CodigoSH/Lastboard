@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'bun:test';
 import {
-    barHtml, boxHtml, chartHtml, chartIndexAt, CHART_WIDTH, kpiHtml, meterLevel, ringHtml, sortOptions, sparkHtml, tabsHtml, toolbarHtml, type T,
+    barHtml, bookmarkChipHtml, boxHtml, chartHtml, chartIndexAt, CHART_WIDTH, kpiHtml, meterLevel, ringHtml, sortOptions, sparkHtml, tabsHtml, toolbarHtml, type T,
 } from './infra.template';
 
 const t: T = (key) => `[${key}]`;
@@ -112,5 +112,29 @@ describe('the chart', () => {
         expect(mid.index).toBe(2);
         expect(mid.x).toBeGreaterThan(0);
         expect(mid.x).toBeLessThan(CHART_WIDTH);
+    });
+});
+
+describe('the bookmark pill', () => {
+    test('names the bookmark when there is one', () => {
+        const html = bookmarkChipHtml('Plex', '[none]');
+        expect(html).toContain('chip--link');
+        expect(html).toContain('Plex');
+        expect(html).not.toContain('chip--none');
+    });
+    test('without one it is the bookmark struck through, with its words for the pointer and for screen readers', () => {
+        const html = bookmarkChipHtml('', '[none]');
+        expect(html).toContain('chip--none');
+        expect(html).toContain('title="[none]"');
+        expect(html).toContain('aria-label="[none]"');
+        expect(html).toContain('M3.5 3.5l17 17');
+        expect(html).not.toContain('chip--link');
+    });
+    test('with no words for the absence it draws nothing, as before', () => {
+        expect(bookmarkChipHtml('')).toBe('');
+    });
+    test('what it is given is escaped', () => {
+        expect(bookmarkChipHtml('', evil)).not.toContain('<img');
+        expect(bookmarkChipHtml(evil, '[none]')).not.toContain('<img');
     });
 });

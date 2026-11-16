@@ -164,6 +164,7 @@
   "infra.filter_up": "চলমান",
   "infra.filter_off": "বন্ধ",
   "infra.filter_warn": "সতর্কতা",
+  "infra.no_bookmark": "কোনো বুকমার্ক নেই",
   "infra.refresh": "রিফ্রেশ",
   "infra.sort": "সাজান",
   "infra.sort_cpu": "সিপিইউ",

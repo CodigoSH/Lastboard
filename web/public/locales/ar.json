@@ -164,6 +164,7 @@
   "infra.filter_up": "قيد التشغيل",
   "infra.filter_off": "متوقفة",
   "infra.filter_warn": "تنبيهات",
+  "infra.no_bookmark": "بلا إشارة مرجعية",
   "infra.refresh": "تحديث",
   "infra.sort": "ترتيب حسب",
   "infra.sort_cpu": "المعالج",

@@ -164,6 +164,7 @@
   "infra.filter_up": "실행 중",
   "infra.filter_off": "중지됨",
   "infra.filter_warn": "경고",
+  "infra.no_bookmark": "북마크 없음",
   "infra.refresh": "새로고침",
   "infra.sort": "정렬 기준",
   "infra.sort_cpu": "CPU",

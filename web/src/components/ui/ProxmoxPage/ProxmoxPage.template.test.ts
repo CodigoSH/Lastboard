@@ -150,3 +150,21 @@ describe('the storage tab', () => {
         expect(html).not.toContain(evil);
     });
 });
+
+describe('the bookmark mark of a machine', () => {
+    const none = '[infra.no_bookmark]';
+    test('a card and the head of its panel show the pill with a bookmark and the struck-through icon without', () => {
+        const linked = view(guest(), { link: 'photos' });
+        const bare = view(guest());
+        expect(cardHtml(linked, t, fmt)).toContain('chip--link');
+        expect(cardHtml(linked, t, fmt)).not.toContain('chip--none');
+        expect(cardHtml(bare, t, fmt)).toContain('chip--none');
+        expect(cardHtml(bare, t, fmt)).toContain(none);
+        expect(cardHtml(bare, t, fmt)).not.toContain('chip--link');
+        expect(guestHeadHtml(drawer(linked), t)).toContain('chip--link');
+        expect(guestHeadHtml(drawer(bare), t)).toContain('chip--none');
+    });
+    test('a stopped machine without a bookmark carries it too', () => {
+        expect(cardHtml(view(guest({ running: false })), t, fmt)).toContain('chip--none');
+    });
+});

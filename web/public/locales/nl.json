@@ -164,6 +164,7 @@
   "infra.filter_up": "Actief",
   "infra.filter_off": "Gestopt",
   "infra.filter_warn": "Waarschuwingen",
+  "infra.no_bookmark": "Geen bladwijzer",
   "infra.refresh": "Vernieuwen",
   "infra.sort": "Sorteren op",
   "infra.sort_cpu": "CPU",

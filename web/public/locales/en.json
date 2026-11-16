@@ -164,6 +164,7 @@
   "infra.filter_up": "Running",
   "infra.filter_off": "Stopped",
   "infra.filter_warn": "Warnings",
+  "infra.no_bookmark": "No bookmark",
   "infra.refresh": "Refresh",
   "infra.sort": "Sort by",
   "infra.sort_cpu": "CPU",

@@ -164,6 +164,7 @@
   "infra.filter_up": "Działające",
   "infra.filter_off": "Zatrzymane",
   "infra.filter_warn": "Ostrzeżenia",
+  "infra.no_bookmark": "Brak zakładki",
   "infra.refresh": "Odśwież",
   "infra.sort": "Sortuj według",
   "infra.sort_cpu": "CPU",

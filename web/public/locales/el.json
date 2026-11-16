@@ -164,6 +164,7 @@
   "infra.filter_up": "Σε λειτουργία",
   "infra.filter_off": "Σταματημένα",
   "infra.filter_warn": "Προειδοποιήσεις",
+  "infra.no_bookmark": "Χωρίς σελιδοδείκτη",
   "infra.refresh": "Ανανέωση",
   "infra.sort": "Ταξινόμηση κατά",
   "infra.sort_cpu": "CPU",

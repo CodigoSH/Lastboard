@@ -38,6 +38,8 @@ const ICONS = {
     clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
     disk: '<rect x="3" y="13" width="18" height="6" rx="1.5"/><path d="M3 13l2-8h14l2 8M7 16h.01M11 16h2"/>',
     bookmark: '<path d="M6 4h12v17l-6-4-6 4V4z"/>',
+    // The same bookmark with a diagonal through it: "nothing is bookmarked here".
+    bookmarkOff: '<path d="M6 4h12v17l-6-4-6 4V4z"/><path d="M3.5 3.5l17 17"/>',
     pen: '<path d="M4 20l1-4L16 5l3 3L8 19l-4 1z"/>',
     activity: '<path d="M3 12h4l3-8 4 16 3-8h4"/>',
     gear: '<circle cx="12" cy="12" r="3"/><path d="M12 3v2.5M12 18.5V21M3 12h2.5M18.5 12H21M5.6 5.6l1.8 1.8M16.6 16.6l1.8 1.8M5.6 18.4l1.8-1.8M16.6 7.4l1.8-1.8"/>',
@@ -276,9 +278,16 @@ export function faceHtml(url: string, cls = 'face'): string {
         : `<span class="${cls} ${cls}--none">${FACE_NONE}</span>`;
 }
 
-/** The orange pill that names the bookmark a machine or container serves; nothing without one. */
-export function bookmarkChipHtml(label: string): string {
-    return label
-        ? `<span class="chip chip--link" title="${escapeHtml(label)}">${icon('bookmark', 11)}<span class="chip__t">${escapeHtml(label)}</span></span>`
+/**
+ * The orange pill that names the bookmark a machine or container serves.
+ * Without one it is the same bookmark struck through, with `noneLabel` for the
+ * pointer and for screen readers; with no `noneLabel`, nothing.
+ */
+export function bookmarkChipHtml(label: string, noneLabel = ''): string {
+    if (label) {
+        return `<span class="chip chip--link" title="${escapeHtml(label)}">${icon('bookmark', 11)}<span class="chip__t">${escapeHtml(label)}</span></span>`;
+    }
+    return noneLabel
+        ? `<span class="chip chip--none" role="img" title="${escapeHtml(noneLabel)}" aria-label="${escapeHtml(noneLabel)}">${icon('bookmarkOff', 13)}</span>`
         : '';
 }

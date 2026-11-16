@@ -164,6 +164,7 @@
   "infra.filter_up": "Em execução",
   "infra.filter_off": "Parados",
   "infra.filter_warn": "Avisos",
+  "infra.no_bookmark": "Sem marcador",
   "infra.refresh": "Atualizar",
   "infra.sort": "Ordenar por",
   "infra.sort_cpu": "CPU",
