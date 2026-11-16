@@ -57,6 +57,7 @@ pveum role add Lastboard --privs "Sys.Audit Datastore.Audit VM.Audit"
 | `Sys.Audit` | Read node status: load average, cores, uptime |
 | `VM.PowerMgmt` | **Optional.** Start and shut down machines from Lastboard |
 | `Sys.Syslog` | **Optional.** Read a node's system log. Not in the role above; [tasks](#tasks) do not need it |
+| `VM.GuestAgent.Audit` (PVE 9) or `VM.Monitor` (PVE 8) | **Optional.** Read the address a virtual machine reports through its guest agent, so [adding machines to the board](#adding-machines-to-the-board) can propose it. Not in the role above; without it a virtual machine is proposed at its console instead |
 
 Nothing here grants console access, configuration changes, backups, or deletion. There is no privilege in the list that can destroy anything.
 
@@ -132,6 +133,17 @@ One card per virtual machine or container (or a list, with the two buttons at th
 - **Chips** — *All*, *Running*, *Stopped* and *Warnings* — each with how many it would show. *Warnings* are the stopped machines a bookmark depends on and the ones at 90% CPU or more.
 - **Group by node** gathers the machines of each node under its name.
 - **Sort by** name, state, CPU or memory. The view, the sort and the grouping are remembered in this browser.
+
+### Adding machines to the board
+
+Rather than making one bookmark per machine by hand, ask Lastboard to propose them: the **bookmark** button in the Proxmox page's header, or the window that opens by itself when you add a hypervisor that answers and has something to offer. It needs permission to edit the board, and it is the same window the [Docker page](../docker/overview.md#adding-the-services-of-a-host-to-the-board) uses.
+
+One row for each machine, with its name and its address to change. Machines that are running and have an address start ticked, and those a bookmark already serves are shown dimmed and unticked.
+
+- **The address** is the one the machine reports: a container's own network interface, or, for a virtual machine, what its **QEMU guest agent** says. Of those it takes the first private IPv4 address, skipping loopback, link-local (169.254), the 100.64/10 range, and the interfaces of Docker, Tailscale, CNI and Flannel. Lastboard proposes `http://` and the address: the port is yours to add.
+- **A machine with no address** — a virtual machine without the agent installed or running, a token that may not read it (see the optional privilege above), or a machine that is off — is proposed at **its console in Proxmox's own interface**, which is a fine bookmark too. A machine that is off starts unticked.
+- **Sections:** one for the hypervisor, named after it. A section that already has that name takes the new bookmarks into its free cells, and grows only when nothing is below it; if it cannot, a new one is made.
+- Each bookmark is tied to its machine, shows the machine's state as the others do, and carries the icon you chose for the machine or, when your account may look icons up, the library's. **Undo** removes what that run created, and nothing else.
 
 ### Storage
 
