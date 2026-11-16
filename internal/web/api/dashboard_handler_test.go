@@ -443,6 +443,55 @@ func TestDeleteItem_Success(t *testing.T) {
 	}
 }
 
+// A section owns what is inside it: deleting the section takes its bookmarks with
+// it, and nothing else on the board, so no bookmark is left behind pointing at a
+// parent that no longer exists.
+func TestDeleteItem_SectionTakesItsChildren(t *testing.T) {
+	server, db, cleanup := setupDashServer(t)
+	defer cleanup()
+
+	createUser(t, db.DB, "alice", "password", "user")
+	var aliceID int
+	db.DB.QueryRow("SELECT id FROM users WHERE username='alice'").Scan(&aliceID)
+	insert := func(typ string, parent any, x int) int64 {
+		res, err := db.DB.Exec(`INSERT INTO items (user_id, parent_id, type, x, y, w, h, content) VALUES (?, ?, ?, ?, 1, 1, 1, '{}')`, aliceID, parent, typ, x)
+		if err != nil {
+			t.Fatalf("insert: %v", err)
+		}
+		id, _ := res.LastInsertId()
+		return id
+	}
+	doomed := insert("section", nil, 1)
+	insert("bookmark", doomed, 1)
+	insert("bookmark", doomed, 2)
+	other := insert("section", nil, 5)
+	kept := insert("bookmark", other, 1)
+	loose := insert("bookmark", nil, 9)
+
+	s := doLogin(t, server.URL, "alice", "password")
+	req, _ := http.NewRequest("DELETE", fmt.Sprintf("%s/api/dashboard/item/%d", server.URL, doomed), nil)
+	s.attach(req)
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		t.Fatalf("request failed: %v", err)
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		t.Fatalf("expected 200, got %d", resp.StatusCode)
+	}
+
+	var inside, orphans, left int
+	db.DB.QueryRow("SELECT COUNT(*) FROM items WHERE parent_id=?", doomed).Scan(&inside)
+	db.DB.QueryRow("SELECT COUNT(*) FROM items c WHERE c.parent_id IS NOT NULL AND NOT EXISTS (SELECT 1 FROM items p WHERE p.id=c.parent_id)").Scan(&orphans)
+	db.DB.QueryRow("SELECT COUNT(*) FROM items WHERE id IN (?, ?, ?)", other, kept, loose).Scan(&left)
+	if inside != 0 || orphans != 0 {
+		t.Errorf("the section's bookmarks were left behind: %d inside, %d orphans", inside, orphans)
+	}
+	if left != 3 {
+		t.Errorf("something outside the section was deleted too: %d of 3 survive", left)
+	}
+}
+
 func TestDeleteItem_OtherUserCannotDelete(t *testing.T) {
 	server, db, cleanup := setupDashServer(t)
 	defer cleanup()
