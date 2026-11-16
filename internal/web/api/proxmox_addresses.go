@@ -123,6 +123,37 @@ func proxmoxAddressPath(node, kind string, vmid int) (string, error) {
 	return "", fmt.Errorf("general.invalid_input")
 }
 
+// maxNoteURLLen bounds an address written in a machine's notes.
+const maxNoteURLLen = 512
+
+// urlFromNotes reads the address a machine's notes give for it: a line that
+// starts with `lastboard.url:` and then an http(s) address. The notes are free
+// text that anyone with write access to the machine can edit, so only a
+// well-formed http(s) address with a host comes out of them, cut to a length.
+func urlFromNotes(notes string) string {
+	for _, line := range strings.Split(notes, "\n") {
+		line = strings.TrimSpace(line)
+		const key = "lastboard.url:"
+		if len(line) < len(key) || !strings.EqualFold(line[:len(key)], key) {
+			continue
+		}
+		v := strings.TrimSpace(line[len(key):])
+		if len(v) > maxNoteURLLen {
+			return ""
+		}
+		if u, err := url.Parse(v); err == nil && (u.Scheme == "http" || u.Scheme == "https") && u.Hostname() != "" {
+			return v
+		}
+		return ""
+	}
+	return ""
+}
+
+// proxmoxConfigPath is where a machine's configuration, notes included, is read.
+func proxmoxConfigPath(node, kind string, vmid int) string {
+	return fmt.Sprintf("/nodes/%s/%s/%d/config", url.PathEscape(node), kind, vmid)
+}
+
 const (
 	maxAddressGuests      = 300
 	addressConcurrency    = 6
@@ -176,6 +207,7 @@ func (h *ProxmoxHandler) Addresses(w http.ResponseWriter, r *http.Request) {
 		mu     sync.Mutex
 		wg     sync.WaitGroup
 		out    = map[string]string{}
+		urls   = map[string]string{}
 		window = make(chan struct{}, addressConcurrency)
 	)
 	for i, g := range in.Guests {
@@ -204,15 +236,27 @@ func (h *ProxmoxHandler) Addresses(w http.ResponseWriter, r *http.Request) {
 					addr = addressFromAgent(reply.Result)
 				}
 			}
-			if addr != "" {
-				mu.Lock()
-				out[fmt.Sprintf("%s|%d", g.Node, g.VMID)] = addr
-				mu.Unlock()
+			// The notes ride the same pass: one machine, one budget.
+			var conf struct {
+				Description string `json:"description"`
 			}
+			var noted string
+			if proxmoxDoCtx(one, cfg, http.MethodGet, proxmoxConfigPath(g.Node, g.Kind, g.VMID), &conf) == nil {
+				noted = urlFromNotes(conf.Description)
+			}
+			key := fmt.Sprintf("%s|%d", g.Node, g.VMID)
+			mu.Lock()
+			if addr != "" {
+				out[key] = addr
+			}
+			if noted != "" {
+				urls[key] = noted
+			}
+			mu.Unlock()
 		}(g, paths[i])
 	}
 	wg.Wait()
 
 	w.Header().Set("Content-Type", "application/json")
-	_ = json.NewEncoder(w).Encode(map[string]any{"addresses": out})
+	_ = json.NewEncoder(w).Encode(map[string]any{"addresses": out, "urls": urls})
 }

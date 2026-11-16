@@ -3,6 +3,7 @@ package api
 import (
 	"encoding/json"
 	"net/netip"
+	"strings"
 	"testing"
 )
 
@@ -106,5 +107,35 @@ func TestProxmoxAddressPath(t *testing.T) {
 		if _, err := proxmoxAddressPath(c.node, c.kind, c.vmid); err == nil {
 			t.Errorf("%+v was accepted", c)
 		}
+	}
+}
+
+func TestURLFromNotes(t *testing.T) {
+	for notes, want := range map[string]string{
+		"lastboard.url: https://wiki.lan":                       "https://wiki.lan",
+		"Wiki\nLASTBOARD.URL:   http://10.0.0.5:3000/x  \nmore": "http://10.0.0.5:3000/x",
+		"  lastboard.url: http://a.lan":                         "http://a.lan",
+		"":                                                      "",
+		"no address here":                                       "",
+		"lastboard.url: javascript:alert(1)":                    "",
+		"lastboard.url: ftp://x.lan":                            "",
+		"lastboard.url: http://":                                "",
+		"lastboard.url: not a url":                              "",
+		"lastboard.url:":                                        "",
+		"see lastboard.url: http://a.lan":                       "",
+		"lastboard.url: http://" + strings.Repeat("a", 600):     "",
+	} {
+		if got := urlFromNotes(notes); got != want {
+			t.Errorf("urlFromNotes(%.40q) = %q, want %q", notes, got, want)
+		}
+	}
+}
+
+func TestProxmoxConfigPath(t *testing.T) {
+	if got := proxmoxConfigPath("pve1", "qemu", 107); got != "/nodes/pve1/qemu/107/config" {
+		t.Errorf("qemu: %q", got)
+	}
+	if got := proxmoxConfigPath("a b", "lxc", 3); got != "/nodes/a%20b/lxc/3/config" {
+		t.Errorf("lxc: %q", got)
 	}
 }

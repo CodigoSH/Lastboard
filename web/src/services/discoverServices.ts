@@ -265,6 +265,8 @@ export interface ProxmoxDiscoverInput {
     guests: PxGuest[];
     /** The address each machine reports, keyed `node|vmid`; a machine that reports none is not in it. */
     addresses: Record<string, string>;
+    /** The address a machine's notes give for it, keyed the same way; it is offered first. */
+    urls?: Record<string, string>;
     /** The label of the bookmark a machine is already tied to, or ''. */
     linkedLabel: (g: PxGuest) => string;
     /** The address of the icon the person chose for a machine, or ''. */
@@ -295,6 +297,8 @@ export function discoverProxmox(input: ProxmoxDiscoverInput): Discovery {
     for (const g of input.guests) {
         const ip = input.addresses[addressKey(g.node, g.vmid)] ?? '';
         const candidates: Candidate[] = [];
+        const noted = input.urls?.[addressKey(g.node, g.vmid)] ?? '';
+        if (noted) candidates.push({ source: 'label', url: noted });
         if (ip) candidates.push({ source: 'ip', url: `http://${ip}` });
         const console = consoleUrl(input.consoleBase, g.kind, g.vmid);
         if (console) candidates.push({ source: 'console', url: console });
@@ -314,8 +318,8 @@ export function discoverProxmox(input: ProxmoxDiscoverInput): Discovery {
             labelIcon: '',
             group: '',
             linkedTo,
-            note: !g.running ? 'stopped' : ip ? '' : 'no_ip',
-            selected: g.running && !!ip && !linkedTo,
+            note: !g.running ? 'stopped' : ip || noted ? '' : 'no_ip',
+            selected: g.running && (!!ip || !!noted) && !linkedTo,
         });
     }
     return { proposals, withoutAddress };

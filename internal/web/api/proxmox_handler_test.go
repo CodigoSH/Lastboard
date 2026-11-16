@@ -106,6 +106,10 @@ func newFakeProxmox(t *testing.T) *fakeProxmox {
 		case r.URL.Path == "/api2/json/nodes/kprox/qemu/108/agent/network-get-interfaces":
 			// A guest whose agent is not running: Proxmox answers an error.
 			w.WriteHeader(http.StatusInternalServerError)
+		case r.URL.Path == "/api2/json/nodes/kprox/qemu/108/config":
+			w.Write([]byte(`{"data":{"description":"Wiki VM\nlastboard.url: https://wiki.lan\n"}}`))
+		case r.URL.Path == "/api2/json/nodes/kprox/lxc/106/config":
+			w.Write([]byte(`{"data":{"description":"lastboard.url: javascript:alert(1)"}}`))
 		case strings.HasSuffix(r.URL.Path, "/status"):
 			w.Write([]byte(`{"data":{"uptime":7200,"loadavg":["0.50","0.40","0.30"],"cpuinfo":{"cores":8}}}`))
 		default:
@@ -1254,5 +1258,36 @@ func TestAddressesAreBoundedAndBelongToTheAccount(t *testing.T) {
 	}
 	if adminFake.asked("GET /api2/json/nodes/kprox/lxc/106/interfaces") {
 		t.Error("the admin's hypervisor was asked on another account's behalf")
+	}
+}
+
+func TestAddressesCarryTheAddressAMachineGivesInItsNotes(t *testing.T) {
+	newFake := newFakeProxmox(t)
+	server, db, cleanup := setupProxmoxServer(t)
+	defer cleanup()
+	createUser(t, db.DB, "root", "password", "admin")
+	admin := doLogin(t, server.URL, "root", "password")
+	pxSave(t, server.URL, admin, `{"hosts":[{"enabled":true,"url":"`+newFake.URL+`","token_id":"a@pve!b","secret":"c","insecure":true}]}`).Body.Close()
+
+	req, _ := http.NewRequest("POST", server.URL+"/api/proxmox/addresses", strings.NewReader(`{"guests":[
+		{"node":"kprox","kind":"lxc","vmid":106},{"node":"kprox","kind":"qemu","vmid":108}]}`))
+	req.Header.Set("Content-Type", "application/json")
+	admin.attach(req)
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer resp.Body.Close()
+	var out struct {
+		Addresses map[string]string `json:"addresses"`
+		URLs      map[string]string `json:"urls"`
+	}
+	json.NewDecoder(resp.Body).Decode(&out)
+	// 108 has no agent, so no address, but its notes name where it lives; 106's notes are not an http address.
+	if out.URLs["kprox|108"] != "https://wiki.lan" || len(out.URLs) != 1 {
+		t.Errorf("urls = %v", out.URLs)
+	}
+	if out.Addresses["kprox|106"] != "192.168.1.106" || out.Addresses["kprox|108"] != "" {
+		t.Errorf("addresses = %v", out.Addresses)
 	}
 }

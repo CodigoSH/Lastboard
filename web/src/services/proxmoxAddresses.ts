@@ -8,25 +8,30 @@ import { apiService } from './apiService';
 /** The server takes at most this many machines in one request. */
 const BATCH = 200;
 
+export interface MachineAddresses { addresses: Record<string, string>; urls: Record<string, string> }
+
 export interface MachineRef { node: string; kind: 'lxc' | 'qemu'; vmid: number }
 
 /**
- * The address each machine reports, keyed `node|vmid`. A machine the server could
+ * The address each machine reports and the one its notes give (a `lastboard.url:`
+ * line), both keyed `node|vmid`. A machine the server could
  * not read is not in the answer, and neither is one whose request failed: the
  * window then offers its console, which is a good answer too.
  */
-export async function fetchAddresses(hostId: string, machines: MachineRef[]): Promise<Record<string, string>> {
+export async function fetchAddresses(hostId: string, machines: MachineRef[]): Promise<MachineAddresses> {
     const out: Record<string, string> = {};
+    const urls: Record<string, string> = {};
     for (let i = 0; i < machines.length; i += BATCH) {
         try {
-            const r = await apiService.post<{ addresses?: Record<string, string> }>('/api/proxmox/addresses', {
+            const r = await apiService.post<{ addresses?: Record<string, string>; urls?: Record<string, string> }>('/api/proxmox/addresses', {
                 host: hostId,
                 guests: machines.slice(i, i + BATCH),
             });
             Object.assign(out, r?.addresses ?? {});
+            Object.assign(urls, r?.urls ?? {});
         } catch { /* this batch has no addresses; the others may */ }
     }
-    return out;
+    return { addresses: out, urls };
 }
 
 export interface ProxmoxHostRef { id: string; name: string; url: string }

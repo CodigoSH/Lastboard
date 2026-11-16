@@ -190,6 +190,14 @@ describe('Proxmox', () => {
         expect(proposals[0].candidates.map(c => c.source)).toEqual(['console']);
         expect(proposals[0]).toMatchObject({ note: 'no_ip', selected: false });
     });
+    test('the address a machine writes in its notes comes first, and stands in for one it cannot report', () => {
+        const withIp = discoverProxmox(pinput({ urls: { 'pve|106': 'https://plex.lan' } })).proposals[0];
+        expect(withIp.candidates.map(c => c.source)).toEqual(['label', 'ip', 'console']);
+        expect(withIp.candidates[0]).toEqual({ source: 'label', url: 'https://plex.lan' });
+        const alone = discoverProxmox(pinput({ addresses: {}, urls: { 'pve|106': 'https://plex.lan' } })).proposals[0];
+        expect(alone).toMatchObject({ note: '', selected: true });
+        expect(alone.candidates.map(c => c.source)).toEqual(['label', 'console']);
+    });
     test('one that is off is offered unticked, with its console', () => {
         const { proposals } = discoverProxmox(pinput({ guests: [guest({ running: false })], addresses: {} }));
         expect(proposals[0]).toMatchObject({ note: 'stopped', selected: false });

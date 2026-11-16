@@ -171,13 +171,14 @@ class DetectServicesModal extends HTMLElement {
             return null;
         }
         const running = px.guests.filter(g => g.running).map(g => ({ node: g.node, kind: g.kind, vmid: g.vmid }));
-        const [addresses] = await Promise.all([fetchAddresses(hostId, running), this.loadIconIndex()]);
+        const [{ addresses, urls }] = await Promise.all([fetchAddresses(hostId, running), this.loadIconIndex()]);
         this.view.address = '';
         return discoverProxmox({
             host: { id: ref.id, name: ref.name },
             consoleBase: ref.url,
             guests: px.guests,
             addresses,
+            urls,
             linkedLabel: g => machineLink({ vmid: g.vmid, node: g.node, name: g.name, host: ref.id })?.label ?? '',
             chosenIcon: g => machineIcon(px, g.node, g.vmid),
         });
