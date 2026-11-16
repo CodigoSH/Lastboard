@@ -211,6 +211,7 @@ var userSettingKeys = map[string]bool{
 	proxmoxHostsKey: true,
 	proxmoxIconsKey: true,
 	dockerHostsKey:  true,
+	dockerIconsKey:  true,
 
 	keyMonMode:      false,
 	keyMonInterval:  false,
