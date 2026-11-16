@@ -16,13 +16,14 @@ import { materializeIcon } from '../../../services/iconStore';
 import { resolveIconUrl } from '../../../services/iconUrl';
 import { retryOnRateLimit } from '../../../services/retryOnRateLimit';
 import { bookmarkContent } from '../../../services/bookmarkContent';
+import { probeAddresses } from '../../../services/probeAddresses';
 import {
     candidateUrl, discoverDocker, discoverProxmox, pickIconName, planServices,
     type Discovery, type GroupBy, type NewService, type ServiceProposal,
 } from '../../../services/discoverServices';
 import { createDetected, undoCreated, type CreateLog, type NewBookmark } from '../../../services/createDetected';
 import type { BoardItem, SectionToPlace } from '../../../services/placeServices';
-import { detectHtml, type RowView, type Source, type WindowView } from './DetectServicesModal.template';
+import { detectHtml, healthText, type RowView, type Source, type WindowView } from './DetectServicesModal.template';
 import css from './DetectServicesModal.css' with { type: 'text' };
 
 /** What a row holds while the window is open: what the person typed is kept apart from what was proposed. */
@@ -54,6 +55,8 @@ class DetectServicesModal extends HTMLElement {
     private iconIndex = new Map<string, string>();
     private lastRun: CreateLog | null = null;
     private loadToken = 0;
+    /** Which of the addresses proposed answered, by address: what was asked, not what is now in a box. */
+    private health = new Map<string, 'up' | 'down'>();
 
     constructor() {
         super();
@@ -123,7 +126,7 @@ class DetectServicesModal extends HTMLElement {
         try {
             const found = this.source === 'docker' ? await this.readDocker(hostId) : await this.readProxmox(hostId);
             if (token !== this.loadToken) return;
-            if (found) this.adopt(found);
+            if (found) { this.health = new Map(); this.adopt(found); }
         } catch (err) {
             if (token !== this.loadToken) return;
             this.rows = new Map();
@@ -131,6 +134,7 @@ class DetectServicesModal extends HTMLElement {
             this.view.error = this.source === 'docker' ? t(hostErrorKey(err)) : t('proxmox.connection_error');
         }
         this.paint();
+        if (this.rows.size > 0) this.probeRows(token);
     }
 
     /** The icon library, when the account may look icons up: it names the icons that are proposed. */
@@ -199,6 +203,31 @@ class DetectServicesModal extends HTMLElement {
         this.view.state = this.rows.size === 0 ? 'empty' : 'ready';
     }
 
+    /**
+     * Asks, row by row as the answers come, whether each proposed address answers.
+     * Only for an account that may check status, and never in the way: the window
+     * is already usable, and a row whose address is changed stops showing its answer.
+     */
+    private probeRows(token: number): void {
+        if (!accessAllows(userStore.getUser(), 'watch_status')) return;
+        void probeAddresses([...this.rows.values()].map(r => r.url), answers => {
+            for (const [u, s] of Object.entries(answers)) this.health.set(u, s);
+            this.showHealth();
+        }, { alive: () => token === this.loadToken });
+    }
+
+    /** Puts each row's answer in place without redrawing the window, so nobody loses what they are typing. */
+    private showHealth(): void {
+        for (const r of this.shadowRoot?.querySelectorAll<HTMLElement>('.row') ?? []) {
+            const state = this.rows.get(r.dataset.key ?? '');
+            const box = r.querySelector<HTMLElement>('.row__health');
+            if (!state || !box) continue;
+            const h = this.health.get(state.url) ?? '';
+            box.dataset.h = h;
+            box.textContent = healthText(h, t);
+        }
+    }
+
     // ── Drawing ──────────────────────────────────────────────────────────────
 
     private rowViews(): RowView[] {
@@ -211,6 +240,7 @@ class DetectServicesModal extends HTMLElement {
             note: r.proposal.note,
             linkedTo: r.proposal.linkedTo,
             iconUrl: r.iconUrl,
+            health: this.health.get(r.url) ?? '',
         }));
     }
 
@@ -275,7 +305,7 @@ class DetectServicesModal extends HTMLElement {
         const row = this.rowOf(target);
         if (!row) return;
         if (target.classList.contains('name')) row.state.name = target.value;
-        else if (target.classList.contains('addr')) { row.state.url = target.value; row.state.edited = true; }
+        else if (target.classList.contains('addr')) { row.state.url = target.value; row.state.edited = true; this.showHealth(); }
     }
 
     private onChange(e: Event): void {
@@ -293,6 +323,7 @@ class DetectServicesModal extends HTMLElement {
             row.state.edited = false;
             const addr = row.el.querySelector<HTMLInputElement>('.addr');
             if (addr) addr.value = target.value;
+            this.showHealth();
         }
     }
 
@@ -335,6 +366,7 @@ class DetectServicesModal extends HTMLElement {
                 if (addr) addr.value = state.url;
             }
         });
+        this.showHealth();
     }
 
     // ── Creating ─────────────────────────────────────────────────────────────

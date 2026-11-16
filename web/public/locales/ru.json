@@ -180,6 +180,8 @@
   "detect.note_host_network": "В сети хоста: введите его адрес",
   "detect.note_stopped": "Остановлен",
   "detect.already": "Уже есть закладка: {name}",
+  "detect.reachable": "Отвечает",
+  "detect.unreachable": "Нет ответа",
   "detect.hidden": "Не показаны, открывать нечего: {count}",
   "detect.board": "Доска",
   "detect.create": "Добавить выбранные: {count}",

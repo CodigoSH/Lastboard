@@ -180,6 +180,8 @@
   "detect.note_host_network": "En la red del host: escribe su dirección",
   "detect.note_stopped": "Parado",
   "detect.already": "Ya tiene marcador: {name}",
+  "detect.reachable": "Responde",
+  "detect.unreachable": "Sin respuesta",
   "detect.hidden": "Sin listar, nada que abrir: {count}",
   "detect.board": "Tablero",
   "detect.create": "Añadir seleccionados: {count}",

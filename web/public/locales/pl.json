@@ -180,6 +180,8 @@
   "detect.note_host_network": "W sieci hosta: wpisz jego adres",
   "detect.note_stopped": "Zatrzymany",
   "detect.already": "Ma już zakładkę: {name}",
+  "detect.reachable": "Odpowiada",
+  "detect.unreachable": "Brak odpowiedzi",
   "detect.hidden": "Nie wymienione, nic do otwarcia: {count}",
   "detect.board": "Tablica",
   "detect.create": "Dodaj zaznaczone: {count}",

@@ -5,7 +5,7 @@ const t: T = (key, params) => `[${key}${params ? ':' + JSON.stringify(params) : 
 const evil = '<img src=x onerror=alert(1)>';
 
 const row = (o: Partial<RowView> = {}): RowView => ({
-    key: 'h1/plex', checked: true, name: 'Plex', url: 'http://nas:32400', candidates: ['http://nas:32400'], note: '', linkedTo: '', iconUrl: '', ...o,
+    key: 'h1/plex', checked: true, name: 'Plex', url: 'http://nas:32400', candidates: ['http://nas:32400'], note: '', linkedTo: '', iconUrl: '', health: '', ...o,
 });
 const view = (o: Partial<WindowView> = {}): WindowView => ({
     source: 'docker', state: 'ready', hostName: 'Home', hosts: [{ id: 'h1', name: 'Home' }], hostId: 'h1', address: 'nas', groupBy: 'host', rows: [row()],
@@ -114,5 +114,14 @@ describe('the result', () => {
         const html = resultHtml({ created: 0, failed: 0, notFit: 0, undoable: 0, undone: 4 }, t);
         expect(html).toContain('detect.undone:{&quot;count&quot;:&quot;4&quot;}');
         expect(html).not.toContain('dt-undo');
+    });
+});
+
+describe('whether the address answers', () => {
+    test('says so for each answer, and nothing when it was not asked', () => {
+        const en = (k: string) => ({ 'detect.reachable': 'Responds', 'detect.unreachable': 'No response' } as Record<string, string>)[k] ?? k;
+        expect(rowHtml(row({ health: 'up' }), en)).toContain('data-h="up">Responds<');
+        expect(rowHtml(row({ health: 'down' }), en)).toContain('data-h="down">No response<');
+        expect(rowHtml(row(), en)).toContain('data-h=""></div>');
     });
 });

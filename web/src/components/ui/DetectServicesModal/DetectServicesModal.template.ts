@@ -21,7 +21,13 @@ export interface RowView {
     linkedTo: string;
     /** The address of an icon to show, or ''. */
     iconUrl: string;
+    /** Whether the address in the box answered when it was asked, or '' when it was not asked. */
+    health: 'up' | 'down' | '';
 }
+
+/** The words for a probe's answer; '' for none. */
+export const healthText = (h: RowView['health'], t: T): string =>
+    h === 'up' ? t('detect.reachable') : h === 'down' ? t('detect.unreachable') : '';
 
 export type WindowState = 'loading' | 'ready' | 'empty' | 'nohost' | 'done';
 
@@ -77,6 +83,7 @@ export function rowHtml(r: RowView, t: T): string {
         <div class="row__main">
             <input type="text" class="name" value="${e(r.name)}" aria-label="${e(t('detect.name'))}" maxlength="80">
             <div class="row__url">${choose}<input type="text" class="addr" value="${e(r.url)}" aria-label="${e(t('detect.url'))}" spellcheck="false" autocomplete="off"></div>
+            <div class="row__health" data-h="${e(r.health)}">${e(healthText(r.health, t))}</div>
             ${notes.length ? `<div class="row__note">${notes.map(e).join(' · ')}</div>` : ''}
         </div>
     </div>`;

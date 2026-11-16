@@ -180,6 +180,8 @@
   "detect.note_host_network": "Στο δίκτυο του host: πληκτρολογήστε τη διεύθυνσή του",
   "detect.note_stopped": "Σταματημένο",
   "detect.already": "Έχει ήδη σελιδοδείκτη: {name}",
+  "detect.reachable": "Ανταποκρίνεται",
+  "detect.unreachable": "Καμία απάντηση",
   "detect.hidden": "Δεν εμφανίζονται, τίποτα να ανοιχτεί: {count}",
   "detect.board": "Πίνακας",
   "detect.create": "Προσθήκη επιλεγμένων: {count}",

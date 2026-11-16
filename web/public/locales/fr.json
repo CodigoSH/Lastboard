@@ -180,6 +180,8 @@
   "detect.note_host_network": "Sur le réseau de l'hôte : saisissez son adresse",
   "detect.note_stopped": "Arrêté",
   "detect.already": "Déjà un signet : {name}",
+  "detect.reachable": "Répond",
+  "detect.unreachable": "Pas de réponse",
   "detect.hidden": "Non listés, rien à ouvrir : {count}",
   "detect.board": "Tableau",
   "detect.create": "Ajouter la sélection : {count}",

@@ -180,6 +180,8 @@
   "detect.note_host_network": "Op het netwerk van de host: typ het adres",
   "detect.note_stopped": "Gestopt",
   "detect.already": "Heeft al een bladwijzer: {name}",
+  "detect.reachable": "Reageert",
+  "detect.unreachable": "Geen reactie",
   "detect.hidden": "Niet getoond, niets om te openen: {count}",
   "detect.board": "Bord",
   "detect.create": "Geselecteerde toevoegen: {count}",

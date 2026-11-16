@@ -180,6 +180,8 @@
   "detect.note_host_network": "در شبکه میزبان: نشانی آن را بنویسید",
   "detect.note_stopped": "متوقف",
   "detect.already": "نشانک دارد: {name}",
+  "detect.reachable": "پاسخ می‌دهد",
+  "detect.unreachable": "پاسخی نیست",
   "detect.hidden": "فهرست نشده، چیزی برای باز کردن نیست: {count}",
   "detect.board": "برد",
   "detect.create": "افزودن انتخاب‌شده‌ها: {count}",
