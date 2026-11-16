@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'bun:test';
 import {
-    candidateUrl, consoleUrl, discoverDocker, discoverProxmox, iconNamesFor, imageBase, isOwnContainer, pickIconName, planServices, prettyName,
+    candidateUrl, consoleUrl, discoverDocker, discoverProxmox, fitSection, iconNamesFor, imageBase, isOwnContainer, pickIconName, planServices, prettyName,
     sectionTitleFor, serviceName, usablePorts, type DiscoverInput, type ServiceProposal,
 } from './discoverServices';
 import type { DockerContainer, DockerHost } from './dockerShared';
@@ -153,9 +153,30 @@ describe('where it goes', () => {
         const svc = (n: string, project: string) => ({ proposal: p(n, project), name: n, url: `http://h/${n}` });
         const plan = planServices([svc('a', 'media'), svc('b', 'media'), svc('c', 'media'), svc('d', 'media'), svc('e', 'media'), svc('x', '')], 'project', 'Home', 12);
         expect(plan.sections.map(s => [s.title, s.items.length])).toEqual([['media', 5], ['Home', 1]]);
-        expect(plan.sections[0].w).toBe(4);
-        expect(plan.sections[0].h).toBe(2); // five bookmarks, four to a row
-        expect(plan.sections[0].items[4]).toMatchObject({ title: 'e', x: 1, y: 2, ref: 4 });
+        expect(plan.sections[0].w).toBe(3);
+        expect(plan.sections[0].h).toBe(2); // five bookmarks: two rows, three wide, not four wide with three cells spare
+        expect(plan.sections[0].items[4]).toMatchObject({ title: 'e', x: 2, y: 2, ref: 4 });
+        expect([plan.sections[1].w, plan.sections[1].h]).toEqual([1, 1]);
+    });
+    test('a section is as big as the bookmarks put in it', () => {
+        const svc = (n: string) => ({ proposal: p(n, ''), name: n, url: `http://h/${n}` });
+        for (const [count, w, h] of [[1, 1, 1], [2, 2, 1], [3, 3, 1], [4, 4, 1]] as const) {
+            const [sec] = planServices(Array.from({ length: count }, (_, i) => svc('s' + i)), 'host', 'Home', 12).sections;
+            expect([sec.w, sec.h]).toEqual([w, h]);
+            // Each bookmark has its own cell inside the section.
+            expect(new Set(sec.items.map(it => `${it.x},${it.y}`)).size).toBe(count);
+            expect(sec.items.every(it => it.x >= 1 && it.x <= w && it.y >= 1 && it.y <= h)).toBe(true);
+        }
+    });
+    test('past four across, the rows grow and the width narrows to what the last row needs', () => {
+        expect([5, 6, 7, 8, 9, 12, 13].map(n => fitSection(n, 12))).toEqual([
+            { w: 3, h: 2 }, { w: 3, h: 2 }, { w: 4, h: 2 }, { w: 4, h: 2 }, { w: 3, h: 3 }, { w: 4, h: 3 }, { w: 4, h: 4 },
+        ]);
+        // Always room for every bookmark, and never an empty row.
+        for (let n = 1; n <= 60; n++) { const { w, h } = fitSection(n, 12); expect(w * h).toBeGreaterThanOrEqual(n); expect(w * (h - 1)).toBeLessThan(n); }
+        // A board narrower than four columns never gets a section wider than itself.
+        expect(fitSection(5, 3)).toEqual({ w: 3, h: 2 });
+        expect(fitSection(0, 12)).toEqual({ w: 1, h: 1 });
     });
     test('nothing selected plans nothing', () => {
         expect(planServices([], 'host', 'Home', 12).sections).toEqual([]);

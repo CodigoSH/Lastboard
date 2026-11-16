@@ -1,5 +1,5 @@
 import { containerName, type DockerContainer, type DockerHost } from './dockerShared';
-import { planImport, type PlanItem, type PlanSection } from './importPlan';
+import { GRID_MIN, planImport, type PlanItem, type PlanSection } from './importPlan';
 import type { PxGuest } from './proxmoxApi';
 import { iconKey } from './proxmoxIcons';
 import { isIconName } from './importIcons';
@@ -256,7 +256,29 @@ export function planServices(services: NewService[], groupBy: GroupBy, hostName:
         ref,
     }));
     const [plan] = planImport([{ name: hostName, items }], cols, hostName);
-    return (plan ?? { name: hostName, sections: [] }) as ServicesPlan;
+    const out = (plan ?? { name: hostName, sections: [] }) as ServicesPlan;
+    // A section is as big as what goes in it, not a fixed block the import uses: two bookmarks are 2 wide by 1 high, three are 3 by 1.
+    for (const sec of out.sections) {
+        const { w, h } = fitSection(sec.items.length, cols);
+        sec.w = w;
+        sec.h = h;
+        sec.items.forEach((it, k) => { it.x = GRID_MIN + (k % w); it.y = GRID_MIN + Math.floor(k / w); });
+    }
+    return out;
+}
+
+/** The widest a section grows before its bookmarks wrap to a second row. */
+export const SECTION_MAX_W = 4;
+
+/**
+ * The smallest box that holds `count` bookmarks in rows of at most four: one row up to four, then as many rows as that
+ * needs, narrowed again so no cell is left over beyond the last row's own (5 are 3 by 2, not 4 by 2).
+ */
+export function fitSection(count: number, cols: number): { w: number; h: number } {
+    const n = Math.max(1, count);
+    const widest = Math.max(1, Math.min(SECTION_MAX_W, cols));
+    const h = Math.ceil(n / Math.min(n, widest));
+    return { w: Math.ceil(n / h), h };
 }
 
 // ── Proxmox ──────────────────────────────────────────────────────────────────
