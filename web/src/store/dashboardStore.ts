@@ -726,7 +726,7 @@ class DashboardStore {
     async deleteItem(id: number) {
         // --- DEMO MODE ---
         if (this.isDemo()) {
-            this.state.items = this.state.items.filter(item => item.id !== id);
+            this.state.items = this.state.items.filter(item => item.id !== id && item.parent_id !== id);
             await demoService.deleteItem(id);
             this.notify();
             return;
@@ -744,7 +744,10 @@ class DashboardStore {
             }
 
             const deletedItem = this.state.items[itemIndex];
-            this.state.items.splice(itemIndex, 1);
+            // A section owns what is inside it and the server removes those with it, so they leave
+            // this list too; left here they would still be counted, searched and checked until a reload.
+            const inside = this.state.items.filter(item => item.parent_id === id);
+            this.state.items = this.state.items.filter(item => item.id !== id && item.parent_id !== id);
             this.saveToLocalStorage();
             this.notify();
 
@@ -754,7 +757,7 @@ class DashboardStore {
             } catch (apiError) {
                 // Rollback on failure
                 console.error('[DashboardStore] Failed to delete item, rolling back', apiError);
-                this.state.items.push(deletedItem);
+                this.state.items.push(deletedItem, ...inside);
                 this.saveToLocalStorage();
                 this.notify();
             }
