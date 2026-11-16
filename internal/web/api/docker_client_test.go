@@ -514,3 +514,93 @@ func TestAProjectLabelIsKeptShort(t *testing.T) {
 		t.Error("no label, no project")
 	}
 }
+
+func TestProxyUrlFromLabels(t *testing.T) {
+	cases := []struct {
+		name   string
+		labels map[string]string
+		want   string
+	}{
+		{"nothing to read", nil, ""},
+		{"no proxy labels", map[string]string{"com.docker.compose.project": "media"}, ""},
+		{"a traefik rule", map[string]string{"traefik.http.routers.plex.rule": "Host(`plex.example.com`)"}, "https://plex.example.com"},
+		{"the first host of several", map[string]string{"traefik.http.routers.a.rule": "Host(`a.example.com`) || Host(`b.example.com`)"}, "https://a.example.com"},
+		{"a host with a path rule beside it", map[string]string{"traefik.http.routers.a.rule": "Host(`a.example.com`) && PathPrefix(`/api`)"}, "https://a.example.com"},
+		{"a rule with no host in it", map[string]string{"traefik.http.routers.a.rule": "PathPrefix(`/api`)"}, ""},
+		{"a regular expression is not an address", map[string]string{"traefik.http.routers.a.rule": "HostRegexp(`{sub:.+}.example.com`)"}, ""},
+		{"a label that is not a router rule", map[string]string{"traefik.http.services.a.rule": "Host(`a.example.com`)"}, ""},
+		{"a caddy site", map[string]string{"caddy": "plex.example.com"}, "https://plex.example.com"},
+		{"a caddy site with its scheme", map[string]string{"caddy": "http://plex.lan"}, "http://plex.lan"},
+		{"a caddy site with a port", map[string]string{"caddy": "plex.lan:8443"}, "https://plex.lan:8443"},
+		{"the first caddy address of a list", map[string]string{"caddy": "a.example.com, b.example.com"}, "https://a.example.com"},
+		{"a numbered caddy label", map[string]string{"caddy_1": "b.example.com"}, "https://b.example.com"},
+		{"a caddy placeholder", map[string]string{"caddy": "{{upstreams 80}}"}, ""},
+		{"a caddy port alone", map[string]string{"caddy": ":8080"}, ""},
+		{"a caddy wildcard", map[string]string{"caddy": "*.example.com"}, ""},
+		{"a caddy directive is not a site", map[string]string{"caddy.reverse_proxy": "{{upstreams 80}}"}, ""},
+		{
+			// This ends up in a box a person reads, and then an href: a label
+			// is free to hold anything, and only a host name becomes an address.
+			"nothing that is not a host name",
+			map[string]string{"caddy": "javascript:alert(1)", "traefik.http.routers.a.rule": "Host(`a b`)"},
+			"",
+		},
+		{"traefik is read before caddy", map[string]string{"caddy": "c.example.com", "traefik.http.routers.a.rule": "Host(`t.example.com`)"}, "https://t.example.com"},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			if got := proxyUrlFromLabels(tc.labels); got != tc.want {
+				t.Errorf("proxyUrlFromLabels(%v) = %q, want %q", tc.labels, got, tc.want)
+			}
+		})
+	}
+}
+
+// The same container always gives the same answer, however the map is walked.
+func TestProxyUrlFromLabelsIsStable(t *testing.T) {
+	labels := map[string]string{
+		"traefik.http.routers.b.rule": "Host(`b.example.com`)",
+		"traefik.http.routers.a.rule": "Host(`a.example.com`)",
+		"traefik.http.routers.c.rule": "Host(`c.example.com`)",
+	}
+	for i := 0; i < 50; i++ {
+		if got := proxyUrlFromLabels(labels); got != "https://a.example.com" {
+			t.Fatalf("run %d gave %q", i, got)
+		}
+	}
+}
+
+func TestListContainers_CarriesWhereAPortIsPublishedAndHowTheNetworkIs(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`[
+			{"Id":"aaa","Names":["/web"],"Image":"nginx","State":"running","Created":1,
+			 "Ports":[{"IP":"0.0.0.0","PrivatePort":80,"PublicPort":8080,"Type":"tcp"},
+			          {"IP":"127.0.0.1","PrivatePort":9000,"PublicPort":9000,"Type":"tcp"},
+			          {"PrivatePort":53,"Type":"udp"}],
+			 "Labels":{"traefik.http.routers.web.rule":"Host(` + "`web.example.com`" + `)"},
+			 "HostConfig":{"NetworkMode":"bridge"}},
+			{"Id":"bbb","Names":["/jelly"],"Image":"jellyfin","State":"running","Created":1,"Ports":[],
+			 "Labels":{},"HostConfig":{"NetworkMode":"host"}}
+		]`))
+	}))
+	defer srv.Close()
+
+	containers, err := ListContainers(srv.URL)
+	if err != nil {
+		t.Fatalf("ListContainers: %v", err)
+	}
+	if got := containers[0].Ports; len(got) != 2 || got[0].IP != "0.0.0.0" || got[1].IP != "127.0.0.1" {
+		t.Errorf("the published ports should keep their addresses, got %+v", got)
+	}
+	if containers[0].NetworkMode != "bridge" || containers[1].NetworkMode != "host" {
+		t.Errorf("network modes = %q and %q", containers[0].NetworkMode, containers[1].NetworkMode)
+	}
+	if containers[0].ProxyUrl != "https://web.example.com" || containers[1].ProxyUrl != "" {
+		t.Errorf("proxy addresses = %q and %q", containers[0].ProxyUrl, containers[1].ProxyUrl)
+	}
+	// The label a person wrote for a dashboard is untouched by all this.
+	if containers[0].UrlHint != "" {
+		t.Errorf("a proxy rule leaked into UrlHint: %q", containers[0].UrlHint)
+	}
+}

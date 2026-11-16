@@ -68,6 +68,10 @@ type DockerPort struct {
 	PublicPort  uint16 `json:"PublicPort"`
 	PrivatePort uint16 `json:"PrivatePort"`
 	Type        string `json:"Type"`
+	// IP is the address the port is published on: "0.0.0.0" or "::" for every
+	// interface, "127.0.0.1" for the machine alone. A port bound to the machine
+	// alone is not one a browser elsewhere can reach.
+	IP string `json:"IP"`
 }
 
 // DockerContainer holds the normalised representation of a Docker container.
@@ -92,6 +96,14 @@ type DockerContainer struct {
 	ExitCode *int
 	// Project is the Compose project the container was started by, if any.
 	Project string
+	// NetworkMode is how the container is attached to the network: "host"
+	// means it publishes no ports at all, because it shares the machine's own.
+	NetworkMode string
+	// ProxyUrl is the address a reverse proxy serves it on, read from its
+	// Traefik or Caddy labels. It is separate from UrlHint on purpose: a label
+	// written for a dashboard is the author's word, this is a guess at where a
+	// proxy puts the container, and only the service detector uses it.
+	ProxyUrl string
 }
 
 // DockerStats holds CPU and memory metrics for a running container.
@@ -292,6 +304,10 @@ type dockerAPIContainer struct {
 	Created int64             `json:"Created"`
 	Ports   []dockerAPIPort   `json:"Ports"`
 	Labels  map[string]string `json:"Labels"`
+
+	HostConfig struct {
+		NetworkMode string `json:"NetworkMode"`
+	} `json:"HostConfig"`
 }
 
 // urlLabelKeys are read in order: the first one present wins. `lastboard.url`
@@ -432,6 +448,7 @@ func ListContainers(hostURL string) ([]DockerContainer, error) {
 					PublicPort:  p.PublicPort,
 					PrivatePort: p.PrivatePort,
 					Type:        p.Type,
+					IP:          p.IP,
 				})
 			}
 		}
@@ -451,6 +468,9 @@ func ListContainers(hostURL string) ([]DockerContainer, error) {
 			Health:   healthFromStatus(c.Status),
 			ExitCode: exitCodeFromStatus(c.Status),
 			Project:  projectFromLabels(c.Labels),
+
+			NetworkMode: c.HostConfig.NetworkMode,
+			ProxyUrl:    proxyUrlFromLabels(c.Labels),
 		})
 	}
 	return containers, nil
