@@ -281,22 +281,24 @@ export function detectHtml(v: WindowView, t: T): string {
         ? `<span class="where__label">${e(t('detect.board'))}</span><div class="where__control">${selectHtml('dt-board', v.boards.map(b => ({ value: String(b.id), label: b.name })), String(v.boardId ?? ''), t('detect.board'))}</div>`
         : '';
 
+    // The tools are always there: with nothing to work on they are shaded, and only the host stays live.
+    const off = v.state !== 'ready';
+    const tools = `<div class="tools${off ? ' tools--off' : ''}">
+                <label class="search"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.5-3.5"></path></svg><input type="search" id="dt-search"${off ? ' disabled' : ''} placeholder="${e(t('detect.search'))}" aria-label="${e(t('detect.search'))}"></label>
+                ${hostPick}
+                <span class="tools__group">
+                    <button type="button" class="tool" id="dt-only-up"${off ? ' disabled' : ''}${v.rows.some(r => r.group === 'add' && r.health === 'up') && v.rows.some(r => r.group === 'add' && r.health === 'down') ? '' : ' hidden'}>${e(t('detect.only_up'))}</button>
+                    <button type="button" class="tool" id="dt-all"${off ? ' disabled' : ''}>${e(t('detect.all'))}</button>
+                    <button type="button" class="tool" id="dt-none"${off ? ' disabled' : ''}>${e(t('detect.none'))}</button>
+                </span>
+            </div>`;
+
     let body: string;
-    const hostOnly = hostPick ? `<div class="tools">${hostPick}</div>` : '';
     if (v.state === 'loading') body = `<div class="frame"><div class="list list--skeleton" aria-hidden="true"><div class="sk"></div><div class="sk"></div><div class="sk"></div><div class="sk"></div></div></div><p class="state" role="status">${e(t('detect.loading', { host: v.hostName }))}</p>`;
     else if (v.state === 'nohost') body = `<p class="state">${e(t(v.source === 'proxmox' ? 'detect.no_hypervisor' : 'detect.no_host'))}</p>`;
     else if (v.state === 'empty') body = `<p class="state">${e(v.error || t('detect.empty'))}</p>`;
     else {
-        body = `<div class="tools">
-                <label class="search"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.5-3.5"></path></svg><input type="search" id="dt-search" placeholder="${e(t('detect.search'))}" aria-label="${e(t('detect.search'))}"></label>
-                ${hostPick}
-                <span class="tools__group">
-                    <button type="button" class="tool" id="dt-only-up"${v.rows.some(r => r.group === 'add' && r.health === 'up') && v.rows.some(r => r.group === 'add' && r.health === 'down') ? '' : ' hidden'}>${e(t('detect.only_up'))}</button>
-                    <button type="button" class="tool" id="dt-all">${e(t('detect.all'))}</button>
-                    <button type="button" class="tool" id="dt-none">${e(t('detect.none'))}</button>
-                </span>
-            </div>
-            <div class="frame">${v.hostName ? `<span class="frame__title">${e(eyebrowText(v.source, v.hostName, t))}</span>` : ''}<div class="frame__head"><div id="dt-head">${headHtml(v.rows, t)}</div>${v.source === 'docker' ? `<div class="head__addr" id="dt-addr">${addressLineHtml(v, t)}</div>` : ''}</div><div class="list" id="dt-list">${listHtml(v, t)}</div></div>
+        body = `<div class="frame">${v.hostName ? `<span class="frame__title">${e(eyebrowText(v.source, v.hostName, t))}</span>` : ''}<div class="frame__head"><div id="dt-head">${headHtml(v.rows, t)}</div>${v.source === 'docker' ? `<div class="head__addr" id="dt-addr">${addressLineHtml(v, t)}</div>` : ''}</div><div class="list" id="dt-list">${listHtml(v, t)}</div></div>
             ${v.withoutAddress ? `<p class="hint">${e(t('detect.hidden', { count: String(v.withoutAddress) }))}</p>` : ''}`;
     }
 
@@ -304,7 +306,7 @@ export function detectHtml(v: WindowView, t: T): string {
             <div class="title-group"><h3 id="dt-title">${e(t('detect.title'))}</h3><p>${e(t('detect.subtitle'))}</p></div>
             <button type="button" class="close-btn" id="dt-close" aria-label="${e(t('general.close'))}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg></button>
         </div>
-        ${v.state === 'ready' ? '' : hostOnly}
+        ${tools}
         ${body}
         <div class="footer${v.state === 'ready' ? ' footer--ready' : ''}">
             ${v.state === 'ready' ? `<div class="preview" id="dt-preview" aria-hidden="true">${previewHtml(v.preview, t)}</div>` : ''}

@@ -66,6 +66,8 @@ app-select { --select-height: 36px; --select-padding: 0 12px; --select-font-size
     stroke: var(--text-dim); fill: none; stroke-width: 2; stroke-linecap: round; pointer-events: none;
 }
 .search input { padding-inline-start: 38px; }
+.tools--off .search, .tools--off .tools__group { opacity: 0.42; pointer-events: none; }
+.tool:disabled, .search input:disabled { cursor: default; }
 .tools__host { flex: 0 0 190px; min-inline-size: 0; }
 .tools__host app-select { inline-size: 100%; }
 .tools__group { display: inline-flex; flex-wrap: wrap; gap: 6px; }
@@ -387,6 +389,8 @@ app-select.alt { flex: none; inline-size: 38px; --select-padding: 0 10px; --sele
     .result { flex: 1 1 100%; min-block-size: 0; }
     /* The × in the corner is the way out here: the footer keeps the one thing that does something. */
     .footer #dt-cancel { display: none; }
+    /* With nothing to add the footer would hold only an empty bar. */
+    .footer:not(.footer--ready) { display: none; }
     .footer .btn--primary { flex: 1 1 0; padding: 0 12px; }
     .preview { gap: 12px; }
 }

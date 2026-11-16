@@ -77,6 +77,20 @@ describe('the window', () => {
         for (const state of ['loading', 'empty'] as const) expect(detectHtml(view({ hosts, state }), t)).toContain('id="dt-host"');
         expect(detectHtml(view({ state: 'empty' }), t)).not.toContain('id="dt-host"');
     });
+    test('the tools stay in every state, shaded and off when there is nothing to work on, and live when there is', () => {
+        for (const state of ['loading', 'empty', 'nohost'] as const) {
+            const html = detectHtml(view({ state }), t);
+            expect(html).toContain('class="tools tools--off"');
+            expect(html).toContain('id="dt-search" disabled');
+            expect(html).toContain('id="dt-all" disabled');
+            expect(html).toContain('id="dt-none" disabled');
+        }
+        const ready = detectHtml(view(), t);
+        expect(ready).toContain('class="tools"');
+        expect(ready).not.toContain('disabled');
+        // The host is not among the shaded ones: it is the way out of a host that has nothing.
+        expect(detectHtml(view({ state: 'empty', hosts: [{ id: 'a', name: 'A' }, { id: 'b', name: 'B' }] }), t)).not.toMatch(/id="dt-host"[^>]*disabled/);
+    });
     test('the button is off with nothing ticked, or while it works', () => {
         expect(detectHtml(view({ selected: 0 }), t)).toMatch(/id="dt-create" disabled/);
         expect(detectHtml(view({ busy: true }), t)).toMatch(/id="dt-create" disabled/);
