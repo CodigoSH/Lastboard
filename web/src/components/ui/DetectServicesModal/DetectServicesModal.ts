@@ -20,6 +20,7 @@ import { isOwnIcon, ownIcons } from '../../../services/ownIcons';
 import { resolveIconUrl } from '../../../services/iconUrl';
 import { retryOnRateLimit } from '../../../services/retryOnRateLimit';
 import { bookmarkContent } from '../../../services/bookmarkContent';
+import { isTypingTarget, opensSearch } from '../../../services/searchShortcut';
 import { probeAddresses } from '../../../services/probeAddresses';
 import { dismissKey, fetchDismissed, saveDismissals } from '../../../services/dismissedServices';
 import {
@@ -29,7 +30,7 @@ import {
 import { createDetected, undoCreated, type CreateLog, type NewBookmark } from '../../../services/createDetected';
 import type { BoardItem, SectionToPlace } from '../../../services/placeServices';
 import { safeImageSrc } from '../../../services/escape';
-import { destinationText, detectHtml, listHtml, healthText, type RowView, type Source, type WindowView } from './DetectServicesModal.template';
+import { detectHtml, existingSectionsHtml, listHtml, healthText, previewHtml, sectionPlaceholder, type PreviewSection, type RowView, type Source, type WindowView } from './DetectServicesModal.template';
 import css from './DetectServicesModal.css' with { type: 'text' };
 
 /** What a row holds while the window is open: what the person typed is kept apart from what was proposed. */
@@ -83,7 +84,7 @@ class DetectServicesModal extends HTMLElement {
     private blankView(): WindowView {
         return {
             source: 'docker', state: 'loading', hostName: '', hosts: [], hostId: '', address: '', groupBy: 'host', rows: [], withoutAddress: 0,
-            boards: [], boardId: null, canPickBoard: false, selected: 0, result: null, busy: false, error: '', open: { linked: false, ignored: false }, sections: [],
+            boards: [], boardId: null, canPickBoard: false, selected: 0, result: null, busy: false, error: '', open: { linked: false, ignored: false }, sectionName: '', autoSections: [], preview: [], boardSections: [],
         };
     }
 
@@ -105,6 +106,7 @@ class DetectServicesModal extends HTMLElement {
         this.view.boards = (state.dashboards || []).map(d => ({ id: d.id, name: d.name }));
         this.view.boardId = state.currentDashboardId;
         this.view.canPickBoard = accessAllows(user, 'board_multiple');
+        void this.loadBoardSections();
 
         try {
             if (this.source === 'docker') {
@@ -251,8 +253,13 @@ class DetectServicesModal extends HTMLElement {
             box.title = healthText(h, t);
         }
         // The line that says what "not answering" means is there while any row to add does not answer.
+        const adding = [...this.rows.values()].filter(r => this.groupOf(r) === 'add');
+        const down = adding.some(r => this.health.get(r.url) === 'down');
         const hint = this.$('dt-hint-down');
-        if (hint) hint.hidden = ![...this.rows.values()].some(r => this.groupOf(r) === 'add' && this.health.get(r.url) === 'down');
+        if (hint) hint.hidden = !down;
+        // "Only those that answer" is a choice only when some answer and some do not.
+        const only = this.$('dt-only-up');
+        if (only) only.hidden = !(down && adding.some(r => this.health.get(r.url) === 'up'));
     }
 
     // ── Drawing ──────────────────────────────────────────────────────────────
@@ -269,6 +276,7 @@ class DetectServicesModal extends HTMLElement {
             iconUrl: r.iconUrl,
             health: this.health.get(r.url) ?? '',
             group: this.groupOf(r),
+            console: !r.edited && r.proposal.candidates[r.choice]?.source === 'console' && r.url === candidateUrl(r.proposal.candidates[r.choice], this.view.address),
         }));
     }
 
@@ -286,27 +294,75 @@ class DetectServicesModal extends HTMLElement {
         return this.ticked().length;
     }
 
-    /** The titles of the sections what is ticked would land in, as the plan will make them. */
-    private destinationSections(): string[] {
+    /** The title of the section each ticked row would land in: the one the person typed, or the window's own choice. */
+    private sectionOf(r: RowState, size: Map<string, number>): string {
+        const named = this.view.sectionName.trim();
+        if (named) return named;
+        const by = this.source === 'docker' ? this.view.groupBy : 'host';
+        return sectionTitleFor(r.proposal, by, this.host?.name ?? '', size);
+    }
+
+    /** What is ticked, laid out as the sections it would make, with the tile each bookmark will wear. */
+    private previewSections(): { auto: string[]; preview: PreviewSection[] } {
         const ticked = this.ticked();
-        if (ticked.length === 0 || !this.host) return [];
+        if (ticked.length === 0 || !this.host) return { auto: [], preview: [] };
         const size = new Map<string, number>();
         for (const r of ticked) if (r.proposal.project) size.set(r.proposal.project, (size.get(r.proposal.project) ?? 0) + 1);
         const by = this.source === 'docker' ? this.view.groupBy : 'host';
-        return [...new Set(ticked.map(r => sectionTitleFor(r.proposal, by, this.host!.name, size)))];
+        const sections = new Map<string, PreviewSection>();
+        const auto = new Set<string>();
+        for (const r of ticked) {
+            auto.add(sectionTitleFor(r.proposal, by, this.host.name, size));
+            const title = this.sectionOf(r, size);
+            if (!sections.has(title)) sections.set(title, { title, tiles: [] });
+            sections.get(title)!.tiles.push({ name: r.name, iconUrl: r.pickedIcon ? resolveIconUrl(r.pickedIcon) : r.iconUrl });
+        }
+        return { auto: [...auto], preview: [...sections.values()] };
+    }
+
+    /** The titles of the sections the chosen board has already, so the person can see what a name would join. */
+    private async loadBoardSections(): Promise<void> {
+        const id = this.view.boardId;
+        if (id == null) { this.view.boardSections = []; return; }
+        const state = dashboardStore.getState();
+        let items: BoardItem[] = [];
+        try {
+            items = id === state.currentDashboardId
+                ? (state.items as unknown as BoardItem[])
+                : await apiService.get<BoardItem[]>(`/api/dashboard?dashboard_id=${id}`);
+        } catch { /* the board could not be read: no suggestions */ }
+        if (id !== this.view.boardId) return;
+        const titles: string[] = [];
+        for (const it of Array.isArray(items) ? items : []) {
+            if (it.type !== 'section' || it.parent_id != null) continue;
+            try {
+                const c = typeof it.content === 'string' ? JSON.parse(it.content) : it.content;
+                const title = typeof c?.title === 'string' ? c.title.trim() : '';
+                if (title && !titles.includes(title)) titles.push(title);
+            } catch { /* a section whose content cannot be read is not offered */ }
+        }
+        this.view.boardSections = titles;
+        this.refreshCount();
     }
 
     private paint(): void {
         if (!this.shadowRoot) return;
         this.view.rows = this.rowViews();
         this.view.selected = this.selectedCount();
-        this.view.sections = this.destinationSections();
+        const laid = this.previewSections();
+        this.view.autoSections = laid.auto;
+        this.view.preview = laid.preview;
         if (!this.dialog) {
             this.shadowRoot.innerHTML = `<style>${css}</style><dialog class="dialog-base" id="modal" aria-labelledby="dt-title"><div id="content"></div></dialog>`;
             this.dialog = this.shadowRoot.getElementById('modal') as HTMLDialogElement;
             this.dialog.addEventListener('click', e => this.onClick(e));
             this.dialog.addEventListener('input', e => this.onInput(e));
             this.dialog.addEventListener('change', e => this.onChange(e));
+            // The house's shortcut: Ctrl+K (Cmd+K) goes to the search, here the window's own.
+            this.dialog.addEventListener('keydown', e => {
+                const typing = isTypingTarget(e.composedPath()[0] as Element, 'dt-search');
+                if (opensSearch(e, { locked: false, typing })) { e.preventDefault(); this.$<HTMLInputElement>('dt-search')?.focus(); }
+            });
         }
         this.shadowRoot.getElementById('content')!.innerHTML = detectHtml(this.view, t);
         this.wireSelects();
@@ -335,9 +391,16 @@ class DetectServicesModal extends HTMLElement {
         const n = this.selectedCount();
         btn.textContent = t('detect.create', { count: String(n) });
         btn.disabled = this.view.busy || n === 0;
-        this.view.sections = this.destinationSections();
-        const dest = this.$('dt-dest');
-        if (dest) dest.textContent = destinationText(this.view, t);
+        // The footer says what is about to happen: the section it would make and the tiles in it.
+        const laid = this.previewSections();
+        this.view.autoSections = laid.auto;
+        this.view.preview = laid.preview;
+        const preview = this.$('dt-preview');
+        if (preview) preview.innerHTML = previewHtml(this.view.preview, t);
+        const field = this.$<HTMLInputElement>('dt-section');
+        if (field) field.placeholder = sectionPlaceholder(this.view, t);
+        const existing = this.$('dt-existing');
+        if (existing) existing.innerHTML = existingSectionsHtml(this.view.boardSections, this.view.sectionName || (laid.auto.length === 1 ? laid.auto[0] : ''), t);
     }
 
     /** Draws the list again, as groups, keeping where it was scrolled, what is searched and which rows are unfolded. */
@@ -424,6 +487,8 @@ class DetectServicesModal extends HTMLElement {
         if (this.dialog && isBackdropClick(this.dialog, e)) { this.dialog.close(); return; }
         const target = e.target as HTMLElement;
         const button = target.closest<HTMLElement>('button');
+        const pill = target.closest<HTMLElement>('[data-section]');
+        if (pill) { this.view.sectionName = pill.dataset.section ?? ''; const f = this.$<HTMLInputElement>('dt-section'); if (f) f.value = this.view.sectionName; this.refreshCount(); return; }
         const fold = target.closest<HTMLElement>('[data-fold]');
         if (fold) { this.foldGroup(fold.dataset.fold as 'linked' | 'ignored'); return; }
         const row = this.rowOf(target);
@@ -441,6 +506,7 @@ class DetectServicesModal extends HTMLElement {
         const id = button?.id;
         if (id === 'dt-close' || id === 'dt-cancel') this.dialog?.close();
         else if (id === 'dt-all' || id === 'dt-none') this.tickVisible(id === 'dt-all');
+        else if (id === 'dt-only-up') this.tickOnlyAnswering();
         else if (id === 'dt-create') void this.create();
         else if (id === 'dt-undo') void this.undo();
     }
@@ -448,6 +514,7 @@ class DetectServicesModal extends HTMLElement {
     private onInput(e: Event): void {
         const target = e.target as HTMLInputElement;
         if (target.id === 'dt-search') { this.filter(target.value); return; }
+        if (target.id === 'dt-section') { this.view.sectionName = target.value; this.refreshCount(); return; }
         if (target.id === 'dt-address') { this.view.address = target.value.trim(); this.rewriteAddresses(); return; }
         const row = this.rowOf(target);
         if (!row) return;
@@ -459,7 +526,7 @@ class DetectServicesModal extends HTMLElement {
             row.state.url = target.value;
             row.state.edited = true;
             const shown = row.el.querySelector<HTMLElement>('.row__addr');
-            if (shown) shown.textContent = target.value;
+            if (shown) { shown.textContent = target.value; shown.classList.remove('row__addr--console'); shown.removeAttribute('title'); }
             this.showHealth();
         }
     }
@@ -467,7 +534,7 @@ class DetectServicesModal extends HTMLElement {
     private onChange(e: Event): void {
         const target = e.target as HTMLInputElement | AppSelect;
         if (target.id === 'dt-group') { this.view.groupBy = target.value as GroupBy; this.refreshCount(); return; }
-        if (target.id === 'dt-board') { this.view.boardId = Number(target.value); this.refreshCount(); return; }
+        if (target.id === 'dt-board') { this.view.boardId = Number(target.value); void this.loadBoardSections(); this.refreshCount(); return; }
         if (target.id === 'dt-host') { void this.loadHost(target.value, null); return; }
         const row = this.rowOf(target);
         if (!row) return;
@@ -482,7 +549,7 @@ class DetectServicesModal extends HTMLElement {
             const addr = row.el.querySelector<HTMLInputElement>('.addr');
             if (addr) addr.value = target.value;
             const shown = row.el.querySelector<HTMLElement>('.row__addr');
-            if (shown) shown.textContent = target.value;
+            if (shown) { shown.textContent = target.value; shown.classList.remove('row__addr--console'); shown.removeAttribute('title'); }
             this.showHealth();
         }
     }
@@ -497,6 +564,20 @@ class DetectServicesModal extends HTMLElement {
             if (rows && name !== 'add') rows.hidden = !(this.view.open[name] || !!q);
             if (name !== 'add') g.hidden = !!q && ![...g.querySelectorAll<HTMLElement>('.row')].some(r => !r.hidden);
         }
+    }
+
+    /** Ticks what answers and unticks the rest, among the rows to add that the search shows. */
+    private tickOnlyAnswering(): void {
+        this.shadowRoot?.querySelectorAll<HTMLElement>('.row--add').forEach(r => {
+            if (r.hidden) return;
+            const state = this.rows.get(r.dataset.key ?? '');
+            const box = r.querySelector<HTMLInputElement>('.pick');
+            if (!state || !box) return;
+            const on = this.health.get(state.url) === 'up';
+            state.checked = on;
+            box.checked = on;
+        });
+        this.refreshCount();
     }
 
     private tickVisible(on: boolean): void {
@@ -560,7 +641,7 @@ class DetectServicesModal extends HTMLElement {
         const state = dashboardStore.getState();
         const gridCols = state.gridColumns || 12;
         // A hypervisor's machines go in the hypervisor's section; Compose's projects are Docker's.
-        const plan = planServices(services, this.source === 'docker' ? this.view.groupBy : 'host', host.name, gridCols);
+        const plan = planServices(services, this.source === 'docker' ? this.view.groupBy : 'host', host.name, gridCols, this.view.sectionName);
 
         const contents: string[] = [];
         for (let i = 0; i < services.length; i++) {

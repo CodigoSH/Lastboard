@@ -25,7 +25,12 @@ export interface RowView {
     health: 'up' | 'down' | '';
     /** Where it is listed: to add, already on the board, or ignored. */
     group: RowGroup;
+    /** The address in use is its console in the hypervisor's own interface, which is long and not one to read. */
+    console: boolean;
 }
+
+/** One section of what is about to be added, as the board will show it: its title and the tiles that go in it. */
+export interface PreviewSection { title: string; tiles: { name: string; iconUrl: string }[] }
 
 /** The three places a service can be: what there is to do, what is already done, and what the person set aside. */
 export type RowGroup = 'add' | 'linked' | 'ignored';
@@ -69,8 +74,14 @@ export interface WindowView {
     error: string;
     /** Which of the two folded groups are unfolded. */
     open: { linked: boolean; ignored: boolean };
-    /** The sections the ticked ones would land in, by title; none when nothing is ticked. */
-    sections: string[];
+    /** The title the person gave the section, or '' to let the window choose. */
+    sectionName: string;
+    /** The titles the window would choose for what is ticked. */
+    autoSections: string[];
+    /** What is ticked, laid out as the sections it would make. */
+    preview: PreviewSection[];
+    /** Titles of the sections the chosen board already has. */
+    boardSections: string[];
 }
 
 const noteText = (n: ProposalNote, t: T): string =>
@@ -113,11 +124,11 @@ const act = (cls: string, label: string): string => `<button type="button" class
  */
 export function rowHtml(r: RowView, t: T): string {
     const head = `<div class="row row--${r.group}" data-key="${e(r.key)}" data-group="${r.group}" data-search="${e(`${r.name} ${r.key}`.toLowerCase())}">`;
-    const note = noteText(r.note, t) ? `<span class="chip">${e(noteText(r.note, t))}</span>` : '';
+    const note = noteText(r.note, t) ? `<span class="chip" title="${e(noteText(r.note, t))}">${e(noteText(r.note, t))}</span>` : '';
     if (r.group === 'linked') {
         return `${head}
         ${faceButton(r, t)}
-        <div class="row__body"><div class="row__title"><span class="row__name">${e(r.name)}</span></div><div class="row__sub"><span class="chip chip--linked">${e(t('detect.already', { name: r.linkedTo }))}</span></div></div>
+        <div class="row__body"><div class="row__title"><span class="row__name">${e(r.name)}</span></div><div class="row__sub"><span class="chip chip--linked" title="${e(t('detect.already', { name: r.linkedTo }))}">${e(t('detect.already', { name: r.linkedTo }))}</span></div></div>
         <div class="row__actions">${act('anyway', t('detect.add_anyway'))}</div>
     </div>`;
     }
@@ -132,7 +143,10 @@ export function rowHtml(r: RowView, t: T): string {
         ? selectHtml('', r.candidates.map(c => ({ value: c, label: c })), r.url, t('detect.url'), 'alt', 460)
         : '';
     // What is known of it is said in words: whether its address answers, and what else there is to say.
-    const sub = `<span class="row__addr">${e(r.url)}</span><span class="row__health" title="${e(healthText(r.health, t))}" data-h="${e(r.health)}">${e(healthText(r.health, t))}</span>${note}`;
+    const addr = r.console
+        ? `<span class="row__addr row__addr--console" title="${e(r.url)}">${e(t('detect.console_label'))}</span>`
+        : `<span class="row__addr">${e(r.url)}</span>`;
+    const sub = `${addr}<span class="row__health" title="${e(healthText(r.health, t))}" data-h="${e(r.health)}">${e(healthText(r.health, t))}</span>${note}`;
     return `${head}
         <input type="checkbox" class="pick" aria-label="${e(r.name)}"${r.checked ? ' checked' : ''}>
         ${faceButton(r, t)}
@@ -158,7 +172,7 @@ export function groupHtml(group: RowGroup, rows: RowView[], v: Pick<WindowView, 
     if (group === 'add') {
         const down = rows.some(r => r.health === 'down');
         return `<section class="group group--add" data-group="add">
-            <div class="group__head"><span class="group__title">${title}</span><span class="group__tools"><button type="button" class="tool" id="dt-all">${e(t('detect.all'))}</button><button type="button" class="tool" id="dt-none">${e(t('detect.none'))}</button></span></div>
+            <div class="group__head"><span class="group__title">${title}</span><span class="group__tools"><button type="button" class="tool" id="dt-only-up"${rows.some(r => r.health === 'up') && rows.some(r => r.health === 'down') ? '' : ' hidden'}>${e(t('detect.only_up'))}</button><button type="button" class="tool" id="dt-all">${e(t('detect.all'))}</button><button type="button" class="tool" id="dt-none">${e(t('detect.none'))}</button></span></div>
             <p class="group__hint" id="dt-hint-down"${down ? '' : ' hidden'}>${e(t('detect.hint_down'))}</p>
             <div class="group__rows">${rows.length ? rows.map(r => rowHtml(r, t)).join('') : `<p class="group__empty">${e(t('detect.nothing_new'))}</p>`}</div>
         </section>`;
@@ -175,13 +189,23 @@ export function listHtml(v: Pick<WindowView, 'rows' | 'open'>, t: T): string {
     return (['add', 'linked', 'ignored'] as const).map(g => groupHtml(g, v.rows.filter(r => r.group === g), v, t)).join('');
 }
 
-/** Where what is ticked will land, said in words, or nothing while nothing is ticked. */
-export function destinationText(v: Pick<WindowView, 'boards' | 'boardId' | 'sections'>, t: T): string {
-    if (v.sections.length === 0) return '';
-    const board = v.boards.find(b => b.id === v.boardId)?.name ?? '';
-    if (v.sections.length === 1) return t('detect.destination', { board, section: v.sections[0] });
-    const shown = v.sections.slice(0, 3).join(', ') + (v.sections.length > 3 ? '…' : '');
-    return t('detect.destination_many', { board, sections: shown });
+const MAX_TILES = 14;
+
+/** What is about to be added, as the board will show it: a box for each section with its title on the border and a tile for each bookmark. */
+export function previewHtml(sections: PreviewSection[], t: T): string {
+    return sections.map(sec => {
+        const shown = sec.tiles.slice(0, MAX_TILES);
+        const more = sec.tiles.length - shown.length;
+        const tiles = shown.map(x => `<span class="tile" title="${e(x.name)}">${x.iconUrl ? `<img src="${e(safeImageSrc(x.iconUrl))}" alt="">` : `<span class="tile__letter">${e(initialOf(x.name))}</span>`}</span>`).join('');
+        return `<div class="preview__box"><span class="preview__title" title="${e(sec.title)}">${e(sec.title)}</span><div class="preview__tiles">${tiles}${more > 0 ? `<span class="tile tile--more">+${more}</span>` : ''}</div></div>`;
+    }).join('') || `<p class="preview__none">${e(t('detect.preview_none'))}</p>`;
+}
+
+/** The sections the chosen board has already, as pills that fill the section field with their title. */
+export function existingSectionsHtml(titles: string[], current: string, t: T): string {
+    if (titles.length === 0) return '';
+    const pills = titles.slice(0, 8).map(x => `<button type="button" class="pill-btn" data-section="${e(x)}" aria-pressed="${x.trim().toLowerCase() === current.trim().toLowerCase()}">${e(x)}</button>`).join('');
+    return `<div class="existing"><span class="existing__label">${e(t('detect.section_existing'))}</span>${pills}</div>`;
 }
 
 export function resultHtml(r: ResultView, t: T): string {
@@ -200,6 +224,11 @@ export function resultHtml(r: ResultView, t: T): string {
 export function eyebrowText(source: Source, host: string, t: T): string {
     const product = t(source === 'proxmox' ? 'widget.proxmox.name' : 'widget.docker.name');
     return host.toLowerCase().includes(product.toLowerCase()) ? host : `${product} · ${host}`;
+}
+
+/** What the section field shows while nothing has been typed: the title the window would choose, or that there are several. */
+export function sectionPlaceholder(v: Pick<WindowView, 'autoSections'>, t: T): string {
+    return v.autoSections.length === 1 ? v.autoSections[0] : v.autoSections.length > 1 ? t('detect.section_several') : '';
 }
 
 export function detectHtml(v: WindowView, t: T): string {
@@ -238,10 +267,18 @@ export function detectHtml(v: WindowView, t: T): string {
         </div>` : hostPick ? `<div class="controls">${hostPick}</div>` : ''}
         ${body}
         <div class="footer">
-            ${v.state === 'ready' ? `<p class="dest" id="dt-dest">${e(destinationText(v, t))}</p>` : ''}
-            ${boardPick}
-            ${v.result ? resultHtml(v.result, t) : '<div class="result" id="dt-message" role="alert"></div>'}
-            <button type="button" class="btn" id="dt-cancel">${e(t('general.close'))}</button>
-            ${v.state === 'ready' ? `<button type="button" class="btn btn--primary" id="dt-create"${v.busy || v.selected === 0 ? ' disabled' : ''}>${e(t('detect.create', { count: String(v.selected) }))}</button>` : ''}
+            ${v.state === 'ready' ? `<div class="footer__where">
+                <div class="where__fields">
+                    ${boardPick}
+                    <label class="field field--section"><span>${e(t('detect.section'))}</span><input type="text" id="dt-section" value="${e(v.sectionName)}" placeholder="${e(sectionPlaceholder(v, t))}" maxlength="60" autocomplete="off" spellcheck="false"></label>
+                </div>
+                <div id="dt-existing">${existingSectionsHtml(v.boardSections, v.sectionName || (v.autoSections.length === 1 ? v.autoSections[0] : ''), t)}</div>
+            </div>
+            <div class="preview" id="dt-preview" aria-hidden="true">${previewHtml(v.preview, t)}</div>` : ''}
+            <div class="footer__actions">
+                ${v.result ? resultHtml(v.result, t) : '<div class="result" id="dt-message" role="alert"></div>'}
+                <button type="button" class="btn" id="dt-cancel">${e(t('general.close'))}</button>
+                ${v.state === 'ready' ? `<button type="button" class="btn btn--primary" id="dt-create"${v.busy || v.selected === 0 ? ' disabled' : ''}>${e(t('detect.create', { count: String(v.selected) }))}</button>` : ''}
+            </div>
         </div>`;
 }

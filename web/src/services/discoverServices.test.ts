@@ -142,6 +142,13 @@ describe('where it goes', () => {
         expect(sectionTitleFor(p('b', 'solo'), 'project', 'Home', size)).toBe('Home');
         expect(sectionTitleFor(p('c'), 'project', 'Home', size)).toBe('Home');
     });
+    test('a section the person named takes everything, over projects and over what a container says', () => {
+        const svc = (n: string, project: string, group = '') => ({ proposal: { ...p(n, project), group }, name: n, url: `http://h/${n}` });
+        const plan = planServices([svc('a', 'media'), svc('b', 'media'), svc('c', 'other', 'Labelled')], 'project', 'Home', 12, ' My lab ');
+        expect(plan.sections.map(sec => sec.title)).toEqual(['My lab']);
+        expect(plan.sections[0].items.length).toBe(3);
+        expect(planServices([svc('a', '')], 'host', 'Home', 12, '   ').sections.map(sec => sec.title)).toEqual(['Home']);
+    });
     test('the sections and their bookmarks are laid out the way an import lays them out', () => {
         const svc = (n: string, project: string) => ({ proposal: p(n, project), name: n, url: `http://h/${n}` });
         const plan = planServices([svc('a', 'media'), svc('b', 'media'), svc('c', 'media'), svc('d', 'media'), svc('e', 'media'), svc('x', '')], 'project', 'Home', 12);

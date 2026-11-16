@@ -185,9 +185,11 @@ button.face:hover .face__edit, button.face:focus-visible .face__edit { opacity: 
 
 /* Who it is: the name, and under it what is known of it, in words. */
 .row__body { display: flex; flex-direction: column; gap: 3px; min-inline-size: 0; }
-.row__title, .row__sub { display: flex; align-items: center; gap: 8px; min-inline-size: 0; }
-.row__name { font-weight: 600; font-size: 14.5px; color: var(--text-main); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.row__addr { font: 12.5px/1.3 var(--font-mono); color: var(--text-dim); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-inline-size: 0; }
+.row__title, .row__sub { display: flex; align-items: center; flex-wrap: wrap; gap: 4px 8px; min-inline-size: 0; }
+.row__name { font-weight: 600; font-size: 14.5px; color: var(--text-main); overflow-wrap: anywhere; }
+.row__addr { font: 12.5px/1.3 var(--font-mono); color: var(--text-dim); overflow-wrap: anywhere; min-inline-size: 0; }
+/* A console is not an address to read: it says what it does, in plain type. */
+.row__addr--console { font: 12.5px/1.3 var(--font-sans, inherit); }
 
 /* The pills: the board's own, in mono small capitals. */
 .chip, .row__health {
@@ -195,8 +197,9 @@ button.face:hover .face__edit, button.face:focus-visible .face__edit { opacity: 
     font: 700 10px/1 var(--font-mono); letter-spacing: 0.07em; text-transform: uppercase; white-space: nowrap; flex: none;
     color: var(--text-dim); background: transparent; border: 1px solid var(--card-border);
 }
-.chip { flex: 0 1 auto; min-inline-size: 0; max-inline-size: 100%; overflow: hidden; text-overflow: ellipsis; display: block; line-height: 18px; }
+.chip { flex: 0 1 auto; min-inline-size: 0; max-inline-size: 100%; display: block; line-height: 18px; overflow-wrap: anywhere; white-space: normal; block-size: auto; min-block-size: 20px; padding-block: 1px; }
 .row__health:empty { display: none; }
+.tool[hidden] { display: none; }
 .row__health::before { content: ''; inline-size: 6px; block-size: 6px; border-radius: 50%; background: currentColor; flex: none; }
 .row__health[data-h="up"] { color: var(--success-color); border-color: rgba(var(--success-rgb), 0.4); background: rgba(var(--success-rgb), 0.1); }
 .row__health[data-h="down"] { color: var(--warning-color); border-color: rgba(var(--warning-rgb), 0.4); background: rgba(var(--warning-rgb), 0.1); }
@@ -237,16 +240,56 @@ app-select.alt { flex: none; inline-size: 38px; --select-padding: 0 10px; --sele
 @keyframes shimmer { from { background-position: 120% 0; } to { background-position: -120% 0; } }
 @media (prefers-reduced-motion: reduce) { .sk { animation: none; } }
 
-/* ── Footer ───────────────────────────────────────────────────────────────── */
+/* ── Footer: where it goes, shown as the board will show it, and the action ── */
 .footer {
-    display: flex; align-items: flex-end; flex-wrap: wrap; gap: 12px; margin-block-start: 16px; padding: 14px 28px 18px;
+    display: flex; align-items: flex-end; flex-wrap: wrap; gap: 12px 20px; margin-block-start: 14px; padding: 12px 28px 16px;
     border-block-start: 1px solid var(--border); background: var(--paper-bg);
 }
-.footer .field { flex: 0 1 220px; }
-/* Where it goes, in words, above the controls that send it there. */
-.dest { flex: 1 1 100%; margin: 0; font-size: 13px; color: var(--text-dim); min-block-size: 18px; }
-.dest:empty::before { content: '\00a0'; }
-.result { flex: 1 1 200px; display: flex; flex-wrap: wrap; align-items: center; gap: 10px; font-size: 13px; min-block-size: 38px; color: var(--text-dim); }
+.footer__where { flex: 1 1 100%; min-inline-size: 0; display: flex; flex-direction: column; gap: 8px; }
+.where__fields { display: grid; grid-template-columns: minmax(0, 0.7fr) minmax(0, 1.3fr); gap: 12px; }
+.where__fields:has(> .field--section:only-child) { grid-template-columns: minmax(0, 1fr); }
+.footer .field { flex: none; }
+.field--section input { font-weight: 600; }
+.existing {
+    display: flex; flex-wrap: nowrap; align-items: center; gap: 6px; overflow-x: auto; scrollbar-width: none;
+    -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent); mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent);
+}
+.existing::-webkit-scrollbar { display: none; }
+.existing:empty { display: none; }
+.existing__label { font: 600 10px/1 var(--font-mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-dim); margin-inline-end: 2px; flex: none; }
+.pill-btn {
+    padding: 3px 10px; font: 700 10px/1.4 var(--font-mono); letter-spacing: 0.07em; text-transform: uppercase; cursor: pointer; max-inline-size: 180px;
+    flex: none; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text-dim); background: transparent; border: 1px solid var(--card-border); border-radius: 999px; transition: all 0.2s;
+}
+.pill-btn:hover, .pill-btn[aria-pressed="true"] { color: var(--accent); border-color: rgba(var(--accent-rgb), 0.45); background: rgba(var(--accent-rgb), 0.08); }
+
+/* The preview: the board's own section — a box with its name on the border — and a tile for each bookmark that will be in it. */
+.preview { flex: 1 1 260px; min-inline-size: 0; display: flex; flex-wrap: wrap; gap: 12px; padding-block-start: 8px; align-self: flex-end; }
+.preview__box {
+    position: relative; display: block; min-inline-size: 0; max-inline-size: 100%; padding: 12px 8px 6px;
+    background: var(--surface); border: 1px solid var(--card-border); border-radius: var(--radius);
+}
+.preview__title {
+    position: absolute; inset-block-start: 0; inset-inline-start: 10px; transform: translateY(calc(-50% - 1px)); max-inline-size: calc(100% - 20px); box-sizing: border-box;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: 1px 8px; font: 700 0.62rem/1.4 var(--font-mono); letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--text-dim); background: var(--surface-solid); border: 1px solid var(--card-border); border-radius: 12px;
+}
+.preview__tiles { display: flex; flex-wrap: wrap; gap: 5px; }
+.tile {
+    inline-size: 26px; block-size: 26px; display: grid; place-items: center; overflow: hidden; flex: none;
+    border-radius: 7px; background: var(--surface-solid); border: 1px solid var(--border); box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.2);
+    animation: tileIn 0.25s var(--ease-bounce) backwards;
+}
+.tile img { inline-size: 100%; block-size: 100%; object-fit: contain; padding: 4px; box-sizing: border-box; }
+.tile__letter { font: 700 11px/1 var(--font-mono); color: var(--text-dim); text-transform: uppercase; }
+.tile--more { font: 700 10px/1 var(--font-mono); color: var(--text-dim); inline-size: auto; padding-inline: 8px; animation: none; }
+@keyframes tileIn { from { opacity: 0; transform: scale(0.6); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .tile { animation: none; } }
+.preview__none { margin: 0; align-self: center; font-size: 12.5px; color: var(--text-dim); }
+
+.footer__actions { flex: 0 1 auto; display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 12px; margin-inline-start: auto; }
+.result { flex: 0 1 auto; display: flex; flex-wrap: wrap; align-items: center; gap: 10px; font-size: 13px; min-block-size: 38px; color: var(--text-dim); }
+.result:empty { display: none; }
 .result .bad { color: var(--danger-color); }
 .link {
     block-size: 30px; padding: 0 10px; font: 600 11px/1 var(--font-mono); letter-spacing: 0.06em; text-transform: uppercase; white-space: nowrap; cursor: pointer;
@@ -287,9 +330,11 @@ app-select.alt { flex: none; inline-size: 38px; --select-padding: 0 10px; --sele
     .row__actions { grid-column: 1 / -1; opacity: 1; flex-wrap: wrap; }
     .row__edit { grid-column: 1 / -1; }
     .footer { padding: 12px 18px 16px; gap: 10px; align-items: stretch; }
-    .footer .field { flex: 1 1 100%; }
+    .where__fields { grid-template-columns: 1fr; }
+    .footer__actions { margin-inline-start: 0; flex: 1 1 100%; }
     .result { flex: 1 1 100%; min-block-size: 0; }
     /* The × in the corner is the way out here: the footer keeps the one thing that does something. */
     .footer #dt-cancel { display: none; }
     .footer .btn--primary { flex: 1 1 0; padding: 0 12px; }
+    .preview { gap: 12px; }
 }

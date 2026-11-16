@@ -1,15 +1,15 @@
 import { describe, expect, test } from 'bun:test';
-import { destinationText, detectHtml, eyebrowText, groupHtml, initialOf, listHtml, resultHtml, rowHtml, selectHtml, type RowView, type T, type WindowView } from './DetectServicesModal.template';
+import { detectHtml, existingSectionsHtml, eyebrowText, groupHtml, initialOf, listHtml, previewHtml, resultHtml, rowHtml, sectionPlaceholder, selectHtml, type RowView, type T, type WindowView } from './DetectServicesModal.template';
 
 const t: T = (key, params) => `[${key}${params ? ':' + JSON.stringify(params) : ''}]`;
 const evil = '<img src=x onerror=alert(1)>';
 
 const row = (o: Partial<RowView> = {}): RowView => ({
-    key: 'h1/plex', checked: true, name: 'Plex', url: 'http://nas:32400', candidates: ['http://nas:32400'], note: '', linkedTo: '', iconUrl: '', health: '', group: 'add', ...o,
+    key: 'h1/plex', checked: true, name: 'Plex', url: 'http://nas:32400', candidates: ['http://nas:32400'], note: '', linkedTo: '', iconUrl: '', health: '', group: 'add', console: false, ...o,
 });
 const view = (o: Partial<WindowView> = {}): WindowView => ({
     source: 'docker', state: 'ready', hostName: 'Home', hosts: [{ id: 'h1', name: 'Home' }], hostId: 'h1', address: 'nas', groupBy: 'host', rows: [row()],
-    withoutAddress: 0, boards: [{ id: 1, name: 'Main' }], boardId: 1, canPickBoard: false, selected: 1, result: null, busy: false, error: '', open: { linked: false, ignored: false }, sections: [], ...o,
+    withoutAddress: 0, boards: [{ id: 1, name: 'Main' }], boardId: 1, canPickBoard: false, selected: 1, result: null, busy: false, error: '', open: { linked: false, ignored: false }, sectionName: '', autoSections: [], preview: [], boardSections: [], ...o,
 });
 
 describe('what a container says is escaped', () => {
@@ -194,16 +194,49 @@ describe('what "not answering" means, said once and where it matters', () => {
 });
 
 describe('where it goes', () => {
-    const base = { boards: [{ id: 1, name: 'Main' }, { id: 2, name: 'Lab' }], boardId: 2 };
-    test('one section is named, several are listed, and nothing ticked says nothing', () => {
-        expect(destinationText({ ...base, sections: [] }, t)).toBe('');
-        expect(destinationText({ ...base, sections: ['Podman'] }, t)).toBe('[detect.destination:{"board":"Lab","section":"Podman"}]');
-        expect(destinationText({ ...base, sections: ['A', 'B'] }, t)).toBe('[detect.destination_many:{"board":"Lab","sections":"A, B"}]');
-        expect(destinationText({ ...base, sections: ['A', 'B', 'C', 'D'] }, t)).toContain('"sections":"A, B, C…"');
+    test('the section field shows the title the window would choose, or that there are several', () => {
+        expect(sectionPlaceholder({ autoSections: [] }, t)).toBe('');
+        expect(sectionPlaceholder({ autoSections: ['Podman'] }, t)).toBe('Podman');
+        expect(sectionPlaceholder({ autoSections: ['A', 'B'] }, t)).toBe('[detect.section_several]');
     });
-    test('the footer carries it, only while there is a list to send', () => {
-        expect(detectHtml(view({ sections: ['Home'] }), t)).toContain('id="dt-dest">[detect.destination');
-        expect(detectHtml(view({ state: 'empty' }), t)).not.toContain('id="dt-dest"');
+    test('the footer has the field, filled with what the person typed, and the preview', () => {
+        const html = detectHtml(view({ sectionName: 'My lab', autoSections: ['Home'], preview: [{ title: 'My lab', tiles: [{ name: 'Plex', iconUrl: '' }] }] }), t);
+        expect(html).toContain('id="dt-section" value="My lab" placeholder="Home"');
+        expect(html).toContain('id="dt-preview"');
+        expect(html).toContain('class="preview__title" title="My lab">My lab<');
+        expect(detectHtml(view({ state: 'empty' }), t)).not.toContain('id="dt-section"');
+    });
+    test('the preview shows a box for each section with its tiles, a letter where there is no icon, and how many more', () => {
+        const tiles = Array.from({ length: 17 }, (_, i) => ({ name: `s${i}`, iconUrl: i === 0 ? '/api/icons/x' : '' }));
+        const html = previewHtml([{ title: 'A', tiles }, { title: 'B', tiles: [{ name: 'p', iconUrl: '' }] }], t);
+        expect(html.match(/preview__box/g)?.length).toBe(2);
+        expect(html).toContain('<img src="/api/icons/x"');
+        expect(html).toContain('tile__letter">S<');
+        expect(html).toContain('tile--more">+3<');
+        expect(previewHtml([], t)).toContain('[detect.preview_none]');
+    });
+    test('what is typed in a name or a title is escaped in the preview', () => {
+        const html = previewHtml([{ title: evil, tiles: [{ name: evil, iconUrl: '' }] }], t);
+        expect(html).not.toContain('<img src=x');
+    });
+    test('the sections the board has are offered as pills, the one in use marked, and nothing is said when there are none', () => {
+        const html = existingSectionsHtml(['Media', 'Lab'], 'lab', t);
+        expect(html).toContain('data-section="Media" aria-pressed="false"');
+        expect(html).toContain('data-section="Lab" aria-pressed="true"');
+        expect(existingSectionsHtml([], '', t)).toBe('');
+        expect(existingSectionsHtml([evil], '', t)).not.toContain('<img src=x');
+    });
+});
+
+describe('a console is not read as an address', () => {
+    test('a row whose address is its console says what it does, and keeps the address as its tooltip', () => {
+        const html = rowHtml(row({ console: true, url: 'https://pve:8006/#v1:0:=lxc%2F1' }), t);
+        expect(html).toContain('row__addr--console" title="https://pve:8006/#v1:0:=lxc%2F1">[detect.console_label]<');
+        expect(rowHtml(row(), t)).not.toContain('row__addr--console');
+    });
+    test('the only-answering button is there to be shown, and hidden until some answer and some do not', () => {
+        expect(groupHtml('add', [row({ health: 'up' }), row({ key: 'b', health: 'down' })], { open: { linked: false, ignored: false } }, t)).toMatch(/id="dt-only-up">/);
+        expect(groupHtml('add', [row({ health: 'up' })], { open: { linked: false, ignored: false } }, t)).toMatch(/id="dt-only-up" hidden>/);
     });
 });
 
@@ -229,7 +262,7 @@ describe('how the window reads', () => {
         expect(eyebrowText('proxmox', 'my proxmox lab', t)).toBe('my proxmox lab');
     });
     test('notes are chips, and a bookmark already serving it says so in the accent one', () => {
-        expect(rowHtml(row({ note: 'stopped' }), (k) => k)).toContain('<span class="chip">detect.note_stopped</span>');
+        expect(rowHtml(row({ note: 'stopped' }), (k) => k)).toContain('<span class="chip" title="detect.note_stopped">detect.note_stopped</span>');
         expect(rowHtml(row({ group: 'linked', linkedTo: 'My Plex' }), (k) => k)).toContain('class="chip chip--linked"');
     });
     test('the loading state draws placeholders, and still says what it waits for', () => {
