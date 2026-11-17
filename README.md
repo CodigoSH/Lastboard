@@ -65,7 +65,7 @@ It is **one static Go binary** and **one SQLite file**. No database server, no R
 
 - **A native drag-and-drop grid**, written from scratch in plain JavaScript — no grid library, no framework. Drag tiles anywhere, resize them a cell at a time from the corner. A live outline shows where a tile will land and turns **red** when the target is occupied: nothing is ever pushed aside behind your back, and a drop onto a taken cell is refused rather than guessed at.
 - **Bookmarks** with an icon, a label you can place above, below, inside or hide entirely, a border colour and width of their own, and an optional **status dot** in any corner that says whether the service is answering.
-- **Sections** — containers that group bookmarks under a title. Drop tiles inside and they travel together; move the section to another dashboard and its contents follow.
+- **Sections** — containers that group bookmarks under a title. Drop tiles inside and they travel together; move the section to another dashboard and its contents follow. Delete a section and what is inside goes with it — or turn on **Only the section** in the confirmation to keep the contents on the board, where they are.
 - **Multiple independent dashboards per user**, each with its own layout and items, switched from the top bar, reorderable by drag, with one marked as the one that opens first.
 - **Move items between dashboards** — one at a time from a tile's menu, or many at once with the selection mode. Arrivals are auto-placed and briefly highlighted so you can see where they landed.
 - **Live search** filters the board by label as you type.
@@ -107,6 +107,7 @@ Give a bookmark a URL and a status position and Lastboard watches it. No second 
 - **Live state and resource use** on the board, and **start / stop / restart** from a container's panel on the Docker page for any account allowed to control Docker; a click on a row of the widget opens that container's panel over the board. A member reaches Docker only through its own agents; the server's socket and TCP or TLS daemons are the administrator's.
 - **A Docker page** with an overview of every host (what is running, what needs attention, CPU and memory), an inventory of all the containers, and a side panel for each one: how it is set up — ports, mounts, networks, the *names* of its environment variables, never their values — and its log, which can follow live. Details and logs on an agent host need Lastboard Agent v1.3.0 or later.
 - **A container's panel opens its service**, from its bookmark or, failing that, from a `lastboard.url` or `homepage.href` label, then its first published port — so containers already labelled for another dashboard work here unchanged.
+- **Add a host's containers to your board in one go.** A window proposes a bookmark for each container, with a name, an address and an icon you can change on its row: the address the container names itself (`lastboard.url`, `homepage.href`, Traefik or Caddy labels), or its published ports. It opens by itself when you add a host, sorts what it finds into *To add*, *Already on your board* and *Ignored*, says which addresses answer, lets you name the section and see it first, and asks before it makes anything.
 - **A host that stops answering** doesn't make its containers vanish: they stay, greyed out, with the host line saying it isn't responding.
 
 ### Proxmox VE
@@ -117,7 +118,8 @@ Give a bookmark a URL and a status position and Lastboard watches it. No second 
 - **That is the point of it.** A stopped container doesn't just say *stopped* — it says **which service it takes with it**: every stopped tile turns a soft red, the ones serving a bookmark carry its mark in the corner, and the summary names the service by name.
 - **Start and shut down** a machine with confirmation, only on the hypervisors you connected, and only when the token really carries `VM.PowerMgmt` — which Lastboard asks the host rather than assuming. **Nodes can never be powered off from Lastboard**, deliberately.
 - **What the hypervisor has been doing**: each node and each machine opens its last fifty tasks — backups, starts, migrations, snapshots — with their state and log, which keeps following while a task runs. It needs only `Sys.Audit`, which the recommended role already has. A node's **system log** is optional and needs `Sys.Syslog` as well; without it the page says so and nothing else is affected.
-- **Nothing is written to your database**: no machine names, no figures, no history. Only the connection (the token secret is never sent back to a browser) and the icons you choose for machines.
+- **Add a hypervisor's machines to your board the same way.** Each running machine is proposed at the first private address its network reports — a container's own, or what a virtual machine's guest agent says; a `lastboard.url:` line in its notes comes first — and one without an address opens its console in Proxmox.
+- **Nothing is written to your database**: no machine names, no figures, no history. Only the connection (the token secret is never sent back to a browser), the icons you choose for machines and, if you ignore machines in the window that adds them to the board, which ones (by node and number). The bookmarks you make from them are yours.
 
 ### Yours to keep
 
@@ -142,6 +144,7 @@ Give a bookmark a URL and a status position and Lastboard watches it. No second 
 - **Beta channel**, opt-in per user.
 - **One-line install** on Linux with a systemd unit, `--uninstall`, `--purge` and `--reinstall`, that tells you which version you have and stops when you already have the latest, and a timestamped copy of your database taken before every upgrade.
 - **Runs unprivileged** on request (`PUID`/`PGID`), fixing data-directory ownership itself before dropping privileges.
+- **A way back from a forgotten password**, run on the server itself: `lastboard password reset <username>` (and `lastboard 2fa reset <username>` for a lost phone).
 - **Structured logging** (`LOG_FORMAT=json`) and a `/api/health` endpoint.
 
 ### Security

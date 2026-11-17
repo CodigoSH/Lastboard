@@ -1,6 +1,6 @@
 # Preferences
 
-All personalization and system options live in the **Settings** panel, opened from the icon in the top navigation bar.
+All personalization and system options live in the **Settings** panel, opened from the icon in the top navigation bar. While it is open the address reads `/?view=settings`, so reloading keeps it open and that address brings it up from a link; the browser's Back button closes it and leaves you on your board.
 
 Two of the sections — **Users** and **Advanced** — belong to the administrator and are not drawn at all for anybody else. **Monitoring**, **Proxmox** and **Docker** are every account's own: each one sees its own, never anyone else's. A Member account sees **My Profile**, **Look & Feel**, **Personalization**, **Monitoring**, **Proxmox**, **Docker**, **Data** and **About** — the ones its permissions allow — and nothing hints that the rest exist.
 

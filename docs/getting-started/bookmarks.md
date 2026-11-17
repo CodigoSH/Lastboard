@@ -2,6 +2,10 @@
 
 Bookmarks are the core of Lastboard: quick-launch tiles that link to your apps, services, and sites. This guide covers creating and customizing them, organizing them into sections, and controlling how they behave on mobile.
 
+## Adding many at once
+
+If you run Docker or Proxmox, you do not have to make a bookmark for each container or machine by hand: the **bookmark** button in the header of the Docker and Proxmox pages (and a window that opens by itself when you add a host) proposes one for each, with its name, its address and its icon, and creates the ones you tick, in a section you can name. It needs permission to edit the board. See [Adding the services of a host to the board](../docker/overview.md#adding-the-services-of-a-host-to-the-board) and [Adding machines to the board](../proxmox/overview.md#adding-machines-to-the-board).
+
 ## Adding a Bookmark
 
 Enter **Edit Mode** (the pencil/edit toggle in the top bar). Tiles gain a drag handle and a menu of their own, and the **Add (+)** menu appears next to it.
@@ -51,7 +55,7 @@ The **Customization** tab controls the tile's appearance:
 
 **Icon** opens a search across several icon sets at once, grouped by provider. Pick one, upload your own image, or paste a direct URL.
 
-The first group, **CodigoSH**, holds the marks of Lastboard, LastHelp, the Lastboard Agent and CodigoSH itself, which no public icon set has. They come with Lastboard, so they are offered even with no internet and to an account that may not look icons up, and they are not copied into your database: your board names them by address (`/images/brand/…`), and they are always there.
+The first group, **CodigoSH**, holds the marks of Lastboard, the Lastboard Agent, CodigoSH itself and its other products, which no public icon set has. They come with Lastboard, so they are offered even with no internet and to an account that may not look icons up, and they are not copied into your database: your board names them by address (`/images/brand/…`), and they are always there.
 
 ![The icon picker](../assets/m-icons.png)
 
@@ -82,6 +86,8 @@ A **Section** is a container that groups related bookmarks, and widgets, togethe
 > Bookmarks and sections can also be **moved to another dashboard** — individually or in bulk. See [Dashboards](../using/dashboards.md#moving-items-between-dashboards).
 
 **Deleting a section** deletes what is inside it too, and the confirmation says so. To remove the section and keep what is inside, turn on **Only the section** in that confirmation: what is inside — bookmarks and widgets alike — stays on the board in the cells where it was drawn and at its own size, no longer in a section. The switch only appears when the section has something inside.
+
+![Deleting a section: the confirmation with Only the section turned on, and its message changed to say what will stay](../assets/m-delete-section.png)
 
 ## Reordering & Search
 

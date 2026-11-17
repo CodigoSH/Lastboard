@@ -34,7 +34,9 @@ The dashboard itself: a grid you arrange, and the tiles on it.
   below, inside or hide entirely, a border colour and width of its own, and an optional
   **status dot** in any corner that says whether the service answers.
 - **Sections** — a container that groups bookmarks under a title. Drop tiles inside and they
-  travel with it: move the section to another dashboard and its contents go too.
+  travel with it: move the section to another dashboard and its contents go too. Delete a
+  section and what is inside goes with it — or turn on **Only the section** in the
+  confirmation to keep the contents on the board, where they are.
 - **Widgets** — nine of them, listed below, each resizable and configurable in place.
 - **Multiple dashboards per user**, each with its own layout and items, switched from the top
   bar, reorderable, and with one marked as the one that opens first.
@@ -109,6 +111,11 @@ Built in, not bolted on. Give a bookmark a URL and a status position and Lastboa
 - **A container's name is a link.** The address is worked out from what you typed, then from a
   `lastboard.url` or `homepage.href` label on the container, then from its first published
   port — so containers already labelled for another dashboard work here unchanged.
+- **Add a host's containers to your board in one go.** A window proposes a bookmark for each
+  container, with a name, an address and an icon you can change on its row. It opens by itself
+  when you add a host, sorts what it finds into *To add*, *Already on your board* and *Ignored*,
+  says which addresses answer, lets you name the section and see it first, and asks before it
+  makes anything.
 - **A host that stops answering** does not make its containers vanish: they stay, greyed out,
   and the host line says it is not responding.
 - **A Docker page** with an overview of every host — what is running, what needs attention, CPU and
@@ -147,8 +154,13 @@ shows it beside the services it runs.
 - **An icon for machines that will never have a bookmark** — the runners, the tunnel, the
   container Lastboard itself runs on — chosen from the same picker the bookmarks use and
   stored on your own server.
+- **Add a hypervisor's machines to your board the same way** — each running machine is proposed
+  at the first private address its network reports, and one without an address opens its
+  console in Proxmox.
 - **Nothing is written to your database**: no machine names, no figures, no history. Only the
-  connection itself is stored, and the token secret is never sent back to a browser.
+  connection is stored (the token secret is never sent back to a browser), with the icons you
+  choose for machines and, if you ignore machines in the window that adds them to the board,
+  which ones. The bookmarks you make from them are yours.
 
 → [Proxmox](proxmox/overview.md) · [Proxmox widget](widgets/proxmox.md)
 
