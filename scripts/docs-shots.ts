@@ -44,6 +44,8 @@ const DOCKER_PORT = Number(process.env.DOCKER_PORT || 8210);   // the first inve
 const DOCKER_PORT_2 = Number(process.env.DOCKER_PORT_2 || 8211); // the second
 const SERVICES_PORT = Number(process.env.SERVICES_PORT || 8212); // the services the status page watches
 const DEAD_PORT = Number(process.env.DEAD_PORT || 8213);         // nothing listens here: the one service that is down
+/** The port a machine of the stand-in hypervisor answers on: its VMID above this. */
+const ANSWER_BASE = 18000;
 const WORK = join(tmpdir(), 'lastboard-docs-shots');
 const BIN = './bin/lastboard';
 
@@ -134,6 +136,26 @@ const maskServices = (tag: string) => `
   { const walker = document.createTreeWalker(${PAGE(tag)}, NodeFilter.SHOW_TEXT);
     for (let n = walker.nextNode(); n; n = walker.nextNode()) {
         n.nodeValue = n.nodeValue.replace(/http:\\/\\/127\\.0\\.0\\.1:(\\d+)\\/?([a-z-]*)/g, (m, port, slug) => 'https://' + (port === '${DEAD_PORT}' ? 'immich' : slug) + '.home.lan');
+    } }`;
+
+/** The window that adds services to the board, drawn with its rows, and every address asked and answered. */
+const windowReady = () => until('the window that adds services', `
+    const root = document.querySelector('detect-services-modal')?.shadowRoot;
+    if (!root || !root.querySelector('#dt-create')) return false;
+    // A machine opened at its console has no address to ask, and so no answer to wait for.
+    const asked = [...root.querySelectorAll('.row--add')].filter((r) => !r.querySelector('.row__addr--console'));
+    return asked.length > 0 && asked.every((r) => r.querySelector('.row__health')?.textContent.trim());`);
+
+/**
+ * The window prints the address it was given, and the stand-ins run on this machine: dressed, on
+ * the text, in what a household would have. For the machines of the hypervisor the number after
+ * `base` is the VMID, which is the last part of the address they would have.
+ */
+const maskWindow = (to: string, base = 0) => `
+  { const walker = document.createTreeWalker(document.querySelector('detect-services-modal').shadowRoot, NodeFilter.SHOW_TEXT);
+    for (let n = walker.nextNode(); n; n = walker.nextNode()) {
+        n.nodeValue = n.nodeValue.replace(/http:\\/\\/127\\.0\\.0\\.1:(\\d+)/g, (m, port) => '${to}'.replace('$1', String(Number(port) - ${base})))
+            .replace(/127\\.0\\.0\\.1/g, '192.168.1.20');
     } }`;
 
 /** A tab of a full-screen page, opened. */
@@ -375,6 +397,33 @@ const SHOTS: Shot[] = [
               ${openCard('proxmox-page', 'plex')}`,
     },
     {
+        // The window that proposes a host's containers as bookmarks, opened from the page's header.
+        name: 'docker-add-services', w: 1500, h: 1000, pad: 0, wait: 900,
+        act: `${TOPBAR}.querySelector('#docker-toggle').click();
+              ${overviewReady('docker-page')}
+              ${PAGE('docker-page')}.querySelector('#hp-detect').click();
+              ${windowReady()}
+              ${maskWindow('http://192.168.1.20:$1')}`,
+        clip: `document.querySelector('detect-services-modal').shadowRoot.querySelector('dialog')`,
+    },
+    {
+        name: 'proxmox-add-machines', w: 1500, h: 1000, pad: 0, wait: 900,
+        act: `${TOPBAR}.querySelector('#proxmox-toggle').click();
+              ${overviewReady('proxmox-page', false)}
+              ${PAGE('proxmox-page')}.querySelector('#hp-detect').click();
+              ${until('the host dropdown', `return !!document.querySelector('detect-services-modal')?.shadowRoot?.querySelector('#dt-host');`)}
+              // The first hypervisor has a bookmark for every machine, so there is nothing to add there: the
+              // photograph is of the second, picked in the window's own dropdown as a person would.
+              { const pick = document.querySelector('detect-services-modal').shadowRoot.querySelector('#dt-host');
+                const other = JSON.parse(pick.getAttribute('data-options')).find((o) => o.value !== pick.value);
+                pick.value = other.value;
+                pick.dispatchEvent(new Event('change', { bubbles: true, composed: true }));
+                await sleep(600); }
+              ${windowReady()}
+              ${maskWindow('http://192.168.1.$1', ANSWER_BASE)}`,
+        clip: `document.querySelector('detect-services-modal').shadowRoot.querySelector('dialog')`,
+    },
+    {
         name: 'monitor-overview', w: 1600, h: 1000, wait: 800,
         act: `${TOPBAR}.querySelector('#monitor-toggle').click();
               ${overviewReady('monitor-page')}`,
@@ -429,6 +478,22 @@ const SHOTS: Shot[] = [
               const grid = document.querySelector('bookmark-grid').shadowRoot;
               const cards = [...grid.querySelectorAll('.bookmark-grid__card')].filter((c) => !c.querySelector('widget-api'));
               window.__gridBottom = Math.ceil(Math.max(...cards.map((c) => c.getBoundingClientRect().bottom)) + 20);`,
+    },
+    {
+        // What deleting a section asks, with the switch that keeps what is inside turned on: the
+        // message above it changes to say what will happen. It is opened the way the tile's menu
+        // opens it, on the first section that has something in it.
+        name: 'm-delete-section', w: 1400, h: 800, pad: 0, wait: 700,
+        act: `${TOPBAR}.querySelector('#edit-toggle').click(); await sleep(600);
+              { const grid = document.querySelector('bookmark-grid');
+                const sections = [...grid.shadowRoot.querySelectorAll('.bookmark-grid__section')];
+                const full = sections.find((el) => el.querySelector('.bookmark-grid__card'));
+                if (!full) throw new Error('no section with something inside to delete');
+                await grid._deleteItem(Number(full.dataset.id));
+                ${until('the confirmation', `return document.querySelector('confirmation-modal')?.shadowRoot?.getElementById('cm-toggle');`)}
+                document.querySelector('confirmation-modal').shadowRoot.getElementById('cm-toggle').click();
+                await sleep(500); }`,
+        clip: `document.querySelector('confirmation-modal').shadowRoot.querySelector('dialog')`,
     },
     {
         name: 'm-bookmark', w: 1500, h: 950, pad: 0, wait: 600,
@@ -716,6 +781,13 @@ function startFakeProxmox(port: number, resources: any[]): { close: () => void }
             res.end(JSON.stringify({ data: all }));
         } else if (journalReq) {
             res.end(JSON.stringify({ data: journal(decodeURIComponent(journalReq[1])) }));
+        } else if (/^\/api2\/json\/nodes\/[^/]+\/(lxc|qemu)\/\d+\/config$/.test(path)) {
+            // What the window that adds machines to the board reads: a line in the notes saying where
+            // the machine answers. The machines have no network of their own to report an address from.
+            // Only a machine that runs says where it answers: a stopped one has nothing there to ask.
+            const vmid = Number(path.split('/')[6]);
+            const runs = resources.some((r) => r.vmid === vmid && r.status === 'running');
+            res.end(JSON.stringify({ data: { description: runs ? `lastboard.url: http://127.0.0.1:${ANSWER_BASE + vmid}` : '' } }));
         } else if (path === '/api2/json/cluster/resources') {
             res.end(JSON.stringify({ data: resources }));
         } else if (path === '/api2/json/access/permissions') {
@@ -860,6 +932,26 @@ function startFakeDocker(port: number, host: FakeDockerHost): { close: () => voi
     });
     server.listen(port, '127.0.0.1');
     return { close: () => server.close() };
+}
+
+/**
+ * Listeners where the invented Docker containers publish a port and where the stand-in
+ * hypervisor's machines say they answer, so the window that adds them to the board can be
+ * photographed with its addresses answering, as they do for a person whose services run.
+ *
+ * Only on ports that are free: if something real already listens on one, the rig does not
+ * go and ask it, and says so (see `busy`).
+ */
+function startAnswerers(ports: number[]): { close: () => void; busy: number[] } {
+    const busy: number[] = [];
+    const servers = ports.map((p) => {
+        const server = createServer((_, res) => { res.statusCode = 200; res.end('ok'); });
+        // A port the rig may not open at all (below 1024) is not something real answering: only EADDRINUSE is.
+        server.on('error', (e: any) => { if (e?.code === 'EADDRINUSE') busy.push(p); });
+        server.listen(p, '127.0.0.1');
+        return server;
+    });
+    return { close: () => servers.forEach((s) => { try { s.close(); } catch { } }), busy };
 }
 
 /**
@@ -1254,7 +1346,19 @@ async function main() {
     const dockerA = startFakeDocker(DOCKER_PORT, DOCKER_HOSTS[0]);
     const dockerB = startFakeDocker(DOCKER_PORT_2, DOCKER_HOSTS[1]);
     const services = startFakeServices(SERVICES_PORT);
-    closers.push(() => { pve.close(); pve2.close(); dockerA.close(); dockerB.close(); services.close(); });
+    const answerPorts = [
+        // The first host only: it is the one the window opens on, and the second publishes ports that a
+        // household's own services might really be listening on.
+        ...DOCKER_HOSTS[0].containers.flatMap((c) => c.ports || []),
+        ...[...PVE_SINGLE, ...PVE_CLUSTER].filter((r: any) => (r.type === 'lxc' || r.type === 'qemu') && r.status === 'running').map((r: any) => ANSWER_BASE + r.vmid),
+    ].filter((port, i, all) => all.indexOf(port) === i);
+    const answerers = startAnswerers(answerPorts);
+    closers.push(() => { pve.close(); pve2.close(); dockerA.close(); dockerB.close(); services.close(); answerers.close(); });
+    await sleep(300);
+    // Asking a real service on a published port would be touching what is not ours.
+    if (answerers.busy.length && wantedShots.some((w) => w.name.endsWith('-add-services') || w.name === 'proxmox-add-machines')) {
+        throw new Error(`these ports are in use by something real, and the window that adds services would probe them: ${answerers.busy.join(', ')}`);
+    }
 
     // The browser comes up first: the Setup Wizard only exists until an account
     // is created, so anything photographing it has to run before that call.
