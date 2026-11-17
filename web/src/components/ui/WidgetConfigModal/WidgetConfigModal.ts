@@ -32,6 +32,7 @@ import { testRemoteStats } from '../../../services/remoteStats';
 import { telemetrySources } from '../../../services/access';
 import { userStore } from '../../../store/userStore';
 import { telemetrySource } from '../../../widgets/core/remoteTelemetry';
+import { isEnter } from '../../../services/imeKeys';
 import {
     applySourceVisibility, describeTest, readSourceSettings, secretChanges,
     showSavedSecrets, sourceOptions, telemetrySourceTemplate, wireSecretBoxes,
@@ -1326,7 +1327,7 @@ class WidgetConfigModal extends HTMLElement {
                 select();
             });
             row.addEventListener('keydown', (e) => {
-                if ((e as KeyboardEvent).key === 'Enter' || (e as KeyboardEvent).key === ' ') {
+                if (isEnter(e as KeyboardEvent) || (e as KeyboardEvent).key === ' ') {
                     e.preventDefault();
                     select();
                 }
@@ -1541,7 +1542,7 @@ class WidgetConfigModal extends HTMLElement {
             };
             row.addEventListener('click', select);
             row.addEventListener('keydown', (e) => {
-                if ((e as KeyboardEvent).key === 'Enter' || (e as KeyboardEvent).key === ' ') {
+                if (isEnter(e as KeyboardEvent) || (e as KeyboardEvent).key === ' ') {
                     e.preventDefault();
                     select();
                 }

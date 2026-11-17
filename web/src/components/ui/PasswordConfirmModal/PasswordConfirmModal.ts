@@ -4,6 +4,7 @@ import { i18n } from '../../../services/i18n';
 import { setupPasswordToggles } from '../../../services/passwordToggle';
 import css from './PasswordConfirmModal.css' with { type: 'text' };
 import { isBackdropClick } from '../../../services/dialogBackdrop';
+import { isEnter } from '../../../services/imeKeys';
 
 export class PasswordConfirmModal extends HTMLElement {
     private dialog: HTMLDialogElement | null = null;
@@ -71,7 +72,7 @@ export class PasswordConfirmModal extends HTMLElement {
         // Confirm on Enter
         if (passwordInput) {
             passwordInput.onkeydown = (e) => {
-                if (e.key === 'Enter') {
+                if (isEnter(e)) {
                     e.preventDefault();
                     validateAndConfirm();
                 }

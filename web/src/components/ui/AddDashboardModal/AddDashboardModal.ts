@@ -1,6 +1,7 @@
 import { template } from './AddDashboardModal.template';
 import { adoptSharedStyles } from '../../../services/sharedStyles';
 import { dashboardStore } from '../../../store/dashboardStore';
+import { isEnter } from '../../../services/imeKeys';
 import css from './AddDashboardModal.css' with { type: 'text' };
 
 interface AddDashboardModalState {
@@ -63,7 +64,7 @@ class AddDashboardModal extends HTMLElement {
             const keyEvent = e as KeyboardEvent;
             if (keyEvent.key === 'Escape') {
                 this.close();
-            } else if (keyEvent.key === 'Enter') {
+            } else if (isEnter(keyEvent)) {
                 e.preventDefault();
                 this.handleSubmit();
             }

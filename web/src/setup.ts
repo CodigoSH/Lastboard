@@ -8,6 +8,7 @@ import { i18n } from './services/i18n';
 import { bootstrap } from './core/bootstrap';
 import { ThemeService, asThemeChoice } from './services/ThemeService';
 import { setupPasswordToggles } from './services/passwordToggle';
+import { isEnter } from './services/imeKeys';
 
 bootstrap(async () => {
     setupPasswordToggles(document.body);
@@ -261,7 +262,7 @@ bootstrap(async () => {
 
     // Enter Key Support (Global)
     document.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') {
+        if (isEnter(e)) {
             e.preventDefault();
             nextBtn.click();
         }

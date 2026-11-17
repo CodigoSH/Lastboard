@@ -5,6 +5,7 @@ import { escapeHtml } from '../../../services/escape';
 import { setupPasswordToggles } from '../../../services/passwordToggle';
 import css from './BackupModal.css' with { type: 'text' };
 import { isBackdropClick } from '../../../services/dialogBackdrop';
+import { isEnter } from '../../../services/imeKeys';
 
 /**
  * Asks how a backup should leave the server: as it is, or sealed under a
@@ -74,7 +75,7 @@ export class BackupModal extends HTMLElement {
         for (const input of [password, confirm]) {
             if (!input) continue;
             input.onkeydown = (e) => {
-                if (e.key === 'Enter') {
+                if (isEnter(e)) {
                     e.preventDefault();
                     submit();
                 }

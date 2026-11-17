@@ -5,6 +5,7 @@ import {
     selectSearchTemplate, filterSelectOptions,
 } from './Select.template';
 import { adoptSharedStyles, ensureSharedStylesInDocument } from '../../../services/sharedStyles';
+import { isEnter } from '../../../services/imeKeys';
 
 /** Mirrors `.select-dropdown.open { max-height }` in Select.css. */
 const DROPDOWN_MAX_HEIGHT = 300;
@@ -217,7 +218,7 @@ export class AppSelect extends HTMLElement {
                 this.paintOptions(filterSelectOptions(this._options, input.value));
             });
             input?.addEventListener('keydown', (e) => {
-                if (e.key !== 'Enter') return;
+                if (!isEnter(e)) return;
                 e.preventDefault();
                 const first = this.listEl?.querySelector('.select-option') as HTMLElement | null;
                 const val = first?.dataset.value;

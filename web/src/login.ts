@@ -115,12 +115,8 @@ bootstrap(async () => {
     };
     localize();
 
-    // Enable implicit submission via Enter key
-    form.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') {
-            // No custom logic needed, native submit works or we catch 'submit' event
-        }
-    });
+    // Enter submits the form natively, through the 'submit' event below, and a browser does not do
+    // that while an input method is still composing the text. There is nothing to listen for here.
 
     form.addEventListener('submit', async (e) => {
         e.preventDefault();

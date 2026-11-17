@@ -15,6 +15,7 @@ import { accessAllows } from '../../services/access';
 import { userStore } from '../../store/userStore';
 import { WidgetContentHelper } from '../../services/widgetContentHelper';
 import { notepadSanitizer } from '../../services/htmlSanitizer';
+import { isEnter } from '../../services/imeKeys';
 
 // ============================================================================
 // ICONS (V14: Pro Minimalist - 1.5px Stroke, Lucide Style)
@@ -896,7 +897,7 @@ export class NotepadWidget extends HTMLElement {
         const isChecklist = (text: string) => /^[☐☑]/.test(text.trim());
         const isEmptyChecklist = (text: string) => text.replace(/[☐☑\s\u00A0\u200B]/g, '').length === 0;
 
-        if (e.key === 'Enter') {
+        if (isEnter(e)) {
             const sel = this.getSelection();
             if (sel && sel.anchorNode) {
                 const node = sel.anchorNode;

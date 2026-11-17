@@ -11,6 +11,7 @@ import { accessAllows } from '../../../services/access';
 import { userStore } from '../../../store/userStore';
 import { fetchDockerSettings } from '../../../services/dockerHosts';
 import type { User } from '../../../types';
+import { isEnter } from '../../../services/imeKeys';
 
 interface TopBarState {
     editMode: boolean;
@@ -417,7 +418,7 @@ class TopBar extends HTMLElement {
             // Activate role="button" elements (e.g. the add-menu items) with
             // Enter/Space, reusing the click delegation above. matches() (not
             // closest()) so a real <button> nested inside never double-fires.
-            if (keyEvent.key === 'Enter' || keyEvent.key === ' ') {
+            if (isEnter(keyEvent) || keyEvent.key === ' ') {
                 const activatable = e.target as HTMLElement;
                 if (activatable.matches?.('[role="button"]')) {
                     keyEvent.preventDefault();

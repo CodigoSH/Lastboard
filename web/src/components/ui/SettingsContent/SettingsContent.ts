@@ -31,6 +31,7 @@ import {
 import { userProfilesTemplate, userPermsTemplate, userSummaryTemplate } from './userDialog.template';
 import { fetchDockerSettings, saveDockerSettings, type AccountDockerHost, type DockerHostEdit } from '../../../services/dockerHosts';
 import { agentIsOld, fetchAgentVersion, fetchContainers, hostErrorKey } from '../../../services/dockerShared';
+import { isEnter } from '../../../services/imeKeys';
 import css from './SettingsContent.css' with { type: 'text' };
 
 class SettingsContent extends HTMLElement {
@@ -134,8 +135,9 @@ class SettingsContent extends HTMLElement {
         // upload tiles are focusable role="button" divs). matches() (not closest())
         // so a real <button> nested inside — e.g. remove-background — never double-fires.
         root.addEventListener('keydown', (e) => {
-            const key = (e as KeyboardEvent).key;
-            if (key !== 'Enter' && key !== ' ') return;
+            const pressed = e as KeyboardEvent;
+            const enter = isEnter(pressed);
+            if (!enter && pressed.key !== ' ') return;
             const el = e.target as HTMLElement;
             if (el.matches?.('[role="button"]')) {
                 e.preventDefault();
@@ -143,7 +145,7 @@ class SettingsContent extends HTMLElement {
                 return;
             }
             // Enter on an auto-saving text field commits it (blur fires 'change').
-            if (key === 'Enter' && el instanceof HTMLInputElement && el.dataset.change) {
+            if (enter && el instanceof HTMLInputElement && el.dataset.change) {
                 el.blur();
             }
         });
