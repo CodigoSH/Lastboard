@@ -48,6 +48,14 @@ export function decodeKey(key: string): Uint8Array<ArrayBuffer> {
 }
 
 /**
+ * The moment the server gives, as a date. The server counts Unix time in seconds (`last_ok_at`); a `Date` counts
+ * in milliseconds, so the number as it comes lands twenty days after 1970.
+ */
+export function unixToDate(seconds: number): Date {
+    return new Date(seconds * 1000);
+}
+
+/**
  * A name for a subscription that says which one it is without being it: the first eight bytes of the
  * SHA-256 of its address, in hex. The server computes the same for its list, so the page can tell
  * which row is this device without the server ever sending an address back.

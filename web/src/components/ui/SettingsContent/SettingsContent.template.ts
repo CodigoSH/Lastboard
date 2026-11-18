@@ -4,6 +4,7 @@ import { i18n } from '../../../services/i18n';
 import { escapeHtml as esc, safeImageSrc } from '../../../services/escape';
 import { SECRET_MASK } from '../../../services/secretField';
 import type { PushView } from '../../../services/pushClient';
+import { unixToDate } from '../../../services/pushSupport';
 import { ALERT_TEXT_FIELDS, ALERT_MARKERS } from './alertTexts';
 import type { AccountDockerHost } from '../../../services/dockerHostList';
 import { roleOrLabel } from '../../../services/accountAccess';
@@ -562,7 +563,7 @@ const pushTemplate = (push: PushView | undefined) => {
                     <app-button variant="${here ? 'ghost' : 'primary'}" data-action="${here ? 'push-disable' : 'push-enable'}" ${p.busy ? 'disabled' : ''}>${esc(here ? i18n.t('push.disable') : i18n.t('push.enable'))}</app-button>
                 </div>`;
     const rows = p.devices.map(d => {
-        const delivered = d.last_ok_at ? i18n.t('push.last_delivered', { date: i18n.formatDateTime(d.last_ok_at, { dateStyle: 'medium', timeStyle: 'short' }) }) : i18n.t('push.never_delivered');
+        const delivered = d.last_ok_at ? i18n.t('push.last_delivered', { date: i18n.formatDateTime(unixToDate(d.last_ok_at), { dateStyle: 'medium', timeStyle: 'short' }) }) : i18n.t('push.never_delivered');
         return `
                 <div class="settings-content__action-row">
                     <div class="settings-content__action-info">

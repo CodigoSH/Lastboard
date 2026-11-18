@@ -1,6 +1,16 @@
 import { describe, expect, it } from 'bun:test';
 import { createHash } from 'crypto';
-import { decodeKey, deviceRef, isIOS, pushSupport, type PushEnv } from './pushSupport';
+import { decodeKey, deviceRef, isIOS, pushSupport, unixToDate, type PushEnv } from './pushSupport';
+
+describe('the time the server gives for a delivery', () => {
+    it('is in seconds, so it is a date in our days and not in January 1970', () => {
+        const d = unixToDate(1780000000);
+        expect(d.toISOString()).toBe('2026-05-28T20:26:40.000Z');
+        expect(d.getUTCFullYear()).toBe(2026);
+        // The number as it comes, taken for milliseconds, is the mistake that showed 21 January 1970.
+        expect(new Date(1780000000).getUTCFullYear()).toBe(1970);
+    });
+});
 
 const desktop: PushEnv = { serviceWorker: true, pushManager: true, notification: true, permission: 'default', ios: false, standalone: false };
 
