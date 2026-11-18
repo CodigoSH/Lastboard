@@ -2,14 +2,14 @@ import { i18n } from '../../../services/i18n';
 import { resizeImage } from '../../../services/image';
 import { adoptSharedStyles } from '../../../services/sharedStyles';
 import { userStore } from '../../../store/userStore';
-import { accessAllows, dataSections } from '../../../services/access';
+import { dataSections } from '../../../services/access';
 import { updateStore } from '../../../store/updateStore';
 import { userService } from '../../../services/userService';
 import { ThemeService, asThemeChoice } from '../../../services/ThemeService';
 import { apiService } from '../../../services/apiService';
 import { importService } from '../../../services/importService';
 import { ImportTooLargeError } from '../../../services/importPlan';
-import { accountTemplate, deviceName, sessionsListTemplate, type SessionsView, type TwoFactorView, twoFactorIdle, type PasskeysView, passkeysIdle, themeTemplate, personalizationTemplate, usersTemplate, advancedTemplate, dataTemplate, monitoringTemplate, proxmoxTemplate, dockerTemplate, aboutTemplate, updateZoneTemplate, type PxSettingsHost, type PxHostStatus, type DockerRowStatus } from './SettingsContent.template';
+import { accountTemplate, deviceName, sessionsListTemplate, type SessionsView, type TwoFactorView, twoFactorIdle, type PasskeysView, passkeysIdle, themeTemplate, personalizationTemplate, usersTemplate, advancedTemplate, dataTemplate, monitoringTemplate, notificationsTemplate, proxmoxTemplate, dockerTemplate, aboutTemplate, updateZoneTemplate, type PxSettingsHost, type PxHostStatus, type DockerRowStatus } from './SettingsContent.template';
 import { loadProxmox } from '../../../services/proxmoxApi';
 import { sameHostUrl } from '../../../services/proxmoxMatch';
 import { User, UserPreferences } from '../../../types';
@@ -23,6 +23,11 @@ import '../IconSelectionModal/IconSelectionModal';
 import { SECRET_MASK, secretChange } from '../../../services/secretField';
 import { ALERT_TEXT_KEYS } from './alertTexts';
 import { loadPush, enablePush, disablePush, removePushDevice, pushIdle, type PushView } from '../../../services/pushClient';
+import {
+    fetchChannels, saveChannels, testChannel, addableTypes, failureText, hasPush, isChannelType, takesAddress,
+    type ChannelEdit, type ChannelType, type NotifyChannel,
+} from '../../../services/notifyChannels';
+import { channelTitle, typeLabel } from './notifyChannels.template';
 import { newProxmoxHostIds, proxmoxPayload } from './proxmoxPayload';
 import {
     DEFAULT_PROFILE, PROFILES, createBody, grantsFrom, profileOf, setBool, setLevel, updateBody,
@@ -53,13 +58,17 @@ class SettingsContent extends HTMLElement {
     private storingIcons = false;
     private importFormat = 'auto';
     private monitoring: {
-        mode: string; interval_sec: number; alerts_enabled: boolean;
-        notify_type: string; notify_url: string; notify_has_token: boolean; fail_threshold: number;
-        // Write-only: sent when typed or removed, never received.
-        notify_token?: string; clear_notify_token?: boolean;
+        mode: string; interval_sec: number; fail_threshold: number;
+        // Read-only: alerts are on when any channel is. The channels are their own list (see `channels`).
+        alerts_enabled?: boolean; notify_methods?: string[];
         // The wording this account chose for its alerts; empty is the translated default.
         text_down_title?: string; text_down_body?: string; text_up_title?: string; text_up_body?: string;
-    } = { mode: 'tab', interval_sec: 300, alerts_enabled: false, notify_type: 'none', notify_url: '', notify_has_token: false, fail_threshold: 1 };
+    } = { mode: 'tab', interval_sec: 300, fail_threshold: 1 };
+    /** Where this account's alerts go: its list of channels, as the server holds it. */
+    private channels: NotifyChannel[] = [];
+    private channelsMax = 10;
+    private channelsLoaded = false;
+    private channelsFailed = false;
     /**
      * Whether the values above came from the server. The object starts as a
      * guess, and drawing switches from a guess is not a cosmetic problem: the
@@ -243,8 +252,23 @@ class SettingsContent extends HTMLElement {
                 case 'localize-icons':
                     this.localizeIcons();
                     break;
-                case 'test-notify':
-                    this.testNotify();
+                case 'add-channel':
+                    this.fillChannelModal(-1);
+                    break;
+                case 'edit-channel':
+                    this.fillChannelModal(Number(el.dataset.index ?? -1));
+                    break;
+                case 'delete-channel':
+                    this.deleteChannel(Number(el.dataset.index ?? -1));
+                    break;
+                case 'save-channel':
+                    this.saveChannel();
+                    break;
+                case 'test-channel':
+                    this.testChannelFromWindow();
+                    break;
+                case 'open-monitoring':
+                    (document.querySelector('right-drawer') as (HTMLElement & { selectSection?: (s: string) => void }) | null)?.selectSection?.('monitoring');
                     break;
                 case 'alert-texts-reset':
                     this.saveMonitoring({ text_down_title: '', text_down_body: '', text_up_title: '', text_up_body: '' });
@@ -327,7 +351,7 @@ class SettingsContent extends HTMLElement {
         // them and Delete empties it: there is no button for either.
         root.addEventListener('focusin', (e) => {
             const t = e.target as HTMLInputElement;
-            if (t?.id === 'notify-token' || t?.id === 'proxmox-secret' || t?.id === 'docker-token') t.select();
+            if (t?.id === 'channel-token' || t?.id === 'proxmox-secret' || t?.id === 'docker-token') t.select();
         });
 
         root.addEventListener('change', (e) => {
@@ -369,24 +393,13 @@ class SettingsContent extends HTMLElement {
                 case 'monitoring-toggle':
                     this.saveMonitoring({ mode: (el as HTMLInputElement).checked ? 'background' : 'off' });
                     break;
-                case 'alerts-toggle':
-                    this.saveMonitoring({ alerts_enabled: (el as HTMLInputElement).checked });
-                    break;
-                case 'notify-url':
-                    this.saveMonitoring({ notify_url: (el as HTMLInputElement).value.trim() });
+                case 'channel-toggle':
+                    this.toggleChannel(Number((el as HTMLElement).dataset.index ?? -1), (el as HTMLInputElement).checked);
                     break;
                 case 'alert-text': {
                     // Only the four known fields, whatever the markup says.
                     const key = (el as HTMLElement).dataset.textKey;
                     if (key && ALERT_TEXT_KEYS.includes(key)) this.saveMonitoring({ [key]: (el as HTMLInputElement).value });
-                    break;
-                }
-                case 'notify-token': {
-                    // The box shows dots when one is saved: what happened to them decides.
-                    const change = secretChange((el as HTMLInputElement).value, this.monitoring.notify_has_token);
-                    if (change.action === 'set') this.saveMonitoring({ notify_token: change.token });
-                    else if (change.action === 'clear') this.saveMonitoring({ clear_notify_token: true });
-                    else this.render();   // untouched, or half-erased dots: draw them whole again
                     break;
                 }
             }
@@ -428,6 +441,9 @@ class SettingsContent extends HTMLElement {
         }
         if (section === 'monitoring' || section === 'notifications') {
             this.fetchMonitoring();
+        }
+        if (section === 'notifications') {
+            this.fetchChannels();
         }
         if (section === 'docker') {
             this.fetchDocker();
@@ -861,7 +877,6 @@ class SettingsContent extends HTMLElement {
             this.monitoring = loaded;
             this.monitoringLoaded = true;
             this.render();
-            if (loaded.notify_type === 'push') this.fetchPush();
         } catch (e) {
             console.error("Failed to fetch monitoring settings", e);
             if (seq !== this.monitoringSeq) return;
@@ -1295,22 +1310,190 @@ class SettingsContent extends HTMLElement {
         }));
     }
 
-    async testNotify() {
+    // ── Channels: where alerts go ───────────────────────────────────────────────
+
+    async fetchChannels() {
+        this.channelsFailed = false;
         try {
-            await apiService.post('/api/monitor/test', {
-                notify_type: this.monitoring.notify_type,
-                notify_url: this.monitoring.notify_url,
-                // Only what was typed over the dots; with nothing new the server uses the saved one.
-                notify_token: (() => {
-                    const raw = (this.shadowRoot?.getElementById('notify-token') as HTMLInputElement | null)?.value ?? '';
-                    const c = secretChange(raw, this.monitoring.notify_has_token);
-                    return c.action === 'set' ? c.token : '';
-                })(),
-            });
-            if (window.notifier) window.notifier.show(i18n.t('settings.notify_test_ok'));
-        } catch {
-            if (window.notifier) window.notifier.show(i18n.t('settings.notify_test_fail'), 'error');
+            const got = await fetchChannels();
+            this.channels = got.channels;
+            this.channelsMax = got.max;
+            this.channelsLoaded = true;
+        } catch (e) {
+            console.error('Failed to fetch the alert channels', e);
+            this.channelsFailed = true;
         }
+        this.renderUnlessEditingChannel();
+        // The browsers push reaches are only asked for when push is in the list.
+        if (this.channelsLoaded && hasPush(this.channels)) this.fetchPush();
+    }
+
+    /** An answer arriving must not redraw the page under a window someone is typing in. */
+    private renderUnlessEditingChannel() {
+        const dialog = this.shadowRoot?.getElementById('channel-modal') as HTMLDialogElement | null;
+        if (!dialog?.open) this.render();
+    }
+
+    /**
+     * The window for one channel, empty or carrying what the row holds. The kind of a channel that exists is
+     * fixed: another kind is another channel, with its own address and token.
+     */
+    private fillChannelModal(index: number) {
+        if (!this.channelsLoaded) return;
+        const root = this.shadowRoot!;
+        const c = index >= 0 ? this.channels[index] : null;
+        if (index >= 0 && !c) return;
+        const input = (id: string) => root.getElementById(id) as HTMLInputElement | null;
+        const show = (id: string, on: boolean) => {
+            const el = root.getElementById(id) as HTMLElement | null;
+            if (el) el.style.display = on ? '' : 'none';
+        };
+
+        const kinds = c ? [c.type] : addableTypes(this.channels, this.channelsMax);
+        if (kinds.length === 0) return;
+        const typeSel = root.getElementById('channel-type') as any;
+        if (typeSel) {
+            typeSel.options = kinds.map(k => ({ value: k, label: typeLabel(k, (key, p) => i18n.t(key, p)) }));
+            typeSel.value = c ? c.type : kinds[0];
+            typeSel.toggleAttribute?.('disabled', !!c);
+        }
+        const sync = () => {
+            const kind = (typeSel?.value || kinds[0]) as ChannelType;
+            const address = takesAddress(kind);
+            show('channel-url-row', address);
+            show('channel-token-row', address);
+            show('channel-push-note', !address);
+            const url = input('channel-url');
+            if (url) url.placeholder = kind === 'ntfy' ? 'https://ntfy.sh/my-topic' : kind === 'gotify' ? 'https://gotify.example.com' : 'https://…';
+            const note = root.getElementById('channel-token-note');
+            if (note) note.textContent = i18n.t(c?.has_token && kind === c.type ? 'settings.notify_token_saved' : 'settings.notify_token_desc');
+        };
+        if (typeSel && !typeSel.dataset.bound) {
+            typeSel.dataset.bound = '1';
+            typeSel.addEventListener('change', sync);
+        }
+
+        const set = (id: string, v: string) => { const el = input(id); if (el) el.value = v; };
+        set('channel-edit-index', String(index));
+        set('channel-name', c?.name || '');
+        set('channel-url', c?.url || '');
+        // Dots when a token is stored: its presence is shown, never its value.
+        set('channel-token', c?.has_token ? SECRET_MASK : '');
+        const on = input('channel-enabled');
+        if (on) on.checked = c ? c.enabled : true;
+        const result = root.getElementById('channel-test-result');
+        if (result) { result.textContent = ''; result.style.color = ''; }
+        sync();
+
+        const title = root.getElementById('channel-modal-title');
+        if (title) title.textContent = i18n.t(c ? 'general.edit' : 'notify.add');
+        const dialog = root.getElementById('channel-modal') as HTMLDialogElement | null;
+        // What was learned while the window was open (the result of a test) is drawn once it closes.
+        dialog?.addEventListener('close', () => this.render(), { once: true });
+        dialog?.showModal();
+    }
+
+    /** What the window holds, as a channel: the form over what the server listed. */
+    private channelFromWindow(): ChannelEdit | null {
+        const root = this.shadowRoot!;
+        const val = (id: string) => (root.getElementById(id) as HTMLInputElement | null)?.value ?? '';
+        const index = Number(val('channel-edit-index'));
+        const existing = index >= 0 ? this.channels[index] : undefined;
+        const type = (existing?.type ?? ((root.getElementById('channel-type') as any)?.value || 'ntfy')) as ChannelType;
+        if (!isChannelType(type)) return null;
+        return {
+            id: existing?.id || '',
+            name: val('channel-name').trim(),
+            type,
+            url: takesAddress(type) ? val('channel-url').trim() : '',
+            enabled: !!(root.getElementById('channel-enabled') as HTMLInputElement | null)?.checked,
+            has_token: !!existing?.has_token && takesAddress(type),
+            last: existing?.last ?? null,
+            tokenBox: takesAddress(type) ? val('channel-token') : undefined,
+        };
+    }
+
+    /** What the window was opened for: one channel, added or edited. */
+    async saveChannel() {
+        if (!this.channelsLoaded) return;
+        const edited = this.channelFromWindow();
+        if (!edited) return;
+        if (takesAddress(edited.type) && !edited.url) {
+            if (window.notifier) window.notifier.show(i18n.t('error.invalid_url'), 'error');
+            return;
+        }
+        const index = Number((this.shadowRoot!.getElementById('channel-edit-index') as HTMLInputElement | null)?.value ?? -1);
+        const list: ChannelEdit[] = this.channels.map(c => ({ ...c }));
+        if (index >= 0 && list[index]) list[index] = edited; else list.push(edited);
+        if (await this.putChannels(list)) {
+            (this.shadowRoot!.getElementById('channel-modal') as HTMLDialogElement | null)?.close();
+            this.render();
+        }
+    }
+
+    /** A switch on a row: that channel on or off, and nothing else about it. */
+    private async toggleChannel(index: number, on: boolean) {
+        const c = this.channels[index];
+        if (!c || !this.channelsLoaded) return;
+        const list: ChannelEdit[] = this.channels.map(x => ({ ...x }));
+        list[index] = { ...c, enabled: on };
+        if (!(await this.putChannels(list))) this.render(); // the switch goes back to what the server holds
+    }
+
+    /** Removing one asks first: its token goes with it. */
+    private deleteChannel(index: number) {
+        const c = this.channels[index];
+        if (!c) return;
+        const name = channelTitle(c, (key, p) => i18n.t(key, p));
+        import('../../../services/EventBus').then(({ eventBus, EVENTS }) => {
+            eventBus.emit(EVENTS.SHOW_CONFIRMATION, {
+                title: i18n.t('action.remove'),
+                message: name,
+                onConfirm: async () => {
+                    await this.putChannels(this.channels.filter((_, i) => i !== index).map(x => ({ ...x })));
+                },
+            });
+        });
+    }
+
+    /** Writes the whole list, as the server takes it for the truth. */
+    private async putChannels(list: ChannelEdit[]): Promise<boolean> {
+        try {
+            const next = await saveChannels(list);
+            this.channels = next.channels;
+            this.channelsMax = next.max;
+            this.monitoringSeq++;
+            this.renderUnlessEditingChannel();
+            if (hasPush(this.channels)) this.fetchPush();
+            const { eventBus, EVENTS } = await import('../../../services/EventBus');
+            eventBus.emit(EVENTS.MONITORING_CHANGED, { mode: this.monitoring.mode });
+            if (window.notifier) window.notifier.show(i18n.t('settings.saved'));
+            return true;
+        } catch (e) {
+            const key = String((e as Error)?.message || '').trim();
+            if (window.notifier) window.notifier.show(i18n.t(key === 'error.invalid_url' ? key : 'settings.save_error'), 'error');
+            return false;
+        }
+    }
+
+    /** Sends a test alert to the channel as the window holds it, and says in the window what came of it. */
+    async testChannelFromWindow() {
+        const c = this.channelFromWindow();
+        const result = this.shadowRoot?.getElementById('channel-test-result') as HTMLElement | null;
+        if (!c || !result) return;
+        const say = (text: string, bad: boolean) => { result.textContent = text; result.style.color = bad ? 'var(--danger-color)' : 'var(--success-color)'; };
+        say('…', false);
+        try {
+            await testChannel(c);
+            say(i18n.t('settings.notify_test_ok'), false);
+        } catch (e) {
+            const word = String((e as Error)?.message || '').trim();
+            if (word === 'error.invalid_url') { say(i18n.t('error.invalid_url'), true); return; }
+            const why = failureText(word);
+            say(i18n.t('notify.test_failed', { reason: i18n.t(why.key, why.params) }), true);
+        }
+        // What the test came to is on the channel now: the list reads it again behind the window.
+        if (c.id) { void fetchChannels().then(got => { this.channels = got.channels; }).catch(() => { /* the window already said it */ }); }
     }
 
     attributeChangedCallback(name: string, oldValue: string, newValue: string) {
@@ -1325,6 +1508,9 @@ class SettingsContent extends HTMLElement {
             }
             if (newValue === 'monitoring' || newValue === 'notifications') {
                 this.fetchMonitoring();
+            }
+            if (newValue === 'notifications') {
+                this.fetchChannels();
             }
             if (newValue === 'proxmox') {
                 this.fetchProxmox();
@@ -1737,11 +1923,21 @@ class SettingsContent extends HTMLElement {
             case 'data':
                 return dataTemplate(this.pendingIcons, this.localIcons, this.storingIcons, dataSections(userStore.getUser()));
 
-            // 'notifications' used to be its own section; anything still
-            // pointing there lands on the section that absorbed it.
             case 'monitoring':
+                return monitoringTemplate(this.monitoring, this.monitoringLoaded, this.monitoringFailed);
+
             case 'notifications':
-                return monitoringTemplate(this.monitoring, this.monitoringLoaded, this.monitoringFailed, accessAllows(userStore.getUser(), 'watch_alerts'), this.push, this.alertTextsOpen);
+                return notificationsTemplate({
+                    loaded: this.monitoringLoaded && this.channelsLoaded,
+                    failed: this.monitoringFailed || this.channelsFailed,
+                    channels: this.channels,
+                    max: this.channelsMax,
+                    monitoringOn: this.monitoring.mode === 'background',
+                    failThreshold: this.monitoring.fail_threshold,
+                    push: this.push,
+                    alertTextsOpen: this.alertTextsOpen,
+                    texts: this.monitoring as Record<string, unknown>,
+                });
 
             case 'docker':
                 return dockerTemplate(this.docker, this.dockerLoaded, this.dockerFailed, this.dockerStatus);
@@ -2064,21 +2260,6 @@ class SettingsContent extends HTMLElement {
             });
         }
 
-        const notifyTypeSelect = this.shadowRoot!.getElementById('notify-type') as any;
-        if (notifyTypeSelect) {
-            notifyTypeSelect.options = [
-                { value: 'none', label: i18n.t('settings.notify_none') },
-                { value: 'ntfy', label: 'ntfy' },
-                { value: 'gotify', label: 'Gotify' },
-                { value: 'webhook', label: i18n.t('settings.notify_webhook') },
-                { value: 'push', label: i18n.t('settings.notify_push') },
-            ];
-            notifyTypeSelect.addEventListener('change', async (e: CustomEvent) => {
-                const type = e.detail;
-                await this.saveMonitoring({ notify_type: type });
-                if (type === 'push') this.fetchPush();
-            });
-        }
 
         const importFormatSelect = this.shadowRoot!.getElementById('import-format') as any;
         if (importFormatSelect) {

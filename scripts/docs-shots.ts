@@ -203,6 +203,7 @@ const SETTINGS_SECTIONS: [string, string][] = [
     ['personalization', 'p-personalization'],
     ['users', 'p-users'],
     ['monitoring', 'p-monitoring'],
+    ['notifications', 'p-notifications'],
     ['proxmox', 'p-proxmox'],
     ['docker', 'p-docker'],
     ['data', 'p-data'],
@@ -999,9 +1000,14 @@ async function seedLiveData(dbPath: string, token: string, csrf: string) {
     }
 
     // 24/7 monitoring on, so the status page and the widget have something to say.
-    await api('/monitor/settings', {
-        mode: 'background', interval_sec: 300, alerts_enabled: true,
-        notify_type: 'ntfy', notify_url: 'https://ntfy.sh/my-topic', notify_token: '', fail_threshold: 2,
+    await api('/monitor/settings', { mode: 'background', interval_sec: 300, fail_threshold: 2 });
+    // Where its alerts go: three channels of different kinds, one of them off, so the list shows what it is for.
+    await api('/monitor/channels', {
+        channels: [
+            { type: 'push', name: '', enabled: true },
+            { type: 'ntfy', name: 'Family phone', url: 'https://ntfy.sh/my-topic', enabled: true },
+            { type: 'webhook', name: 'Home Assistant', url: 'https://ha.example.com/api/webhook/lastboard', enabled: false },
+        ],
     });
 
     const { Database } = await import('bun:sqlite');

@@ -16,7 +16,7 @@ const row = (over: Partial<ServiceRow> & { name: string }): ServiceRow => readRo
     item_id: 1, status: 'up', uptime_pct: 100, latency_ms: 100, avg_ms_24h: 100, url: 'plex.lan', board: 'Media', uptime_7d: 100, uptime_30d: 100, heartbeat: [], ...over,
 });
 const view = (r: ServiceRow, over: Partial<ServiceView> = {}): ServiceView => ({ row: r, face: '', selected: false, showBoard: false, ...over });
-const setup = (over: Partial<MonitoringSetup> = {}): MonitoringSetup => ({ mode: 'background', interval_sec: 300, alerts_enabled: true, notify_type: 'ntfy', fail_threshold: 3, retention_days: 30, ...over });
+const setup = (over: Partial<MonitoringSetup> = {}): MonitoringSetup => ({ mode: 'background', interval_sec: 300, alerts_enabled: true, notify_methods: ['ntfy'], fail_threshold: 3, retention_days: 30, ...over });
 
 const noMarkup = (html: string, payload: string) => {
     expect(html).not.toContain(payload);
@@ -81,15 +81,20 @@ describe('the four indicators', () => {
         expect(k).toContain('data-act="settings"');
     });
     test('alerts and their threshold are not mentioned until the person turns alerts on', () => {
-        for (const k of [monitoringKpi(setup({ alerts_enabled: false }), t, fmt), monitoringKpi(setup({ alerts_enabled: false, notify_type: 'ntfy' }), t, fmt), monitoringKpi(setup({ mode: 'tab' }), t, fmt)]) {
+        for (const k of [monitoringKpi(setup({ alerts_enabled: false }), t, fmt), monitoringKpi(setup({ alerts_enabled: false, notify_methods: ['ntfy'] }), t, fmt), monitoringKpi(setup({ mode: 'tab' }), t, fmt)]) {
             expect(k).not.toContain('monitorpage.alerts');
             expect(k).not.toContain('monitorpage.threshold');
             expect(k).not.toContain('monitorpage.off');
             expect(k).toContain('data-act="settings"');
         }
-        const on = monitoringKpi(setup({ alerts_enabled: true, notify_type: 'ntfy', fail_threshold: 3 }), t, fmt);
+        const on = monitoringKpi(setup({ alerts_enabled: true, notify_methods: ['ntfy'], fail_threshold: 3 }), t, fmt);
         expect(on).toContain('[monitorpage.alerts:method=');
         expect(on).toContain('[monitorpage.threshold]: N(3)');
+    });
+    test('says every kind of channel the alerts go to, once each', () => {
+        const several = monitoringKpi(setup({ alerts_enabled: true, notify_methods: ['push', 'ntfy', 'ntfy', 'webhook'] }), t, fmt);
+        expect(several).toContain('Push, ntfy, Webhook');
+        expect(several.match(/ntfy/g)?.length).toBe(1);
     });
     test('monitoring off: the page says it is live only, and offers the way to turn it on', () => {
         const k = monitoringKpi(setup({ mode: 'tab' }), t, fmt);

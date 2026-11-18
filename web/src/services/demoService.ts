@@ -29,9 +29,7 @@ const DEFAULT_MONITOR_SETTINGS = {
     mode: 'background',
     interval_sec: 300,
     alerts_enabled: true,
-    notify_type: 'ntfy',
-    notify_url: 'https://ntfy.sh/lastboard-demo',
-    notify_has_token: false,
+    notify_methods: ['ntfy'],
     fail_threshold: 2,
 };
 

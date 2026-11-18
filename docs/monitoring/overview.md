@@ -12,7 +12,7 @@ Monitoring adds history and alerting on top of that indicator.
 
 ## 24/7 Monitoring
 
-Open **Settings → Monitoring**. Monitoring is **yours**: the **24/7 monitoring** toggle, the check interval and the alerts apply to your own bookmarks, and every account sets them for itself. Someone who has not chosen yet starts from the values the server had when accounts got their own.
+Open **Settings → Monitoring**. Monitoring is **yours**: the **24/7 monitoring** toggle and the check interval apply to your own bookmarks, and every account sets them for itself, as it does where its alerts go (see [Notifications](#notifications)). Someone who has not chosen yet starts from the values the server had when accounts got their own.
 
 ![Monitoring settings](../assets/p-monitoring.png)
 
@@ -85,17 +85,32 @@ Clearing data does not turn monitoring off — new checks start accumulating aga
 
 ## Notifications
 
-When **24/7 monitoring** is on, Lastboard can send an alert when a service goes down and again when it recovers. Configure this in **Settings → Monitoring**, in the Notifications card below the monitoring settings — the screenshot at the top of this page shows both cards.
+When **24/7 monitoring** is on, Lastboard can send an alert when a service goes down and again when it recovers. Where alerts go is set in **Settings → Notifications**, a section of its own: a list of **channels**, as Docker and Proxmox have lists of hosts. Alerts only go out while 24/7 monitoring is on (**Settings → Monitoring**); the Notifications section says so, with a button to the place where it is turned on, when it is off.
+
+![Settings → Notifications: the list of channels, each with its own switch, the push devices and the settings every channel shares](../assets/p-notifications.png)
+
+An alert is sent to **every channel that is on**, each on its own, so one that is down does not stop the others. You can have several of the same kind (two ntfy topics, one for you and one for someone else) and up to **10** in all; push is the only one that can be there once, because its destination is your own browsers. There is no switch for alerts as a whole: they are on when any channel is, and the section says when every one is off.
+
+Each channel is a row with its name (or its kind, if you gave it none), where it goes (the host, never the whole address, since the path of a topic or a webhook is what keeps strangers from sending to it), its own **switch**, and **Edit** and **Remove** (which asks first). Under the name, the row says how the **last alert** to that channel went: delivered, or failed with the reason in words — "the server answered HTTP 401", "no answer in time", "it could not be reached". **+ Add channel** opens a window:
+
+| Field | Description |
+| :--- | :--- |
+| **Type** | **Push notifications**, **ntfy**, **Gotify** or **Webhook**. It cannot be changed once the channel exists: another kind is another channel, with its own address and token. |
+| **Name** | Optional, up to 40 characters, to tell channels apart ("My phone"). |
+| **URL** | The ntfy topic URL, the Gotify server URL, or your webhook endpoint. Not used by Push notifications. |
+| **Token** | Optional. Bearer token for ntfy/webhook, or the app token for Gotify. Once saved it is never shown: the field holds dots, so you can tell one is there, and has no reveal option. Type a new token to replace it; empty the field to remove it. Not used by Push notifications. |
+| **On** | Whether alerts are sent to this channel. |
+
+**Send test**, in the same window, fires a test notification to that channel as the window holds it — before you save it, if you like — and says what came of it right there. The result also shows on the channel's row.
+
+Below the list, in an **Alerts** card, are the settings every channel shares:
 
 | Setting | Description |
 | :--- | :--- |
-| **Alerts** | Turns notifications on. Everything below only appears once it is on. |
-| **Notification method** | **None**, **ntfy**, **Gotify**, **Webhook**, or **Push notifications**. |
-| **URL** | The ntfy topic URL, the Gotify server URL, or your webhook endpoint. Not used by Push notifications. |
-| **Token** | Optional. Bearer token for ntfy/webhook, or the app token for Gotify. Once saved it is never shown: the field holds dots, so you can tell one is there, and has no reveal option. Type a new token to replace it; empty the field to remove it. Not used by Push notifications. |
-| **Fail threshold** | How many **consecutive** failed checks trigger a down alert: **1, 2, 3, or 5**. A higher value avoids alerts on brief blips. |
+| **Failures before an alert** | How many **consecutive** failed checks trigger a down alert: **1, 2, 3, or 5**. A higher value avoids alerts on brief blips. |
+| **Advanced · alert messages** | The wording of the alerts (see [Language and wording](#language-and-wording-of-alerts)), in a fold that starts closed. |
 
-Use **Send test** to fire a test notification with the current settings and confirm delivery before relying on it.
+An account that had one method set up before channels existed finds it as the first entry of its list when it updates, on or off as its alerts switch was, with its address and token: nothing to do. A backup from before channels is restored the same way.
 
 ### What each method sends
 
@@ -118,7 +133,7 @@ Use **Send test** to fire a test notification with the current settings and conf
 
 Every method says the same thing, and says it in **the language of the account that owns the service** (the one it chose under **Personalization → Language**), in all twenty languages Lastboard speaks. An outage names what failed and why — "No response", or the HTTP status the check got back — and how many checks in a row failed; a recovery says how long the service was down. After a restart Lastboard does not know when an outage began, so a recovery of a service that was already down then only says that it responds again.
 
-You can write the wording yourself. Under **Advanced · alert messages**, a fold that starts closed at the foot of the same card as the failure threshold (press its title to open it), there is a box for the title and the text of an outage and of a recovery. Each one that you leave empty keeps the translated default, which the box shows as its placeholder, and **Use the default texts** empties all four. What you write is used as you write it, in whatever language you choose, with these markers filled in:
+You can write the wording yourself. Under **Advanced · alert messages**, a fold that starts closed in the **Alerts** card of **Settings → Notifications** (press its title to open it), there is a box for the title and the text of an outage and of a recovery. Each one that you leave empty keeps the translated default, which the box shows as its placeholder, and **Use the default texts** empties all four. What you write is used as you write it, in whatever language you choose, with these markers filled in:
 
 | Marker | Replaced by |
 | :--- | :--- |
@@ -127,15 +142,15 @@ You can write the wording yourself. Under **Advanced · alert messages**, a fold
 | `{reason}` | "No response" or the HTTP status the check got back (outage). |
 | `{duration}` | How long the service was down (recovery). |
 
-A text is at most 200 characters, and a marker that is not in the table stays as you wrote it. **Send test** uses your wording, in your language, with the word "Test" in front so it cannot be taken for a real outage. Each account has its own, and they are part of a backup.
+A text is at most 200 characters, and a marker that is not in the table stays as you wrote it. **Send test** in a channel's window uses your wording, in your language, with the word "Test" in front so it cannot be taken for a real outage. Each account has its own, and they are part of a backup.
 
 ### Push notifications
 
 Push notifications reach a device while no Lastboard tab is open, which none of the other methods do on their own: ntfy and Gotify need their own app, and a webhook needs something on the other end. It is **off until you choose it**, and nothing is asked of your browser until you press the button.
 
-1. In **Settings → Monitoring**, turn on **24/7 monitoring** and **Alerts**, and choose **Push notifications** as the method.
-2. On each device you want alerted, open Lastboard, go to the same place and press **Enable**. The browser asks permission to show notifications; allow it. This has to be done on the device itself, from a tap, because a browser will not let a page grant that for another.
-3. Press **Send test**. A notification should arrive on every device you enabled.
+1. In **Settings → Monitoring**, turn on **24/7 monitoring**. In **Settings → Notifications**, press **+ Add channel**, choose **Push notifications** and save.
+2. On each device you want alerted, open Lastboard, go to **Settings → Notifications** and press **Enable** in the push card. The browser asks permission to show notifications; allow it. This has to be done on the device itself, from a tap, because a browser will not let a page grant that for another.
+3. Open the push channel with **Edit** and press **Send test**. A notification should arrive on every device you enabled.
 
 Your enabled devices are listed under **Your devices** with the last time something was delivered to each. **Remove** takes one off the list, and **Disable** on the current device also tells the browser to let go of it. Each account has its own devices: alerts for the services on your boards go to your devices, and nobody else can see or remove them. An account can have up to 20.
 

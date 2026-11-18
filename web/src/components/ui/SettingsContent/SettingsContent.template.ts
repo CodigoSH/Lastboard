@@ -2,9 +2,10 @@ import { sessionIsOnline, sessionsInOrder } from '../../../services/sessionsOrde
 import { agentIsOld } from '../../../services/dockerShared';
 import { i18n } from '../../../services/i18n';
 import { escapeHtml as esc, safeImageSrc } from '../../../services/escape';
-import { SECRET_MASK } from '../../../services/secretField';
 import type { PushView } from '../../../services/pushClient';
 import { unixToDate } from '../../../services/pushSupport';
+import { hasPush, type NotifyChannel } from '../../../services/notifyChannelList';
+import { channelsCardHtml, channelModalHtml } from './notifyChannels.template';
 import { ALERT_TEXT_FIELDS, ALERT_MARKERS } from './alertTexts';
 import type { AccountDockerHost } from '../../../services/dockerHostList';
 import { roleOrLabel } from '../../../services/accountAccess';
@@ -585,9 +586,8 @@ const pushTemplate = (push: PushView | undefined) => {
 };
 
 export const monitoringTemplate = (monitoring: {
-    mode: string; interval_sec: number; alerts_enabled: boolean;
-    notify_type: string; notify_url: string; notify_has_token: boolean; fail_threshold: number;
-}, loaded: boolean, failed: boolean, mayAlert = true, push?: PushView, alertTextsOpen = false) => {
+    mode: string; interval_sec: number;
+}, loaded: boolean, failed: boolean) => {
     // Until the server has answered there is nothing true to draw. The switches
     // used to be painted from the placeholder, so this section claimed 24/7 and
     // alerts were off before it knew — and a switch flipped in that window saved
@@ -641,62 +641,73 @@ export const monitoringTemplate = (monitoring: {
                 </div>
             </div>
         </div>
+    </div>
+`;
+};
 
-        ${mayAlert ? `<div class="bento-card">
+/** What the Notifications section needs to be drawn. */
+export interface NotificationsView {
+    loaded: boolean;
+    failed: boolean;
+    channels: NotifyChannel[];
+    max: number;
+    /** 24/7 monitoring is on: alerts only go out while it is. */
+    monitoringOn: boolean;
+    failThreshold: number;
+    push: PushView | undefined;
+    alertTextsOpen: boolean;
+    /** The account's own wording, for the fold of advanced texts. */
+    texts: Record<string, unknown>;
+}
+
+/**
+ * Where alerts go. One card with the list of channels, each on its own switch, and the window that adds or
+ * edits one; push, when it is in the list, brings the browsers it reaches; and the settings every channel
+ * shares (the failures before an alert, and the wording) come last, the wording folded away.
+ */
+export const notificationsTemplate = (v: NotificationsView) => {
+    if (!v.loaded) {
+        return `
+    <div class="bento-grid" style="grid-template-columns: 1fr;">
+        <div class="bento-card">
             <h3 class="settings-content__title">${i18n.t('settings.notifications')}</h3>
-            ${!on24 ? `<p class="settings-content__text-dim" style="font-size:13px;margin:0 0 14px;">${i18n.t('settings.alerts_requires_247')}</p>` : ''}
+            <p class="settings-content__text-dim" style="font-size:13px;margin:0;">
+                ${v.failed ? i18n.t('settings.monitoring_unavailable') : i18n.t('general.loading')}
+            </p>
+        </div>
+    </div>
+`;
+    }
+    const t = (key: string, params?: Record<string, string>) => i18n.t(key, params);
+    const ctx = {
+        devices: v.push ? v.push.devices.length : null,
+        when: (s: number) => i18n.formatSpan(s * 1000) ?? i18n.formatDateTime(unixToDate(s), { timeStyle: 'short' }),
+    };
+    return `
+    <div class="bento-grid" style="grid-template-columns: 1fr;">
+        ${channelsCardHtml({ channels: v.channels, max: v.max, monitoringOn: v.monitoringOn }, t, ctx)}
+
+        ${hasPush(v.channels) ? `<div class="bento-card">
+            <h3 class="settings-content__title">${i18n.t('settings.notify_push')}</h3>
+            <div class="settings-content__action-group">${pushTemplate(v.push)}</div>
+        </div>` : ''}
+
+        ${v.channels.length > 0 ? `<div class="bento-card">
+            <h3 class="settings-content__title">${i18n.t('settings.alerts')}</h3>
             <div class="settings-content__action-group">
-                <div class="settings-content__action-row">
-                    <div class="settings-content__action-info">
-                        <h3>${i18n.t('settings.alerts')}</h3>
-                        <p>${i18n.t('settings.alerts_desc')}</p>
-                    </div>
-                    <label class="toggle-switch">
-                        <input type="checkbox" id="alerts-toggle" data-change="alerts-toggle" ${monitoring.alerts_enabled ? 'checked' : ''}>
-                        <span class="slider"></span>
-                    </label>
-                </div>
-                ${monitoring.alerts_enabled ? `
-                <div class="settings-content__action-row">
-                    <div class="settings-content__action-info">
-                        <h3>${i18n.t('settings.notify_method')}</h3>
-                    </div>
-                    <app-select id="notify-type" value="${esc(monitoring.notify_type)}"></app-select>
-                </div>
-                ${monitoring.notify_type && monitoring.notify_type !== 'none' ? `
-                ${monitoring.notify_type === 'push' ? pushTemplate(push) : `
-                <div class="settings-content__form-group">
-                    <label class="settings-content__label">${i18n.t('settings.notify_url')}</label>
-                    <input type="text" id="notify-url" class="settings-content__input" data-change="notify-url" value="${esc(monitoring.notify_url)}" spellcheck="false" placeholder="${monitoring.notify_type === 'ntfy' ? 'https://ntfy.sh/mi-tema' : monitoring.notify_type === 'gotify' ? 'https://gotify.midominio.com' : 'https://…'}" />
-                    <p class="settings-content__text-dim" style="font-size: 11px; margin: 5px 0 0 0;">${i18n.t('settings.notify_url_desc')}</p>
-                </div>
-                <div class="settings-content__form-group" style="margin-top: 14px;">
-                    <label class="settings-content__label">${i18n.t('settings.notify_token')}</label>
-                    <input type="password" id="notify-token" class="settings-content__input" data-change="notify-token" value="${monitoring.notify_has_token ? SECRET_MASK : ''}" spellcheck="false" autocomplete="new-password" placeholder="" />
-                    <p class="settings-content__text-dim" style="font-size: 11px; margin: 5px 0 0 0;">${monitoring.notify_has_token ? i18n.t('settings.notify_token_saved') : i18n.t('settings.notify_token_desc')}</p>
-                </div>`}
                 <div class="settings-content__action-row">
                     <div class="settings-content__action-info">
                         <h3>${i18n.t('settings.fail_threshold')}</h3>
                         <p>${i18n.t('settings.fail_threshold_desc')}</p>
                     </div>
-                    <app-select id="fail-threshold" value="${monitoring.fail_threshold}"></app-select>
+                    <app-select id="fail-threshold" value="${v.failThreshold}"></app-select>
                 </div>
-                ${alertTextsTemplate(monitoring, alertTextsOpen)}
-                ` : ''}
-                ` : ''}
+                ${alertTextsTemplate(v.texts, v.alertTextsOpen)}
             </div>
-            ${monitoring.alerts_enabled && monitoring.notify_type && monitoring.notify_type !== 'none' ? `
-            <div class="settings-content__action-group settings-content__action-group--actions">
-                <div class="settings-content__action-row">
-                    <div class="settings-content__action-info">
-                        <h3>${i18n.t('settings.notify_test')}</h3>
-                    </div>
-                    <app-button variant="primary" data-action="test-notify">${i18n.t('settings.notify_test_btn')}</app-button>
-                </div>
-            </div>` : ''}
         </div>` : ''}
     </div>
+
+    ${channelModalHtml(t)}
 `;
 };
 

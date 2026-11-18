@@ -154,7 +154,7 @@ A restore replaces the database, but your browser may still hold cached assets o
 ## Notifications never arrive
 
 - Alerts require **24/7 monitoring** — there's no server to send them in tab mode.
-- Use **Send test** in **Settings → Monitoring** to verify the endpoint and token.
+- Use **Send test** in the channel's window, in **Settings → Notifications**, to verify the endpoint and token; the channel's row says how its last alert went.
 - Check that the notification server is reachable from the Lastboard host.
 
 See [Monitoring → Notifications](../monitoring/overview.md#notifications).

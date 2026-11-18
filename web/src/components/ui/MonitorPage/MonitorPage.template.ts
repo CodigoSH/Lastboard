@@ -89,12 +89,13 @@ export interface MonitoringSetup {
     mode: string;
     interval_sec: number;
     alerts_enabled: boolean;
-    notify_type: string;
+    /** The kinds of the channels that are on (ntfy, gotify, webhook, push): alerts go to every one. */
+    notify_methods: string[];
     fail_threshold: number;
     retention_days: number;
 }
 
-const NOTIFY_NAMES: Record<string, string> = { ntfy: 'ntfy', gotify: 'Gotify', webhook: 'Webhook' };
+const NOTIFY_NAMES: Record<string, string> = { ntfy: 'ntfy', gotify: 'Gotify', webhook: 'Webhook', push: 'Push' };
 
 type Tone = 'ok' | 'warn' | 'bad' | '';
 
@@ -132,7 +133,7 @@ export function monitoringKpi(setup: MonitoringSetup | null, t: T, fmt: Fmt): st
     if (!setup) return kpiHtml({ label, icon: 'gear', value: '—' });
     // Alerts and their threshold are said only once the person has turned alerts on: until then they are not part of the picture.
     const alertsOn = setup.mode === 'background' && setup.alerts_enabled;
-    const method = NOTIFY_NAMES[setup.notify_type] ?? t('monitorpage.on');
+    const method = [...new Set(setup.notify_methods ?? [])].map(m => NOTIFY_NAMES[m] ?? t('monitorpage.on')).join(', ') || t('monitorpage.on');
     const chips: { text: string; tone: Tone }[] = setup.mode === 'background' ? [{ text: `● ${t('monitorpage.on')}`, tone: 'ok' }] : [];
     if (alertsOn) chips.push({ text: t('monitorpage.alerts', { method }), tone: '' });
     const more = { text: t('monitorpage.settings'), act: 'settings' };
