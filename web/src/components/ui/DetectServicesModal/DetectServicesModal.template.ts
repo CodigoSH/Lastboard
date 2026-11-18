@@ -27,6 +27,8 @@ export interface RowView {
     group: RowGroup;
     /** The address in use is its console in the hypervisor's own interface, which is long and not one to read. */
     console: boolean;
+    /** A bookmark that seems to be it is on the board without being tied to it: it can be tied now. */
+    canLink?: boolean;
 }
 
 /** One section of what is about to be added, as the board will show it: its title and the tiles that go in it. */
@@ -130,7 +132,7 @@ export function rowHtml(r: RowView, t: T): string {
         return `${head}
         ${faceButton(r, t)}
         <div class="row__body"><div class="row__title"><span class="row__name">${e(r.name)}</span></div><div class="row__sub"><span class="chip chip--linked" title="${e(t('detect.already', { name: r.linkedTo }))}">${e(t('detect.already', { name: r.linkedTo }))}</span></div></div>
-        <div class="row__actions">${act('anyway', t('detect.add_anyway'))}</div>
+        <div class="row__actions">${r.canLink ? act('link', t('detect.link')) : ''}${act('anyway', t('detect.add_anyway'))}</div>
     </div>`;
     }
     if (r.group === 'ignored') {
@@ -177,8 +179,13 @@ export function groupHtml(group: RowGroup, rows: RowView[], v: Pick<WindowView, 
         </section>`;
     }
     const open = v.open[group];
+    // Bookmarks that seem to be these services but are tied to none can be tied all at once, without opening the group.
+    const linkable = group === 'linked' ? rows.filter(r => r.canLink).length : 0;
+    const bar = linkable
+        ? `<div class="group__bar"><span class="group__hint">${e(t('detect.link_hint'))}</span><button type="button" class="act act--linkall">${e(t('detect.link_all', { count: String(linkable) }))}</button></div>`
+        : '';
     return `<section class="group group--${group}" data-group="${group}">
-            <button type="button" class="group__head group__head--fold" data-fold="${group}" aria-expanded="${open}">${CHEVRON}<span class="group__title">${title}</span></button>
+            <button type="button" class="group__head group__head--fold" data-fold="${group}" aria-expanded="${open}">${CHEVRON}<span class="group__title">${title}</span></button>${bar}
             <div class="group__rows"${open ? '' : ' hidden'}>${rows.map(r => rowHtml(r, t)).join('')}</div>
         </section>`;
 }

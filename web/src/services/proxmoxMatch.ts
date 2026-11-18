@@ -83,6 +83,22 @@ export function buildNameIndex<T>(entries: { keys: string[]; value: T }[]): Map<
     return index;
 }
 
+/**
+ * The place an address points at, for telling whether a bookmark and a service are the same thing: the host and
+ * the port, the scheme's own port when none is written. The scheme, the path and the case do not count, and an
+ * address that is not one gives ''.
+ */
+export function placeOf(url: string): string {
+    const raw = (url || '').trim();
+    if (!raw) return '';
+    try {
+        const u = new URL(/^[a-z][a-z0-9+.-]*:\/\//i.test(raw) ? raw : `http://${raw}`);
+        if (u.protocol !== 'http:' && u.protocol !== 'https:') return '';
+        const port = u.port || (u.protocol === 'https:' ? '443' : '80');
+        return u.hostname ? `${u.hostname.toLowerCase()}:${port}` : '';
+    } catch { return ''; }
+}
+
 /** What the index says about one machine, or nothing when it cannot be sure. */
 export function guessByName<T>(index: Map<string, T | null>, machineName: string): T | null {
     return index.get(machineKey(machineName)) ?? null;

@@ -46,6 +46,23 @@ describe('a row', () => {
         expect(linked).toContain('row--linked');
         expect(linked).toContain('&quot;name&quot;:&quot;My Plex&quot;');
     });
+    test('a service that a bookmark seems to be can be tied to it, and one that cannot is only told about', () => {
+        const can = rowHtml(row({ group: 'linked', linkedTo: 'My Plex', canLink: true }), t);
+        expect(can).toContain('act--link"');
+        expect(can).toContain('act--anyway');
+        const cannot = rowHtml(row({ group: 'linked', linkedTo: 'My Plex' }), t);
+        expect(cannot).not.toContain('act--link"');
+        expect(cannot).toContain('act--anyway');
+        // The row to add has nothing to tie.
+        expect(rowHtml(row({ canLink: true }), t)).not.toContain('act--link"');
+    });
+    test('the group of bookmarks already on the board offers to tie them all, and says how many', () => {
+        const rows = [row({ key: 'a', group: 'linked', canLink: true }), row({ key: 'b', group: 'linked', canLink: true }), row({ key: 'c', group: 'linked' })];
+        const html = groupHtml('linked', rows, { open: { linked: false, ignored: false } }, t);
+        expect(html).toContain('act--linkall');
+        expect(html).toContain('[detect.link_all:{&quot;count&quot;:&quot;2&quot;}]');
+        expect(groupHtml('linked', [row({ group: 'linked' })], { open: { linked: false, ignored: false } }, t)).not.toContain('act--linkall');
+    });
     test('can be found by its name', () => {
         expect(rowHtml(row({ name: 'Home Assistant', key: 'h1/ha' }), t)).toContain('data-search="home assistant h1/ha"');
     });

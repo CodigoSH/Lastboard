@@ -148,6 +148,8 @@ button.group__head .group__title { flex: 0 1 auto; }
 
 .group__rows[hidden] { display: none; }
 .group__empty { margin: 0; padding: 14px 12px; font-size: 13px; color: var(--text-dim); }
+.group__bar { display: flex; align-items: center; gap: 12px; padding: 0 12px 4px; }
+.group__hint { flex: 1 1 auto; min-inline-size: 0; font-size: 12.5px; color: var(--text-dim); }
 .group__rows { display: flex; flex-direction: column; gap: 3px; }
 
 /* A row is not a card inside the frame's card: it is a line of the list that lights up when it is touched or chosen,

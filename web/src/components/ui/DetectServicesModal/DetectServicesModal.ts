@@ -9,7 +9,9 @@ import { fetchDockerSettings, hostsForWidget } from '../../../services/dockerHos
 import { fetchContainers, hostAddress, hostErrorKey, type DockerHost } from '../../../services/dockerShared';
 import { loadDockerLinks, clearDockerLinks, dockerLinkKey } from '../../../services/dockerLinks';
 import { loadProxmox, chosenIcon as machineIcon } from '../../../services/proxmoxApi';
-import { loadProxmoxLinks, linkFor as machineLink, bookmarkNamed, clearProxmoxLinks } from '../../../services/proxmoxLinks';
+import { loadProxmoxLinks, linkFor as machineLink, bookmarkNamed, bookmarkAt, clearProxmoxLinks, type PxLink } from '../../../services/proxmoxLinks';
+import { dashboardService } from '../../../services/dashboardService';
+import { isLinked, linkedContent } from '../../../services/linkExisting';
 import { fetchAddresses, fetchProxmoxHosts, type ProxmoxHostRef } from '../../../services/proxmoxAddresses';
 import { buildIconIndex } from '../../../services/importIcons';
 import { materializeIcon } from '../../../services/iconStore';
@@ -26,7 +28,7 @@ import { probeAddresses } from '../../../services/probeAddresses';
 import { dismissKey, fetchDismissed, saveDismissals } from '../../../services/dismissedServices';
 import {
     candidateUrl, discoverDocker, discoverProxmox, pickIconName, planServices, sectionTitleFor,
-    type Discovery, type NewService, type ServiceProposal,
+    type BookmarkMatch, type Discovery, type NewService, type ServiceProposal,
 } from '../../../services/discoverServices';
 import { createDetected, type NewBookmark } from '../../../services/createDetected';
 import type { BoardItem, SectionToPlace } from '../../../services/placeServices';
@@ -44,6 +46,8 @@ interface RowState {
     /** True once the person typed in the address box: a new host address no longer rewrites it. */
     edited: boolean;
     iconUrl: string;
+    /** The icon this service would get if it were added, whatever the row shows now. */
+    ownIcon: string;
     /** The person chose to ignore it: it is not proposed, and it is not counted as left to add. */
     ignored: boolean;
     /** The person asked to add it although a bookmark seems to serve it already. */
@@ -55,6 +59,15 @@ interface RowState {
 }
 
 const t = (key: string, params?: Record<string, string>) => i18n.t(key, params);
+
+/** A bookmark tied to a machine by hand names it (a guess from the name does not). */
+const tiedTo = (l: PxLink | null): PxLink | null => (l && l.vmid > 0 ? l : null);
+
+/** A bookmark found by name or address, with what is needed to tie it afterwards; nothing for one the server did not identify. */
+function asMatch(l: PxLink | null): BookmarkMatch | null {
+    if (!l || l.vmid > 0 || l.itemId === undefined || !l.content) return null;
+    return { label: l.label, icon: l.icon, itemId: l.itemId, boardId: l.boardId ?? null, content: l.content };
+}
 
 /**
  * "Detect services": lists what a host's containers, or a hypervisor's machines,
@@ -163,6 +176,9 @@ class DetectServicesModal extends HTMLElement {
         this.view.result = result;
         this.paint();
 
+        // What is on the board is read afresh each time: an index kept from a minute ago, or built before the open
+        // board had loaded, would offer as new what a bookmark already is.
+        this.forgetLinks();
         try {
             const found = this.source === 'docker' ? await this.readDocker(hostId) : await this.readProxmox(hostId);
             if (token !== this.loadToken) return;
@@ -204,7 +220,9 @@ class DetectServicesModal extends HTMLElement {
             host,
             // A container tied to a bookmark by hand, or else one the bookmark's name says it is:
             // a board made before this page existed is full of them, and a second one is a duplicate.
-            linkedLabel: name => links.get(dockerLinkKey(host.id, name))?.label ?? bookmarkNamed(name)?.label ?? '',
+            linkedLabel: name => links.get(dockerLinkKey(host.id, name))?.label ?? '',
+            linkedIcon: name => links.get(dockerLinkKey(host.id, name))?.icon ?? '',
+            matchOf: name => asMatch(bookmarkNamed(name)),
             chosenIcon: name => settings.icons?.[`${host.id}/${name}`] ?? '',
         });
     }
@@ -228,7 +246,13 @@ class DetectServicesModal extends HTMLElement {
             guests: px.guests,
             addresses,
             urls,
-            linkedLabel: g => machineLink({ vmid: g.vmid, node: g.node, name: g.name, host: ref.id })?.label ?? '',
+            // Tied by hand (it names a machine) or only guessed from its name (it does not).
+            linkedLabel: g => tiedTo(machineLink({ vmid: g.vmid, node: g.node, name: g.name, host: ref.id }))?.label ?? '',
+            linkedIcon: g => tiedTo(machineLink({ vmid: g.vmid, node: g.node, name: g.name, host: ref.id }))?.icon ?? '',
+            matchOf: g => {
+                const l = machineLink({ vmid: g.vmid, node: g.node, name: g.name, host: ref.id });
+                return l && !tiedTo(l) ? asMatch(l) : null;
+            },
             chosenIcon: g => machineIcon(px, g.node, g.vmid),
         });
     }
@@ -246,9 +270,19 @@ class DetectServicesModal extends HTMLElement {
             const lib = pickIconName(p.iconNames, this.iconIndex);
             const libUrl = lib ? this.iconIndex.get(lib) ?? this.iconIndex.get(lib.replace(/_/g, '-')) ?? '' : '';
             const left = dismissed.has(dismissKey(p.link));
+            // A bookmark at the address of one of its addresses is that service, whatever it is called.
+            if (!p.linkedTo) {
+                for (const u of urls) {
+                    const hit = asMatch(bookmarkAt(u));
+                    if (hit) { p.match = hit; p.linkedTo = hit.label; p.linkedIcon = hit.icon; p.selected = false; break; }
+                }
+            }
+            const own = p.chosenIcon || p.labelIcon || libUrl;
+            // A service that is on the board already wears the icon of the bookmark that serves it.
+            const shown = p.linkedTo && p.linkedIcon ? resolveIconUrl(p.linkedIcon) : own;
             return [p.key, {
                 proposal: p, checked: p.selected && !left, name: p.name, url: urls[0] ?? '', edited: false,
-                iconUrl: p.chosenIcon || p.labelIcon || libUrl, ignored: left, forced: false, pickedIcon: '', choice: 0,
+                iconUrl: shown, ownIcon: own, ignored: left, forced: false, pickedIcon: '', choice: 0,
             }];
         }));
         this.view.state = this.rows.size === 0 ? 'empty' : 'ready';
@@ -302,6 +336,7 @@ class DetectServicesModal extends HTMLElement {
             iconUrl: r.iconUrl,
             health: this.health.get(r.url) ?? '',
             group: this.groupOf(r),
+            canLink: this.canLink(r),
             console: !r.edited && r.proposal.candidates[r.choice]?.source === 'console' && r.url === candidateUrl(r.proposal.candidates[r.choice], this.view.address),
         }));
     }
@@ -309,6 +344,12 @@ class DetectServicesModal extends HTMLElement {
     /** Where a row is listed: ignored by the person, or already served by a bookmark, or there to be added. */
     private groupOf(r: RowState): 'add' | 'linked' | 'ignored' {
         return r.ignored ? 'ignored' : r.proposal.linkedTo && !r.forced ? 'linked' : 'add';
+    }
+
+    /** A bookmark that seems to be this service is on the board, tied to nothing, and has no link of its kind yet. */
+    private canLink(r: RowState): boolean {
+        const m = r.proposal.match;
+        return !!m && this.groupOf(r) === 'linked' && !isLinked(m.content, r.proposal.link);
     }
 
     /** What is ticked, among the rows there are to add. */
@@ -482,7 +523,56 @@ class DetectServicesModal extends HTMLElement {
     private addAnyway(row: { el: HTMLElement; state: RowState }): void {
         row.state.forced = true;
         row.state.checked = true;
+        // What is added is a new bookmark, with the icon this service would get, not the other bookmark's.
+        row.state.iconUrl = row.state.ownIcon;
         this.renderList();
+    }
+
+    /**
+     * Ties bookmarks that are on the board to the services they seem to be: only the link is added to each, and
+     * nothing else about it changes. It asks first, and a bookmark edited elsewhere in the meantime is left as it is.
+     */
+    private async link(rows: RowState[]): Promise<void> {
+        if (rows.length === 0 || this.view.busy || this.asking) return;
+        this.asking = true;
+        const modal = document.querySelector('confirmation-modal') as { confirm(title: string, message: string): Promise<boolean> } | null;
+        const sure = modal ? await modal.confirm(t('detect.link_title'), t('detect.link_message', { count: String(rows.length) })) : true;
+        this.asking = false;
+        if (!sure) return;
+
+        this.view.busy = true;
+        this.refreshCount();
+        this.message('');
+        let done = 0;
+        let changed = 0;
+        let failed = 0;
+        const boards = new Set<number | null>();
+        for (const r of rows) {
+            const m = r.proposal.match;
+            const next = m ? linkedContent(m.content, r.proposal.link) : null;
+            if (!m || !next) { failed++; continue; }
+            try {
+                await dashboardService.updateItemGuarded({ id: m.itemId, content: next.content }, next.expected);
+                done++;
+                boards.add(m.boardId);
+                // Every row that points at this bookmark now sees the link, so none offers it twice.
+                for (const other of this.rows.values()) {
+                    if (other.proposal.match?.itemId === m.itemId) other.proposal.match.content = next.content;
+                }
+            } catch (err) {
+                if (String((err as Error)?.message ?? err).includes('conflict')) changed++; else failed++;
+            }
+        }
+        this.view.busy = false;
+        this.forgetLinks();
+        const open = dashboardStore.getState().currentDashboardId;
+        if (done > 0 && [...boards].some(b => b === null || b === open)) await dashboardStore.fetchItems();
+        this.announce();
+        this.renderList();
+        this.refreshCount();
+        const notifier = (window as unknown as { notifier?: { show: (m: string) => void } }).notifier;
+        if (done > 0) notifier?.show(t('detect.linked', { count: String(done) }));
+        if (changed + failed > 0) this.message(t('detect.link_failed', { count: String(changed + failed) }));
     }
 
     private foldGroup(group: 'linked' | 'ignored'): void {
@@ -526,6 +616,7 @@ class DetectServicesModal extends HTMLElement {
         const button = target.closest<HTMLElement>('button');
         const fold = target.closest<HTMLElement>('[data-fold]');
         if (fold) { this.foldGroup(fold.dataset.fold as 'linked' | 'ignored'); return; }
+        if (button?.classList.contains('act--linkall')) { void this.link([...this.rows.values()].filter(r => this.canLink(r))); return; }
         const row = this.rowOf(target);
         if (row && button?.classList.contains('act')) {
             const kind = [...button.classList].find(c => c.startsWith('act--'))?.slice(5);
@@ -534,6 +625,7 @@ class DetectServicesModal extends HTMLElement {
             else if (kind === 'ignore') this.setIgnored(row, true);
             else if (kind === 'unignore') this.setIgnored(row, false);
             else if (kind === 'anyway') this.addAnyway(row);
+            else if (kind === 'link') void this.link([row.state]);
             return;
         }
         const face = target.closest('.face');

@@ -57,15 +57,34 @@ export interface ServiceProposal {
     group: string;
     /** The bookmark that already serves it, if one does. */
     linkedTo: string;
+    /** The icon that bookmark wears, as it stores it; '' when there is none or no bookmark. */
+    linkedIcon: string;
+    /** A bookmark nobody tied to it that seems to be it (by name or by address), which could be tied now. */
+    match: BookmarkMatch | null;
     note: ProposalNote;
     /** Whether it starts ticked. */
     selected: boolean;
 }
 
+/** A bookmark already on a board, found as the likely home of a service it is not yet tied to. */
+export interface BookmarkMatch {
+    label: string;
+    /** The icon it wears, exactly as it stores it. */
+    icon: string;
+    itemId: number;
+    boardId: number | null;
+    /** Its content as the server holds it. */
+    content: string;
+}
+
 export interface DiscoverInput {
     host: DockerHost | undefined;
-    /** The label of the bookmark a container is already tied to, or ''. */
+    /** The label of the bookmark a container is tied to by hand, or ''. */
     linkedLabel: (name: string) => string;
+    /** The icon that bookmark wears; '' when none. */
+    linkedIcon?: (name: string) => string;
+    /** The bookmark a container's name says it is, when none is tied to it. */
+    matchOf?: (name: string) => BookmarkMatch | null;
     /** The address of the icon the person chose for a container, or ''. */
     chosenIcon: (name: string) => string;
 }
@@ -197,7 +216,11 @@ export function discoverDocker(containers: DockerContainer[], input: DiscoverInp
         }
 
         const running = c.Status === 'running';
-        const linkedTo = input.linkedLabel(name);
+        const tied = input.linkedLabel(name);
+        // A bookmark made by hand before this page existed is on the board already: it is told apart, not duplicated.
+        const match = tied ? null : input.matchOf?.(name) ?? null;
+        const linkedTo = tied || match?.label || '';
+        const linkedIcon = tied ? input.linkedIcon?.(name) ?? '' : match?.icon ?? '';
         const note: ProposalNote = hostNetwork && candidates.length === 0 ? 'host_network' : running ? '' : 'stopped';
         proposals.push({
             key: `${hostId}/${name}`,
@@ -212,6 +235,8 @@ export function discoverDocker(containers: DockerContainer[], input: DiscoverInp
             labelIcon: /^https?:\/\//i.test((c.HintIcon || '').trim()) ? (c.HintIcon || '').trim() : '',
             group: (c.HintGroup || '').trim(),
             linkedTo,
+            linkedIcon,
+            match,
             note,
             selected: running && candidates.length > 0 && !linkedTo,
         });
@@ -292,8 +317,12 @@ export interface ProxmoxDiscoverInput {
     addresses: Record<string, string>;
     /** The address a machine's notes give for it, keyed the same way; it is offered first. */
     urls?: Record<string, string>;
-    /** The label of the bookmark a machine is already tied to, or ''. */
+    /** The label of the bookmark a machine is tied to by hand, or ''. */
     linkedLabel: (g: PxGuest) => string;
+    /** The icon that bookmark wears; '' when none. */
+    linkedIcon?: (g: PxGuest) => string;
+    /** The bookmark a machine's name says it is, when none is tied to it. */
+    matchOf?: (g: PxGuest) => BookmarkMatch | null;
     /** The address of the icon the person chose for a machine, or ''. */
     chosenIcon: (g: PxGuest) => string;
 }
@@ -329,7 +358,10 @@ export function discoverProxmox(input: ProxmoxDiscoverInput): Discovery {
         if (console) candidates.push({ source: 'console', url: console });
         if (candidates.length === 0) { withoutAddress++; continue; }
 
-        const linkedTo = input.linkedLabel(g);
+        const tied = input.linkedLabel(g);
+        const match = tied ? null : input.matchOf?.(g) ?? null;
+        const linkedTo = tied || match?.label || '';
+        const linkedIcon = tied ? input.linkedIcon?.(g) ?? '' : match?.icon ?? '';
         proposals.push({
             key: iconKey(host.id, g.node, g.vmid),
             hostId: host.id,
@@ -343,6 +375,8 @@ export function discoverProxmox(input: ProxmoxDiscoverInput): Discovery {
             labelIcon: '',
             group: '',
             linkedTo,
+            linkedIcon,
+            match,
             note: !g.running ? 'stopped' : ip || noted ? '' : 'no_ip',
             selected: g.running && (!!ip || !!noted) && !linkedTo,
         });

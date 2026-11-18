@@ -1,6 +1,6 @@
 import { apiService } from './apiService';
 import { dashboardStore } from '../store/dashboardStore';
-import { bookmarkKeys, buildNameIndex, guessByName } from './proxmoxMatch';
+import { bookmarkKeys, buildNameIndex, guessByName, placeOf } from './proxmoxMatch';
 
 /**
  * Which bookmark each machine backs, across every board.
@@ -31,6 +31,12 @@ export interface PxLink {
     host: string;
     node: string;
     vmid: number;
+    /** The bookmark itself, on a guess: what is needed to tie it to a service afterwards. */
+    itemId?: number;
+    /** The board it is on; null when the server did not say. */
+    boardId?: number | null;
+    /** Its content as the server holds it. */
+    content?: string;
 }
 
 /** Both halves of the answer: what was declared, and what can be inferred. */
@@ -39,6 +45,8 @@ interface PxIndex {
     explicit: Map<string, PxLink>;
     /** Every other bookmark, by name — null where two of them would fit. */
     byName: Map<string, PxLink | null>;
+    /** The same bookmarks by the place their address points at — null where two of them point at one. */
+    byPlace: Map<string, PxLink | null>;
 }
 
 /** Boards to read. A ceiling, not an expectation: nobody has twenty. */
@@ -86,7 +94,12 @@ function collect(items: any[], explicit: Map<string, PxLink>, guessable: Candida
             }
 
             guessable.push({
-                link: { label, url: c.url || '', icon, host: '', node: '', vmid: 0 },
+                link: {
+                    label, url: c.url || '', icon, host: '', node: '', vmid: 0,
+                    itemId: typeof item.id === 'number' ? item.id : undefined,
+                    boardId: typeof item.dashboard_id === 'number' ? item.dashboard_id : null,
+                    content: typeof item.content === 'string' ? item.content : JSON.stringify(item.content),
+                },
                 keys: bookmarkKeys(label, c.iconName || '', c.icon || ''),
             });
         } catch { /* a bookmark with unreadable content is simply not linked */ }
@@ -106,7 +119,7 @@ async function build(): Promise<PxIndex> {
         boards = await apiService.get<{ id: number }[]>('/api/dashboards') || [];
     } catch {
         // One board's worth is better than none.
-        return { explicit, byName: buildNameIndex(guessable.map(c => ({ keys: c.keys, value: c.link }))) };
+        return indexOf(explicit, guessable);
     }
 
     const current = dashboardStore.getState().currentDashboardId;
@@ -117,7 +130,16 @@ async function build(): Promise<PxIndex> {
             collect(Array.isArray(items) ? items : [], explicit, guessable);
         } catch { /* a board that cannot be read links nothing */ }
     }
-    return { explicit, byName: buildNameIndex(guessable.map(c => ({ keys: c.keys, value: c.link }))) };
+    return indexOf(explicit, guessable);
+}
+
+/** Both lookups over the bookmarks nobody has tied to a machine. */
+function indexOf(explicit: Map<string, PxLink>, guessable: Candidate[]): PxIndex {
+    return {
+        explicit,
+        byName: buildNameIndex(guessable.map(c => ({ keys: c.keys, value: c.link }))),
+        byPlace: buildNameIndex(guessable.map(c => ({ keys: [placeOf(c.link.url)], value: c.link }))),
+    };
 }
 
 /**
@@ -164,6 +186,15 @@ export function linkFor(guest: { vmid: number; node: string; name: string; host?
  */
 export function bookmarkNamed(name: string): PxLink | null {
     return cache ? guessByName(cache.byName, name) : null;
+}
+
+/**
+ * The bookmark whose address is this one's, for a service found at that address: the host and the port, nothing
+ * when two bookmarks point there or the index is not built yet.
+ */
+export function bookmarkAt(url: string): PxLink | null {
+    const place = placeOf(url);
+    return cache && place ? cache.byPlace.get(place) ?? null : null;
 }
 
 /** Called when a bookmark changes, so the next reader rebuilds the index. */

@@ -263,6 +263,22 @@ describe('what a container says about itself', () => {
         const { proposals } = discoverDocker([ctr({ HintName: '   ', HintGroup: ' ', HintIcon: '' })], input());
         expect(proposals[0]).toMatchObject({ name: 'Plex', group: '', labelIcon: '' });
     });
+    test('a bookmark that is not tied to it but seems to be it is told apart, with what is needed to tie it', () => {
+        const match = { label: 'Mi Plex', icon: '/img/plex.svg', itemId: 7, boardId: 2, content: '{"label":"Mi Plex"}' };
+        const p = discoverDocker([ctr()], input({ matchOf: n => (n === 'plex' ? match : null) })).proposals[0];
+        expect(p).toMatchObject({ linkedTo: 'Mi Plex', linkedIcon: '/img/plex.svg', selected: false });
+        expect(p.match).toEqual(match);
+    });
+    test('one that is tied by hand wins over a guess, and is not offered to be tied again', () => {
+        const match = { label: 'Other', icon: '/img/o.svg', itemId: 7, boardId: 2, content: '{}' };
+        const p = discoverDocker([ctr()], input({
+            linkedLabel: () => 'My Plex', linkedIcon: () => '/img/mine.svg', matchOf: () => match,
+        })).proposals[0];
+        expect(p).toMatchObject({ linkedTo: 'My Plex', linkedIcon: '/img/mine.svg', match: null });
+    });
+    test('without a bookmark there is nothing to tie and no icon of its own to show', () => {
+        expect(discoverDocker([ctr()], input()).proposals[0]).toMatchObject({ linkedTo: '', linkedIcon: '', match: null });
+    });
     test('the section it names is used however the window groups', () => {
         const p = discoverDocker([ctr({ HintGroup: 'Media', Project: 'stack' })], input()).proposals[0];
         const size = new Map([['stack', 3]]);
