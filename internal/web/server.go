@@ -19,6 +19,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"git.codigosh.com/CodigoSH/Lastboard/internal/platform/config"
@@ -52,6 +53,9 @@ type Server struct {
 	// locales are the language codes actually shipped, read once from the
 	// embedded locale files so the list cannot drift from what exists.
 	locales []string
+	// backgroundOn is set once the loops that run for the life of the process have started. What reaches out to the
+	// release server on a person's behalf waits for it, so a server built for a test never does.
+	backgroundOn atomic.Bool
 }
 
 func NewServer(db *sql.DB) *Server {
@@ -83,6 +87,7 @@ func NewServer(db *sql.DB) *Server {
 // stop when ctx is cancelled, and wg is done only once every one of them has
 // returned — so a restart cannot catch one mid-write.
 func (s *Server) StartBackground(ctx context.Context, wg *sync.WaitGroup) {
+	s.backgroundOn.Store(true)
 	tasks := map[string]func(){
 		"websocket hub":   func() { s.WSHub.Run(ctx) },
 		"stats broadcast": func() { s.WSHub.StartBroadcasting(ctx, 1*time.Second) },
@@ -446,6 +451,7 @@ func (s *Server) routes() {
 
 	// Update API
 	updateHandler := api.NewUpdateHandler(s.DB)
+	updateHandler.Texts, updateHandler.Push = alerttext.New(s.assets), api.NewPushSender(s.DB)
 	s.Router.Handle("GET /api/system/update/check", protect(anyAccount(updateHandler.CheckUpdate)))
 	s.Router.Handle("POST /api/system/update/perform", protect(need(access.Admin, updateHandler.PerformUpdate)))
 
@@ -453,6 +459,12 @@ func (s *Server) routes() {
 	alertTexts := alerttext.New(s.assets)
 	monitorHandler := api.NewMonitorHandler(s.DB)
 	monitorHandler.Texts = alertTexts
+	// A channel switched on for new versions hears of the one that is waiting without waiting for the next look.
+	monitorHandler.OnUpdatesChannel = func() {
+		if s.backgroundOn.Load() {
+			updateHandler.NotifyNow()
+		}
+	}
 	s.Router.Handle("GET /api/monitor/settings", protect(need(access.WatchMonitor, monitorHandler.GetSettings)))
 	s.Router.Handle("POST /api/monitor/settings", protect(need(access.WatchMonitor, monitorHandler.UpdateSettings)))
 	// Where the alerts go: a list per account, each channel on its own switch, and a test for any of them.

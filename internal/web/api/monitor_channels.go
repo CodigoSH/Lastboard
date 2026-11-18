@@ -357,6 +357,14 @@ func (h *MonitorHandler) UpdateChannels(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 	forgetChannelResults(store, uid, list)
+	if h.OnUpdatesChannel != nil {
+		for _, ch := range list {
+			if ch.takesUpdates() && !previous[ch.ID].takesUpdates() {
+				go h.OnUpdatesChannel()
+				break
+			}
+		}
+	}
 	writeJSON(w, channelsViewOf(store, uid))
 }
 

@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'bun:test';
 import type { NotifyChannel } from '../../../services/notifyChannelList';
-import { channelModalHtml, channelNote, channelRowHtml, channelsCardHtml, channelTitle, typeLabel, type RowContext, type T } from './notifyChannels.template';
+import { channelKinds, channelModalHtml, channelNote, channelRowHtml, channelsCardHtml, channelTitle, typeLabel, type RowContext, type T } from './notifyChannels.template';
 
 // The text comes back as its key and what went into it, so a test reads what the screen would say.
 const t: T = (key, params) => `[${key}${params ? ':' + JSON.stringify(params) : ''}]`;
@@ -125,5 +125,21 @@ describe('the window of a channel', () => {
         expect(html).toContain('id="channel-updates-row"');
         expect(html).toContain('notify.kind_alerts');
         expect(html).toContain('notify.kind_updates');
+    });
+});
+
+describe('what a channel says it carries', () => {
+    const t: T = (k: string) => `[${k}]`;
+    test('the usual says nothing, so a list that never chose does not grow a line each', () => {
+        expect(channelKinds({ alerts: true, updates: false }, t)).toBe('');
+        expect(channelRowHtml(ch(), 0, t, ctx)).not.toContain('px-row__kinds');
+    });
+    test('one that also carries the notice of a new version says both', () => {
+        expect(channelKinds({ alerts: true, updates: true }, t)).toBe('[notify.kind_alerts] · [notify.kind_updates]');
+        expect(channelRowHtml(ch({ updates: true }), 0, t, ctx)).toContain('px-row__kinds');
+    });
+    test('one that carries only versions, or no longer alerts, says what is left', () => {
+        expect(channelKinds({ alerts: false, updates: true }, t)).toBe('[notify.kind_updates]');
+        expect(channelKinds({ alerts: false, updates: false }, t)).toBe('');
     });
 });

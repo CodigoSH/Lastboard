@@ -49,8 +49,19 @@ export function channelNote(c: NotifyChannel, t: T, ctx: RowContext): { text: st
     return { text: host ? `${typeLabel(c.type, t)} · ${host}` : typeLabel(c.type, t), tone: 'idle' };
 }
 
+/**
+ * What a channel carries, in words, when that is not the usual: a channel carries alerts unless it was told not to,
+ * and says so only when it also carries the notice of a new version or no longer carries alerts. The usual one says
+ * nothing, so a list of channels that never chose does not grow a line each.
+ */
+export function channelKinds(c: Pick<NotifyChannel, 'alerts' | 'updates'>, t: T): string {
+    if (c.alerts && !c.updates) return '';
+    return [c.alerts ? t('notify.kind_alerts') : '', c.updates ? t('notify.kind_updates') : ''].filter(Boolean).join(' · ');
+}
+
 export function channelRowHtml(c: NotifyChannel, index: number, t: T, ctx: RowContext): string {
     const note = channelNote(c, t, ctx);
+    const kinds = channelKinds(c, t);
     const title = channelTitle(c, t);
     return `
     <div class="settings-content__row px-row" data-channel="${esc(c.id)}">
@@ -58,6 +69,7 @@ export function channelRowHtml(c: NotifyChannel, index: number, t: T, ctx: RowCo
         <div class="px-row__body">
             <div class="px-row__name">${esc(title)}</div>
             <div class="px-row__note px-row__note--${note.tone}">${esc(note.text)}</div>
+            ${kinds ? `<div class="px-row__note px-row__kinds">${esc(kinds)}</div>` : ''}
         </div>
         <label class="toggle-switch" title="${esc(t('notify.enabled'))}">
             <input type="checkbox" data-change="channel-toggle" data-index="${index}" aria-label="${esc(t('notify.enabled'))}: ${esc(title)}" ${c.enabled ? 'checked' : ''}>

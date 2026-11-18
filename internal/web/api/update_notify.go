@@ -4,6 +4,8 @@ import (
 	"context"
 	"database/sql"
 	"log/slog"
+	"sync"
+	"time"
 
 	"git.codigosh.com/CodigoSH/Lastboard/internal/core/alerttext"
 	"git.codigosh.com/CodigoSH/Lastboard/internal/version"
@@ -24,6 +26,19 @@ import (
 
 // keyUpdateNotified is the setting that holds the release the administrator was last told about.
 const keyUpdateNotified = "update_notified"
+
+// updateNoticeMu lets one look for a notice run at a time in the process: the hourly check and the one a channel
+// switched on asks for would otherwise both find the same release untold and send it twice.
+var updateNoticeMu sync.Mutex
+
+// NotifyNow looks for a release the administrator has not been told about and tells them, at once. It is what a
+// channel that has just been switched on for updates asks for, so that the version that is waiting is not left to
+// the next hourly look.
+func (h *UpdateHandler) NotifyNow() {
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+	h.notifyUpdate(ctx)
+}
 
 // notifyUpdateTo sends the notice of a new version to each channel of the administrator that carries updates,
 // and returns how many took it. cfg is what every channel shares (the language, the catalog, the means of telling
@@ -55,6 +70,8 @@ func notifyUpdateTo(ctx context.Context, db *sql.DB, store *UserSettings, admin 
 // that carry updates. It is called by the daily check and does nothing when there is nothing new, nobody to tell,
 // or the release was already told.
 func (h *UpdateHandler) notifyUpdate(ctx context.Context) {
+	updateNoticeMu.Lock()
+	defer updateNoticeMu.Unlock()
 	var admin int
 	var beta bool
 	if err := h.DB.QueryRow(`SELECT id, COALESCE(beta_updates, 0) FROM users WHERE role = 'admin' ORDER BY id ASC LIMIT 1`).Scan(&admin, &beta); err != nil {

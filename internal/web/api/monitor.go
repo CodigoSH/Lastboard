@@ -138,6 +138,10 @@ type MonitorHandler struct {
 
 	// Texts are the translations an alert is written from. Nil reads as English.
 	Texts *alerttext.Catalog
+
+	// OnUpdatesChannel is called, in its own goroutine, when a channel is saved that carries the notice of a new
+	// version and did not before, so that the version that is already waiting is told at once. Nil does nothing.
+	OnUpdatesChannel func()
 }
 
 // NewMonitorHandler builds the monitoring settings handler.

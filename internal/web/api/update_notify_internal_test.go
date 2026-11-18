@@ -8,6 +8,7 @@ import (
 	"net/http/httptest"
 	"sync"
 	"testing"
+	"time"
 
 	"git.codigosh.com/CodigoSH/Lastboard/internal/core/alerttext"
 	"git.codigosh.com/CodigoSH/Lastboard/internal/version"
@@ -327,5 +328,58 @@ func TestPushUrgencyIsLowOnlyForTheNoticeOfAVersion(t *testing.T) {
 	all := f.got()
 	if got := all[len(all)-1].header.Get("Urgency"); got != "low" {
 		t.Errorf("the notice of a version went with urgency %q", got)
+	}
+}
+
+// The notice of a new version is looked for every hour (here, every few milliseconds) and not only when the check of
+// the day runs: a release that comes out after the server started is told within the hour, not the next day.
+func TestAReleaseThatComesOutAfterTheServerStartedIsToldWithoutWaitingForTheDailyCheck(t *testing.T) {
+	rec := newRecorder(t, 200)
+	f := newUpdateFixture(t, []notifyChannel{{ID: "nc", Type: "webhook", URL: rec.srv.URL, Enabled: true, Updates: true}})
+
+	// The forge answers with what the test says, read and written from different goroutines.
+	var mu sync.Mutex
+	latest := version.Current // nothing new at the start
+	f.h.latest = func(bool) (string, string, error) {
+		mu.Lock()
+		defer mu.Unlock()
+		return latest, "", nil
+	}
+	f.h.firstCheckDelay, f.h.noticeEvery = time.Nanosecond, 15*time.Millisecond
+
+	ctx, cancel := context.WithCancel(context.Background())
+	hub := NewHub()
+	done := make(chan struct{})
+	go hub.Run(ctx)
+	go func() { f.h.CheckForUpdatesBackground(ctx, hub); close(done) }()
+	t.Cleanup(func() { cancel(); <-done })
+
+	time.Sleep(100 * time.Millisecond)
+	if rec.count() != 0 {
+		t.Fatalf("told %d times of a version that is not newer", rec.count())
+	}
+	mu.Lock()
+	latest = "v99.0.0"
+	mu.Unlock()
+	waitUntilTrue(t, "the release that came out later is told", func() bool { return rec.count() == 1 })
+	time.Sleep(100 * time.Millisecond)
+	if rec.count() != 1 {
+		t.Errorf("told %d times of one release, want once", rec.count())
+	}
+}
+
+// A look made at the same moment by the hourly check and by a channel that has just been switched on finds the release
+// untold in both, and tells it once.
+func TestTwoLooksAtTheSameTimeTellAReleaseOnce(t *testing.T) {
+	rec := newRecorder(t, 200)
+	f := newUpdateFixture(t, []notifyChannel{{ID: "nc", Type: "webhook", URL: rec.srv.URL, Enabled: true, Updates: true}})
+	var wg sync.WaitGroup
+	for i := 0; i < 8; i++ {
+		wg.Add(1)
+		go func() { defer wg.Done(); f.h.notifyUpdate(context.Background()) }()
+	}
+	wg.Wait()
+	if rec.count() != 1 {
+		t.Errorf("a release was told %d times by eight looks at once, want once", rec.count())
 	}
 }

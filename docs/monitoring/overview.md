@@ -136,13 +136,13 @@ An account that had one method set up before channels existed finds it as the fi
 
 The administrator can be told when a new version of Lastboard is out, through any channel that has **New versions of Lastboard** on. Nothing is sent until a channel asks for it.
 
-- **Once for each version.** Lastboard looks for a new version when it starts and then about every 24 hours, so the notice can arrive up to a day after the release is published. The same version is not told again; the next one is.
+- **Once for each version, within the hour.** While some channel carries updates, Lastboard looks for a new version about 30 seconds after it starts and then every hour, so the notice arrives within the hour of the release being published. The same version is not told again; the next one is. When no channel carries updates it does not ask the release server for this at all.
 - **Only the administrator.** Other accounts cannot update the server, so the option is not offered to them and one sent is not kept.
 - **Pre-releases only if you receive them.** An account that has **Beta channel** on (**Settings → About**) is told of betas as well; otherwise only stable releases.
-- **If it reached no channel,** the next check tries again. If no channel asked for it, nothing is sent and nothing is marked as told, so a channel that you switch on later is told of the version that is waiting.
+- **If it reached no channel,** the next look tries again. If no channel asked for it, nothing is sent and nothing is marked as told. When you switch a channel on for new versions and save it, Lastboard looks at once, so a version that is already waiting is told to that channel right away, without waiting for the hour.
 - **Docker installs too:** the notice says there is a new version, and the way to get it there is to pull the new image (see [Updating](../getting-started/updating.md)).
 
-The notice says which version is out, which one you run and where to update, in the language of the account. **Send test** sends a test alert, not this notice. The result of the last delivery to each channel includes it.
+A channel that carries new versions says so on its row, under the last delivery, so you can tell at a glance which ones do. The notice says which version is out, which one you run and where to update, in the language of the account. **Send test** sends a test alert, not this notice. The result of the last delivery to each channel includes it.
 
 ### Language and wording of alerts
 

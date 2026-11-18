@@ -40,6 +40,11 @@ type UpdateHandler struct {
 	Texts *alerttext.Catalog
 	Push  *PushSender
 
+	// firstCheckDelay and noticeEvery are when the background check first looks and how often the notice of a new
+	// version is looked for; zero means the defaults (30 seconds, one hour). Tests shorten them.
+	firstCheckDelay time.Duration
+	noticeEvery     time.Duration
+
 	// latest replaces the call to the forge in tests; nil means the forge.
 	latest func(beta bool) (tag string, notes string, err error)
 	// docker replaces the container check in tests: the CI runs in a
@@ -182,12 +187,26 @@ func announceUpdate(ctx context.Context, hub *Hub, latest string) {
 // CheckForUpdatesBackground runs a periodic loop to check for updates and notify via WS
 func (h *UpdateHandler) CheckForUpdatesBackground(ctx context.Context, hub *Hub) {
 	// Initial check after 30s to allow system to settle
-	if !sleep(ctx, 30*time.Second) {
+	delay := h.firstCheckDelay
+	if delay == 0 {
+		delay = 30 * time.Second
+	}
+	if !sleep(ctx, delay) {
 		return
 	}
 
 	ticker := time.NewTicker(24 * time.Hour)
 	defer ticker.Stop()
+	// The notice of a new version is looked for far more often than the rest: it is the one a person is waiting
+	// for, and a check once a day left a release unannounced for up to a day after the server started. It asks the
+	// release server only while some channel carries updates (see notifyUpdate), and that answer is kept for ten
+	// minutes, so it costs nobody else anything.
+	every := h.noticeEvery
+	if every == 0 {
+		every = time.Hour
+	}
+	notices := time.NewTicker(every)
+	defer notices.Stop()
 
 	check := func() {
 		// Fetch latest release (including pre-releases) — frontend filters based on user prefs.
@@ -213,6 +232,8 @@ func (h *UpdateHandler) CheckForUpdatesBackground(ctx context.Context, hub *Hub)
 			return
 		case <-ticker.C:
 			check()
+		case <-notices.C:
+			h.notifyUpdate(ctx)
 		}
 	}
 }
@@ -332,7 +353,11 @@ func (h *UpdateHandler) fetchLatestReleaseUncached(beta bool) (tagName string, r
 }
 
 func (h *UpdateHandler) fetchLatestVersion() (string, error) {
-	tag, _, err := h.fetchLatestRelease(true)
+	fetch := h.fetchLatestRelease
+	if h.latest != nil {
+		fetch = h.latest
+	}
+	tag, _, err := fetch(true)
 	return tag, err
 }
 
