@@ -76,6 +76,10 @@ func main() {
 	if err := api.MigrateUserSettings(db.DB); err != nil {
 		slog.Error("Moving settings to the first administrator failed", "error", err)
 	}
+	// Each account's single alert channel becomes the first entry of its list of channels.
+	if err := api.MigrateNotifyChannels(db.DB); err != nil {
+		slog.Error("Writing the alert channels to each account's list failed", "error", err)
+	}
 
 	// Credentials an earlier version left inside widgets move to the secret store
 	// before the first request can carry them to a browser.

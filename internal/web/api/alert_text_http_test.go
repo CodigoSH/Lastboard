@@ -37,7 +37,7 @@ func setupAlertTextServer(t *testing.T) (*httptest.Server, *sql.DB) {
 	mux.Handle("POST /api/login", http.HandlerFunc(auth.Login))
 	mux.Handle("GET /api/monitor/settings", protect(http.HandlerFunc(h.GetSettings)))
 	mux.Handle("POST /api/monitor/settings", protect(http.HandlerFunc(h.UpdateSettings)))
-	mux.Handle("POST /api/monitor/test", protect(http.HandlerFunc(h.TestNotify)))
+	mux.Handle("POST /api/monitor/channels/test", protect(http.HandlerFunc(h.TestChannel)))
 	server := httptest.NewServer(mux)
 	t.Cleanup(func() {
 		server.Close()
@@ -162,7 +162,7 @@ func TestTheTestButtonSpeaksTheAccountsLanguageAndUsesItsOwnWording(t *testing.T
 	}))
 	defer hook.Close()
 	test := func() map[string]any {
-		code, body := pushCall(t, ana, "POST", server.URL+"/api/monitor/test", `{"notify_type":"webhook","notify_url":"`+hook.URL+`"}`)
+		code, body := pushCall(t, ana, "POST", server.URL+"/api/monitor/channels/test", `{"type":"webhook","url":"`+hook.URL+`"}`)
 		if code != 200 {
 			t.Fatalf("test: %d %s", code, body)
 		}

@@ -43,6 +43,11 @@ type notifyConfig struct {
 	UserID int
 	Push   *PushSender
 
+	// Channel is the id of the channel this config is, so the result of an alert can be noted against it.
+	// Others are the account's remaining channels that are on: an alert goes to this one and to each of them.
+	Channel string
+	Others  []notifyConfig
+
 	// Lang, Texts and Catalog are where the wording of an alert comes from: the language of the
 	// account, any text it wrote for itself, and the translations. A config without them says
 	// everything in English, which is how a channel that has never heard of them behaves.
@@ -108,6 +113,34 @@ func (c notifyConfig) active() bool {
 		return c.Enabled && c.Push != nil && c.UserID > 0
 	}
 	return c.Enabled && c.Type != "" && c.Type != "none" && c.URL != ""
+}
+
+// targets are the channels an alert goes to: this one and the others of the account, those that can send.
+func (c notifyConfig) targets() []notifyConfig {
+	var out []notifyConfig
+	if c.active() {
+		own := c
+		own.Others = nil
+		out = append(out, own)
+	}
+	for _, o := range c.Others {
+		if o.active() {
+			out = append(out, o)
+		}
+	}
+	return out
+}
+
+// gate lets alerts through only when the account may send them: without that, every channel stays quiet.
+func (c notifyConfig) gate(alerts bool) notifyConfig {
+	c.Enabled = c.Enabled && alerts
+	others := make([]notifyConfig, len(c.Others))
+	for i, o := range c.Others {
+		o.Enabled = o.Enabled && alerts
+		others[i] = o
+	}
+	c.Others = others
+	return c
 }
 
 // sendNotification dispatches one alert to the configured provider. up reports

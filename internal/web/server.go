@@ -451,7 +451,10 @@ func (s *Server) routes() {
 	monitorHandler.Texts = alertTexts
 	s.Router.Handle("GET /api/monitor/settings", protect(need(access.WatchMonitor, monitorHandler.GetSettings)))
 	s.Router.Handle("POST /api/monitor/settings", protect(need(access.WatchMonitor, monitorHandler.UpdateSettings)))
-	s.Router.Handle("POST /api/monitor/test", protect(need(access.WatchAlerts, monitorHandler.TestNotify)))
+	// Where the alerts go: a list per account, each channel on its own switch, and a test for any of them.
+	s.Router.Handle("GET /api/monitor/channels", protect(need(access.WatchAlerts, monitorHandler.GetChannels)))
+	s.Router.Handle("POST /api/monitor/channels", protect(need(access.WatchAlerts, monitorHandler.UpdateChannels)))
+	s.Router.Handle("POST /api/monitor/channels/test", protect(need(access.WatchAlerts, monitorHandler.TestChannel)))
 
 	// The browsers an account asked to be told, by a notification, when a service of its falls over.
 	// Alerts are what they carry, so they are asked for with the permission alerts are.

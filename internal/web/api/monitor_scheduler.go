@@ -212,9 +212,7 @@ func (m *MonitorScheduler) probe(ctx context.Context, items []MonitoredItem, ale
 	sem := make(chan struct{}, monitorMaxConcurrency)
 	for _, it := range items {
 		if _, ok := cfgs[it.UserID]; !ok {
-			cfg := m.notifyCfg(it.UserID)
-			cfg.Enabled = cfg.Enabled && alerts
-			cfgs[it.UserID] = cfg
+			cfgs[it.UserID] = m.notifyCfg(it.UserID).gate(alerts)
 		}
 	}
 	var wg sync.WaitGroup
@@ -234,17 +232,15 @@ func (m *MonitorScheduler) probe(ctx context.Context, items []MonitoredItem, ale
 	wg.Wait()
 }
 
-// notifyCfg reads one account's alerting configuration.
+// notifyCfg reads one account's alerting configuration: what is the same for every channel (the threshold, the
+// wording, the means of telling browsers), and the channels that are on. The first is the config itself and the
+// rest are its Others, so an alert reaches all of them; an account with none on gets a config that sends nothing.
 func (m *MonitorScheduler) notifyCfg(userID int) notifyConfig {
 	th, _ := strconv.Atoi(m.setting(userID, keyMonThreshold))
 	if th < 1 {
 		th = 1
 	}
-	return notifyConfig{
-		Enabled:       m.setting(userID, keyMonAlerts) == "1",
-		Type:          m.setting(userID, keyMonType),
-		URL:           m.setting(userID, keyMonURL),
-		Token:         m.setting(userID, keyMonToken),
+	common := notifyConfig{
 		FailThreshold: th,
 		UserID:        userID,
 		Push:          m.push,
@@ -252,6 +248,26 @@ func (m *MonitorScheduler) notifyCfg(userID int) notifyConfig {
 		Texts:         alertTemplates(m.store.DB, userID),
 		Catalog:       m.texts,
 	}
+	var cfg notifyConfig
+	var rest []notifyConfig
+	first := true
+	for _, ch := range channelsOf(NewUserSettings(m.store.DB), userID) {
+		if !ch.Enabled {
+			continue
+		}
+		c := common
+		c.Enabled, c.Type, c.URL, c.Token, c.Channel = true, ch.Type, ch.URL, ch.Token, ch.ID
+		if first {
+			cfg, first = c, false
+		} else {
+			rest = append(rest, c)
+		}
+	}
+	if first {
+		return common
+	}
+	cfg.Others = rest
+	return cfg
 }
 
 // forgetStaleAlerts drops the alert state of one account's monitors that no
@@ -321,7 +337,8 @@ func (m *MonitorScheduler) evalAlertCode(ctx context.Context, it MonitoredItem, 
 	fails = st.fails
 	m.alertMu.Unlock()
 
-	if !fire || !cfg.active() {
+	targets := cfg.targets()
+	if !fire || len(targets) == 0 {
 		return
 	}
 	name := it.Name
@@ -332,11 +349,17 @@ func (m *MonitorScheduler) evalAlertCode(ctx context.Context, it MonitoredItem, 
 	if recovered {
 		notice = cfg.recoveryNotice(name, downFor)
 	}
-	go func() {
-		if err := sendNotice(ctx, cfg, notice); err != nil {
-			slog.Error("monitor: alert failed", "item", it.ID, "error", err)
-		}
-	}()
+	// Every channel that is on is told, each on its own: a slow or failing one does not hold back the rest, and
+	// what came of each is noted against it, so the list can say whether the last alert arrived.
+	for _, t := range targets {
+		go func() {
+			err := sendNotice(ctx, t, notice)
+			if err != nil {
+				slog.Error("monitor: alert failed", "item", it.ID, "channel", t.Channel, "error", err)
+			}
+			recordChannelResult(NewUserSettings(m.store.DB), it.UserID, t.Channel, err)
+		}()
+	}
 }
 
 // mode returns an account's monitoring mode, defaulting to "tab" (today's

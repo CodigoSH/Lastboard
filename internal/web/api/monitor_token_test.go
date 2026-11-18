@@ -7,18 +7,18 @@ import (
 	"testing"
 )
 
-// The notification token is a credential its owner types once. After saving it
-// stays out of the page, like the Proxmox secret and the sibling products' tokens:
-// the form learns that one is saved (notify_has_token) and never receives it.
-func TestNotifyTokenIsWriteOnly(t *testing.T) {
+// A channel's token is a credential its owner types once. After saving it stays
+// out of the page, like the Proxmox secret and the sibling products' tokens: the
+// list learns that one is saved (has_token) and never receives it.
+func TestAChannelsTokenIsWriteOnly(t *testing.T) {
 	server, db, cleanup := setupTestServer(t)
 	defer cleanup()
 	createUser(t, db, "boss", "correcthorse", "admin")
 	cookie := loginAndGetCookie(t, server, "boss", "correcthorse")
 
-	send := func(method, body string) map[string]any {
+	send := func(method, path, body string) (int, map[string]any) {
 		t.Helper()
-		req, err := http.NewRequest(method, server.URL+"/api/monitor/settings", strings.NewReader(body))
+		req, err := http.NewRequest(method, server.URL+path, strings.NewReader(body))
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -31,53 +31,92 @@ func TestNotifyTokenIsWriteOnly(t *testing.T) {
 			t.Fatal(err)
 		}
 		defer resp.Body.Close()
-		if resp.StatusCode != http.StatusOK {
-			t.Fatalf("%s %s: %d", method, body, resp.StatusCode)
-		}
 		var out map[string]any
-		if err := json.NewDecoder(resp.Body).Decode(&out); err != nil {
-			t.Fatal(err)
-		}
-		return out
+		_ = json.NewDecoder(resp.Body).Decode(&out)
+		return resp.StatusCode, out
 	}
-	stored := func() string {
-		var v string
-		db.QueryRow(`SELECT value FROM user_settings WHERE key = 'monitoring_notify_token'`).Scan(&v)
-		return v
-	}
-	noToken := func(label string, got map[string]any) {
+	save := func(channel string) []map[string]any {
 		t.Helper()
-		if tok, present := got["notify_token"]; present && tok != "" {
-			t.Errorf("%s: the token came back: %v", label, tok)
+		code, got := send("POST", "/api/monitor/channels", `{"channels":[`+channel+`]}`)
+		if code != http.StatusOK {
+			t.Fatalf("save %s: %d", channel, code)
+		}
+		var list []map[string]any
+		for _, c := range got["channels"].([]any) {
+			list = append(list, c.(map[string]any))
+		}
+		return list
+	}
+	// What the server holds for the first channel.
+	stored := func() string {
+		var raw string
+		db.QueryRow(`SELECT value FROM user_settings WHERE key = 'monitoring_notify_channels'`).Scan(&raw)
+		var list []struct {
+			Token string `json:"token"`
+		}
+		json.Unmarshal([]byte(raw), &list)
+		if len(list) == 0 {
+			return ""
+		}
+		return list[0].Token
+	}
+	noToken := func(label string, list []map[string]any) {
+		t.Helper()
+		for _, c := range list {
+			if _, present := c["token"]; present {
+				t.Errorf("%s: the token came back: %v", label, c)
+			}
 		}
 	}
-	const base = `"mode":"background","interval_sec":60,"alerts_enabled":true,"notify_type":"ntfy","notify_url":"https://ntfy.sh/x","fail_threshold":2`
+	const ntfy = `"type":"ntfy","url":"https://ntfy.sh/x","enabled":true`
 
 	// Typing one saves it, and the answer says so without repeating it.
-	got := send("POST", `{`+base+`,"notify_token":"tk_first"}`)
-	if stored() != "tk_first" || got["notify_has_token"] != true {
-		t.Fatalf("typed token not saved: stored=%q answer=%v", stored(), got)
+	list := save(`{` + ntfy + `,"token":"tk_first"}`)
+	if stored() != "tk_first" || list[0]["has_token"] != true {
+		t.Fatalf("typed token not saved: stored=%q answer=%v", stored(), list)
 	}
-	noToken("save answer", got)
-	noToken("read after save", send("GET", ""))
+	noToken("save answer", list)
+	_, read := send("GET", "/api/monitor/channels", "")
+	for _, c := range read["channels"].([]any) {
+		if _, present := c.(map[string]any)["token"]; present {
+			t.Errorf("read after save: the token came back: %v", c)
+		}
+	}
+	id := list[0]["id"].(string)
 
-	// The form comes back with the field empty (a page that does not know the
-	// token, or a browser that has not reloaded): the saved token stays.
-	got = send("POST", `{`+base+`,"notify_token":""}`)
-	if stored() != "tk_first" || got["notify_has_token"] != true {
-		t.Errorf("an empty field wiped the saved token: stored=%q answer=%v", stored(), got)
+	// The list comes back with the field empty (a page does not know the token):
+	// the saved token stays.
+	list = save(`{"id":"` + id + `",` + ntfy + `,"token":""}`)
+	if stored() != "tk_first" || list[0]["has_token"] != true || list[0]["id"] != id {
+		t.Errorf("an empty field wiped the saved token or changed the id: stored=%q answer=%v", stored(), list)
 	}
 
 	// Typing a new one replaces it.
-	send("POST", `{`+base+`,"notify_token":"tk_second"}`)
+	save(`{"id":"` + id + `",` + ntfy + `,"token":"tk_second"}`)
 	if stored() != "tk_second" {
 		t.Errorf("a new token did not replace the old one: %q", stored())
 	}
 
+	// A channel the browser made up an id for is not an existing one: it takes no token from any.
+	list = save(`{"id":"nc-made-up",` + ntfy + `}`)
+	if stored() != "" || list[0]["has_token"] != false {
+		t.Errorf("an id the server does not know inherited a token: stored=%q answer=%v", stored(), list)
+	}
+
+	// Changing the kind of a channel drops its token: it was for another service.
+	list = save(`{"type":"gotify","url":"https://gotify.example","enabled":true,"token":"gk"}`)
+	id = list[0]["id"].(string)
+	list = save(`{"id":"` + id + `","type":"webhook","url":"https://hooks.example","enabled":true}`)
+	if stored() != "" || list[0]["has_token"] != false {
+		t.Errorf("a channel that changed kind kept the old token: stored=%q answer=%v", stored(), list)
+	}
+
 	// Removing is explicit.
-	got = send("POST", `{`+base+`,"clear_notify_token":true}`)
-	if stored() != "" || got["notify_has_token"] != false {
-		t.Errorf("remove did not clear it: stored=%q answer=%v", stored(), got)
+	list = save(`{"type":"ntfy","url":"https://ntfy.sh/y","enabled":true,"token":"tk"}`)
+	id = list[0]["id"].(string)
+	list = save(`{"id":"` + id + `",` + ntfy + `,"clear_token":true}`)
+	if stored() != "" || list[0]["has_token"] != false {
+		t.Errorf("remove did not clear it: stored=%q answer=%v", stored(), list)
 	}
 }
 

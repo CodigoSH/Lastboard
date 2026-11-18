@@ -146,20 +146,15 @@ func NewMonitorHandler(db *sql.DB) *MonitorHandler {
 }
 
 type monitorSettings struct {
-	Mode          string `json:"mode"`         // off | tab | background
-	IntervalSec   int    `json:"interval_sec"` // probe cadence for background mode
-	AlertsEnabled bool   `json:"alerts_enabled"`
-	NotifyType    string `json:"notify_type"` // none | ntfy | gotify | webhook | push
-	NotifyURL     string `json:"notify_url"`
-	// NotifyToken is write-only: it arrives when the admin types one and is never
-	// sent back. The page learns that one is saved from NotifyHasToken, as the
-	// Proxmox secret does, so the credential does not sit in a field on screen
-	// after saving.
-	NotifyToken      string `json:"notify_token,omitempty"`
-	NotifyHasToken   bool   `json:"notify_has_token"`
-	ClearNotifyToken bool   `json:"clear_notify_token,omitempty"` // write-only: remove the saved token
-	FailThreshold    int    `json:"fail_threshold"`               // consecutive fails before a down alert
-	RetentionDays    int    `json:"retention_days"`               // how long the history is kept; read-only
+	Mode        string `json:"mode"`         // off | tab | background
+	IntervalSec int    `json:"interval_sec"` // probe cadence for background mode
+	// AlertsEnabled and NotifyMethods are read-only: alerts are on when any channel is, and the methods are
+	// the kinds of the channels that are on. The channels themselves are their own list (see monitor_channels.go);
+	// a page that still sends the old fields here changes nothing.
+	AlertsEnabled bool     `json:"alerts_enabled"`
+	NotifyMethods []string `json:"notify_methods"`
+	FailThreshold int      `json:"fail_threshold"` // consecutive fails before a down alert
+	RetentionDays int      `json:"retention_days"` // how long the history is kept; read-only
 
 	// The wording this account chose for its alerts. A pointer so that "not sent" keeps what is
 	// saved (a page that has not reloaded since these existed sends the whole form without them)
@@ -184,20 +179,6 @@ func (s *monitorSettings) alertTextFields() []struct {
 	}
 }
 
-// resolveNotifyToken is the token a save leaves behind. Nothing typed keeps the
-// saved one: the page does not know it, and a browser that has not reloaded
-// since the token stopped being sent sends the whole form back with an empty
-// field, which must not wipe it.
-func resolveNotifyToken(stored, sent string, clear bool) string {
-	if clear {
-		return ""
-	}
-	if sent != "" {
-		return sent
-	}
-	return stored
-}
-
 // GetSettings returns the caller's monitoring configuration, filling defaults
 // when unset (mode "tab" = today's frontend-driven behavior).
 //
@@ -218,21 +199,19 @@ func (h *MonitorHandler) GetSettings(w http.ResponseWriter, r *http.Request) {
 	if threshold < 1 {
 		threshold = 1
 	}
-	notifyType := h.getSetting(uid, keyMonType)
-	if notifyType == "" {
-		notifyType = "none"
+	methods := []string{}
+	for _, ch := range channelsOf(NewUserSettings(h.DB), uid) {
+		if ch.Enabled {
+			methods = append(methods, ch.Type)
+		}
 	}
 	settings := monitorSettings{
 		Mode:          mode,
 		IntervalSec:   interval,
-		AlertsEnabled: h.getSetting(uid, keyMonAlerts) == "1",
-		NotifyType:    notifyType,
+		AlertsEnabled: len(methods) > 0,
+		NotifyMethods: methods,
 		FailThreshold: threshold,
 		RetentionDays: monitorRetentionDays,
-		// It is the account's own channel, so it may read where it goes; the
-		// token it may only learn exists.
-		NotifyURL:      h.getSetting(uid, keyMonURL),
-		NotifyHasToken: h.getSetting(uid, keyMonToken) != "",
 	}
 	for _, f := range settings.alertTextFields() {
 		v := h.getSetting(uid, f.key)
@@ -260,33 +239,15 @@ func (h *MonitorHandler) UpdateSettings(w http.ResponseWriter, r *http.Request) 
 		http.Error(w, "general.invalid_input", http.StatusBadRequest)
 		return
 	}
-	switch s.NotifyType {
-	case "", "none", "ntfy", "gotify", "webhook", "push":
-	default:
-		http.Error(w, "general.invalid_input", http.StatusBadRequest)
-		return
-	}
 	if s.IntervalSec < monitorMinIntervalSec {
 		s.IntervalSec = monitorMinIntervalSec
 	}
 	if s.FailThreshold < 1 {
 		s.FailThreshold = 1
 	}
-	if s.NotifyType == "" {
-		s.NotifyType = "none"
-	}
-	if badNotifyURL(s.NotifyURL) {
-		http.Error(w, "error.invalid_url", http.StatusBadRequest)
-		return
-	}
-	token := resolveNotifyToken(h.getSetting(uid, keyMonToken), s.NotifyToken, s.ClearNotifyToken)
 	values := map[string]string{
 		keyMonMode:      s.Mode,
 		keyMonInterval:  strconv.Itoa(s.IntervalSec),
-		keyMonAlerts:    boolTo01(s.AlertsEnabled),
-		keyMonType:      s.NotifyType,
-		keyMonURL:       s.NotifyURL,
-		keyMonToken:     token,
 		keyMonThreshold: strconv.Itoa(s.FailThreshold),
 	}
 	// Only the texts that were sent are written, cleaned; the others keep what they had.
@@ -300,8 +261,14 @@ func (h *MonitorHandler) UpdateSettings(w http.ResponseWriter, r *http.Request) 
 		http.Error(w, "general.db_error", http.StatusInternalServerError)
 		return
 	}
-	// What goes back is what is saved, without the credential.
-	s.NotifyToken, s.ClearNotifyToken, s.NotifyHasToken = "", false, token != ""
+	// What goes back is what is saved; the channels are read, not written, here.
+	s.NotifyMethods = []string{}
+	for _, ch := range channelsOf(NewUserSettings(h.DB), uid) {
+		if ch.Enabled {
+			s.NotifyMethods = append(s.NotifyMethods, ch.Type)
+		}
+	}
+	s.AlertsEnabled = len(s.NotifyMethods) > 0
 	for _, f := range s.alertTextFields() {
 		v := h.getSetting(uid, f.key)
 		*f.val = &v
@@ -323,48 +290,6 @@ func badNotifyURL(raw string) bool {
 		return true
 	}
 	return util.IsCloudMetadataHost(u.Hostname())
-}
-
-func boolTo01(b bool) string {
-	if b {
-		return "1"
-	}
-	return "0"
-}
-
-// TestNotify sends a one-off test alert using the config in the request body
-// (so it can be tried before saving).
-func (h *MonitorHandler) TestNotify(w http.ResponseWriter, r *http.Request) {
-	uid := middleware.GetUserIDFromContext(r)
-	r.Body = http.MaxBytesReader(w, r.Body, 4*1024)
-	var s monitorSettings
-	if err := json.NewDecoder(r.Body).Decode(&s); err != nil {
-		http.Error(w, "general.invalid_input", http.StatusBadRequest)
-		return
-	}
-	// A test sent without a token uses the saved one: the page never has it.
-	token := resolveNotifyToken(h.getSetting(uid, keyMonToken), s.NotifyToken, false)
-	cfg := notifyConfig{Enabled: true, Type: s.NotifyType, URL: s.NotifyURL, Token: token,
-		Lang: userLanguage(h.DB, uid), Texts: alertTemplates(h.DB, uid), Catalog: h.Texts}
-	if s.NotifyType == "push" {
-		// Its destination is the account's own browsers, so there is nothing typed to test.
-		cfg.UserID, cfg.Push = uid, NewPushSender(h.DB)
-		cfg.URL, cfg.Token = "", ""
-	}
-	if badNotifyURL(s.NotifyURL) {
-		http.Error(w, "error.invalid_url", http.StatusBadRequest)
-		return
-	}
-	if !cfg.active() {
-		http.Error(w, "general.invalid_input", http.StatusBadRequest)
-		return
-	}
-	if err := sendNotice(r.Context(), cfg, cfg.testNotice()); err != nil {
-		http.Error(w, err.Error(), http.StatusBadGateway)
-		return
-	}
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]any{"ok": true})
 }
 
 // incident is a contiguous down period that shows in the queried window. Its

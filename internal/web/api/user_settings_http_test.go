@@ -72,7 +72,7 @@ func TestTheServersOldSettingsBecomeTheFirstAdministratorsAndNobodyElses(t *test
 	defer resp.Body.Close()
 	var got map[string]any
 	json.NewDecoder(resp.Body).Decode(&got)
-	if got["mode"] != "background" || got["interval_sec"] != float64(90) || got["fail_threshold"] != float64(3) || got["notify_url"] != "" {
+	if got["mode"] != "background" || got["interval_sec"] != float64(90) || got["fail_threshold"] != float64(3) || got["alerts_enabled"] != false {
 		t.Errorf("a guest's starting settings = %v", got)
 	}
 
@@ -157,6 +157,11 @@ func TestRestoringBackupsFromBeforeAndAfter(t *testing.T) {
 	}
 	if owned("guest", "monitoring_notify_token") != "" || owned("guest", "proxmox_hosts") != "" {
 		t.Errorf("an old backup's credentials went to a plain account")
+	}
+	// The single channel such a backup carries comes back as the first entry of the list of channels, with its
+	// token, off (the backup said nothing of the alerts switch).
+	if list := owned("boss", "monitoring_notify_channels"); !strings.Contains(list, `"url":"https://ntfy.sh/old"`) || !strings.Contains(list, `"token":"tk_old"`) || !strings.Contains(list, `"enabled":false`) {
+		t.Errorf("an old backup's channel did not become the first of the list: %q", list)
 	}
 	var interval string
 	db.QueryRow(`SELECT value FROM system_settings WHERE key = 'monitoring_interval_sec'`).Scan(&interval)

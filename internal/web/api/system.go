@@ -222,6 +222,10 @@ var userSettingKeys = map[string]bool{
 	keyMonURL:       false,
 	keyMonToken:     false,
 
+	// The list of channels alerts go to (JSON, with each channel's token). A backup from before the list carries
+	// the keys above instead, and a restore turns them into the first channel.
+	keyMonChannels: true,
+
 	keyMonTextDownTitle: false,
 	keyMonTextDownBody:  false,
 	keyMonTextUpTitle:   false,
@@ -693,6 +697,10 @@ func (h *SystemHandler) RestoreBackup(w http.ResponseWriter, r *http.Request) {
 	// them for the whole server.
 	if err := MigrateUserSettings(h.DB); err != nil {
 		slog.Error("Moving settings to the first administrator after a restore failed", "error", err)
+	}
+	// A backup from before the list of channels brings the single channel back in its older keys.
+	if err := MigrateNotifyChannels(h.DB); err != nil {
+		slog.Error("Writing the alert channels to each account's list after a restore failed", "error", err)
 	}
 	// One from before permissions has members with none: they come back with
 	// what they could do then, as an upgrade gives it to the ones already here.

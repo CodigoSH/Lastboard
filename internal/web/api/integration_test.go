@@ -66,6 +66,9 @@ func setupTestServer(t *testing.T) (*httptest.Server, *sql.DB, func()) {
 	mux.Handle("GET /api/widget/{id}/remote-stats", protect(http.HandlerFunc(api.NewRemoteStatsHandler(db.DB).Get)))
 	mux.Handle("POST /api/widget/remote-stats/test", protect(http.HandlerFunc(api.NewRemoteStatsHandler(db.DB).Test)))
 	mux.Handle("POST /api/monitor/settings", protect(http.HandlerFunc(api.NewMonitorHandler(db.DB).UpdateSettings)))
+	mux.Handle("GET /api/monitor/channels", protect(http.HandlerFunc(api.NewMonitorHandler(db.DB).GetChannels)))
+	mux.Handle("POST /api/monitor/channels", protect(http.HandlerFunc(api.NewMonitorHandler(db.DB).UpdateChannels)))
+	mux.Handle("POST /api/monitor/channels/test", protect(http.HandlerFunc(api.NewMonitorHandler(db.DB).TestChannel)))
 
 	server := httptest.NewServer(mux)
 
@@ -495,17 +498,17 @@ func TestLockoutCannotBeEvadedByForgingForwardedFor(t *testing.T) {
 }
 
 // Where alerts go, and with what token, is the account's own. Nobody reads
-// another account's channel: on ntfy and gotify that would be reading the alerts
+// another account's channels: on ntfy and gotify that would be reading the alerts
 // of every service somebody else watches.
-func TestEachAccountsAlertChannelIsItsOwn(t *testing.T) {
+func TestEachAccountsAlertChannelsAreItsOwn(t *testing.T) {
 	server, db, cleanup := setupTestServer(t)
 	defer cleanup()
 	createUser(t, db, "boss", "correcthorse", "admin")
 	createUser(t, db, "guest", "correcthorse", "user")
 
-	call := func(username, method, body string) map[string]any {
+	call := func(username, method, path, body string) map[string]any {
 		cookie := loginAndGetCookie(t, server, username, "correcthorse")
-		req, err := http.NewRequest(method, server.URL+"/api/monitor/settings", strings.NewReader(body))
+		req, err := http.NewRequest(method, server.URL+path, strings.NewReader(body))
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -524,31 +527,47 @@ func TestEachAccountsAlertChannelIsItsOwn(t *testing.T) {
 		}
 		return out
 	}
-
-	call("boss", "POST", `{"mode":"background","interval_sec":60,"alerts_enabled":true,"notify_type":"ntfy","notify_url":"https://ntfy.sh/the-bosss-private-topic","notify_token":"tk_secret_bearer_token","fail_threshold":2}`)
-
-	boss := call("boss", "GET", "")
-	if boss["notify_url"] != "https://ntfy.sh/the-bosss-private-topic" || boss["notify_has_token"] != true {
-		t.Errorf("an account can no longer read its own settings: %v", boss)
+	channelsOf := func(v map[string]any) []map[string]any {
+		var out []map[string]any
+		list, _ := v["channels"].([]any)
+		for _, c := range list {
+			out = append(out, c.(map[string]any))
+		}
+		return out
 	}
-	if tok, present := boss["notify_token"]; present && tok != "" {
-		t.Errorf("the saved token came back in the settings: %v", tok)
+
+	call("boss", "POST", "/api/monitor/settings", `{"mode":"background","interval_sec":60,"fail_threshold":2}`)
+	call("boss", "POST", "/api/monitor/channels", `{"channels":[{"type":"ntfy","name":"Mine","url":"https://ntfy.sh/the-bosss-private-topic","token":"tk_secret_bearer_token","enabled":true}]}`)
+
+	boss := channelsOf(call("boss", "GET", "/api/monitor/channels", ""))
+	if len(boss) != 1 || boss[0]["url"] != "https://ntfy.sh/the-bosss-private-topic" || boss[0]["has_token"] != true || boss[0]["enabled"] != true {
+		t.Errorf("an account can no longer read its own channels: %v", boss)
+	}
+	if _, present := boss[0]["token"]; present {
+		t.Errorf("the saved token came back with the channel: %v", boss[0])
+	}
+	settings := call("boss", "GET", "/api/monitor/settings", "")
+	if settings["alerts_enabled"] != true || settings["mode"] != "background" || settings["interval_sec"] != float64(60) {
+		t.Errorf("an account's own settings: %v", settings)
 	}
 
 	// The guest sees none of it, and none of the boss's choices either.
-	guest := call("guest", "GET", "")
-	if guest["notify_url"] != "" || guest["notify_has_token"] != false || guest["notify_type"] != "none" || guest["alerts_enabled"] != false {
-		t.Errorf("an account was handed another's alert channel: %v", guest)
+	if guest := channelsOf(call("guest", "GET", "/api/monitor/channels", "")); len(guest) != 0 {
+		t.Errorf("an account was handed another's channels: %v", guest)
+	}
+	if g := call("guest", "GET", "/api/monitor/settings", ""); g["alerts_enabled"] != false || g["mode"] != "tab" {
+		t.Errorf("an account was handed another's alert settings: %v", g)
 	}
 
 	// Saving their own changes nothing for the boss.
-	call("guest", "POST", `{"mode":"tab","interval_sec":300,"alerts_enabled":true,"notify_type":"webhook","notify_url":"https://hooks.example/guest","notify_token":"guest-tok","fail_threshold":1}`)
-	boss = call("boss", "GET", "")
-	if boss["notify_url"] != "https://ntfy.sh/the-bosss-private-topic" || boss["mode"] != "background" || boss["interval_sec"] != float64(60) {
+	call("guest", "POST", "/api/monitor/channels", `{"channels":[{"type":"webhook","url":"https://hooks.example/guest","token":"guest-tok","enabled":true}]}`)
+	call("guest", "POST", "/api/monitor/settings", `{"mode":"tab","interval_sec":300,"fail_threshold":1}`)
+	boss = channelsOf(call("boss", "GET", "/api/monitor/channels", ""))
+	if len(boss) != 1 || boss[0]["url"] != "https://ntfy.sh/the-bosss-private-topic" {
 		t.Errorf("the guest's save reached the boss: %v", boss)
 	}
-	guest = call("guest", "GET", "")
-	if guest["notify_url"] != "https://hooks.example/guest" || guest["mode"] != "tab" {
+	guest := channelsOf(call("guest", "GET", "/api/monitor/channels", ""))
+	if len(guest) != 1 || guest[0]["url"] != "https://hooks.example/guest" {
 		t.Errorf("the guest's own save did not stick: %v", guest)
 	}
 }
