@@ -2,6 +2,7 @@ import { containerName, type DockerContainer, type DockerHost } from './dockerSh
 import { GRID_MIN, planImport, type PlanItem, type PlanSection } from './importPlan';
 import type { PxGuest } from './proxmoxApi';
 import { iconKey } from './proxmoxIcons';
+import { withoutOrdinal } from './proxmoxMatch';
 import { isIconName } from './importIcons';
 
 /**
@@ -192,6 +193,32 @@ export function iconNamesFor(c: DockerContainer): string[] {
     return names;
 }
 
+/** Words that say what a machine is and not what it runs: `plex-lxc`, `vm-plex`, `jellyfin-prod`. */
+const MACHINE_ROLES = new Set(['lxc', 'ct', 'vm', 'srv', 'server', 'prod', 'dev', 'test', 'staging']);
+
+/**
+ * Names to look up in the icon library for a Proxmox machine, the exact one first: the number it is filed under
+ * (`18-lastboard`), a numbered copy (`pihole01`, `pihole-2`) and the words that say what kind of machine it is
+ * (`plex-lxc`) are taken off one at a time, so each name is tried before the next, plainer one. A name is never
+ * cut down to nothing: a machine called `vm` stays `vm`.
+ */
+export function guestIconNames(name: string): string[] {
+    const names: string[] = [];
+    const add = (n: string) => { if (n && !names.includes(n)) names.push(n); };
+    const lower = (name || '').trim().toLowerCase();
+    add(lower);
+    const bare = withoutOrdinal(lower);
+    add(bare);
+    const untailed = bare.replace(/[-_.]?\d+$/, '');
+    add(untailed);
+    const parts = untailed.split(/[-_.\s]+/).filter(Boolean);
+    while (parts.length > 1 && MACHINE_ROLES.has(parts[0])) parts.shift();
+    while (parts.length > 1 && MACHINE_ROLES.has(parts[parts.length - 1])) parts.pop();
+    // What is left must name something: `lxc-test` is two words of role, not a service called `test`.
+    if (!(parts.length === 1 && MACHINE_ROLES.has(parts[0]))) add(parts.join('-'));
+    return names;
+}
+
 /** The first name the library has, or '' (the board's own glyph). */
 export function pickIconName(names: string[], index: Map<string, string>): string {
     for (const n of names) {
@@ -371,7 +398,7 @@ export function discoverProxmox(input: ProxmoxDiscoverInput): Discovery {
             candidates,
             project: '',
             chosenIcon: input.chosenIcon(g),
-            iconNames: [g.name.toLowerCase()],
+            iconNames: guestIconNames(g.name),
             labelIcon: '',
             group: '',
             linkedTo,

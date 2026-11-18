@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'bun:test';
 import {
-    candidateUrl, consoleUrl, discoverDocker, discoverProxmox, fitSection, iconNamesFor, imageBase, isOwnContainer, pickIconName, planServices, prettyName,
+    candidateUrl, consoleUrl, discoverDocker, discoverProxmox, fitSection, guestIconNames, iconNamesFor, imageBase, isOwnContainer, pickIconName, planServices, prettyName,
     sectionTitleFor, serviceName, usablePorts, type DiscoverInput, type ServiceProposal,
 } from './discoverServices';
 import type { DockerContainer, DockerHost } from './dockerShared';
@@ -284,5 +284,38 @@ describe('what a container says about itself', () => {
         const size = new Map([['stack', 3]]);
         expect(sectionTitleFor(p, 'host', 'Home', size)).toBe('Media');
         expect(sectionTitleFor(p, 'project', 'Home', size)).toBe('Media');
+    });
+});
+
+describe('the icon names tried for a Proxmox machine', () => {
+    test('the exact name goes first, and the plainer ones after it', () => {
+        expect(guestIconNames('Plex')).toEqual(['plex']);
+        expect(guestIconNames('plex-lxc')).toEqual(['plex-lxc', 'plex']);
+        expect(guestIconNames('vm-plex')).toEqual(['vm-plex', 'plex']);
+    });
+    test('the number a machine is filed under is not part of its name', () => {
+        expect(guestIconNames('18-lastboard')).toEqual(['18-lastboard', 'lastboard']);
+        expect(guestIconNames('90--haos')).toEqual(['90--haos', 'haos']);
+        expect(guestIconNames('15-myspeed-lxc')).toEqual(['15-myspeed-lxc', 'myspeed-lxc', 'myspeed']);
+    });
+    test('a numbered copy is the same service', () => {
+        expect(guestIconNames('pihole01')).toEqual(['pihole01', 'pihole']);
+        expect(guestIconNames('pihole-2')).toEqual(['pihole-2', 'pihole']);
+    });
+    test('a name is never cut down to nothing, nor to a word that says what the machine is', () => {
+        expect(guestIconNames('vm')).toEqual(['vm']);
+        expect(guestIconNames('lxc-test')).toEqual(['lxc-test']);
+        expect(guestIconNames('')).toEqual([]);
+        expect(guestIconNames('42')).toEqual(['42']);
+    });
+    test('a machine is proposed with them, and the library answers with the first it has', () => {
+        const { proposals } = discoverProxmox({
+            host: { id: 'p1', name: 'Home PVE' }, consoleBase: 'https://pve.lan:8006', guests: [{
+                vmid: 106, name: '15-jellyfin-lxc', kind: 'lxc', node: 'pve', running: true, cpu: 0, mem: 0, mem_total: 0, uptime: 0,
+            }],
+            addresses: { 'pve|106': '192.168.1.106' }, linkedLabel: () => '', chosenIcon: () => '',
+        });
+        expect(proposals[0].iconNames).toEqual(['15-jellyfin-lxc', 'jellyfin-lxc', 'jellyfin']);
+        expect(pickIconName(proposals[0].iconNames, new Map([['jellyfin', 'jellyfin.webp']]))).toBe('jellyfin');
     });
 });

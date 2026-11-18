@@ -27,9 +27,14 @@ function squash(s: string): string {
     return (s || '').toLowerCase().replace(/[^a-z0-9]/g, '');
 }
 
+/** A machine's name without the number it is filed under: `15-myspeed` is `myspeed`. */
+export function withoutOrdinal(name: string): string {
+    return (name || '').replace(ORDINAL, '');
+}
+
 /** The key a machine is looked up by. */
 export function machineKey(name: string): string {
-    return squash((name || '').replace(ORDINAL, ''));
+    return squash(withoutOrdinal(name));
 }
 
 /**
