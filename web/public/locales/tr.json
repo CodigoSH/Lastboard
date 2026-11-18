@@ -797,7 +797,7 @@
   "backup.password_required": "Bu yedek korumalı. Parolasını girin.",
   "backup.wrong_password": "Parola yanlış ya da dosya bozuk.",
   "backup.newer_version": "Bu yedek Lastboard'un daha yeni bir sürümünden geliyor. Önce bu sunucuyu güncelle, sonra geri yükle.",
-  "backup.warn_plain": "Bu yedek, hizmetlerinizin API anahtarlarını, Proxmox belirtecini, iki adımlı oturum açma sırlarını ve her hesabın parola özetini şifrelenmemiş olarak içerir. Bu sunucudan dışarı çıkacaksa bir parola belirleyin.",
+  "backup.warn_plain": "Bu yedek, hizmetlerinizin API anahtarlarını, Proxmox belirtecini, bildirim kanallarının belirteçlerini, iki adımlı oturum açma sırlarını ve her hesabın parola özetini şifrelenmemiş olarak içerir. Bu sunucudan dışarı çıkacaksa bir parola belirleyin.",
   "backup.warn_no_recovery": "Kurtarma yolu yoktur: açılamayan bir yedek, yedek değildir. Parolayı güvenli bir yerde saklayın.",
   "backup.password_label": "Yedek parolası (isteğe bağlı)",
   "backup.password_mismatch": "Parolalar eşleşmiyor.",

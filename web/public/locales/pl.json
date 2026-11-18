@@ -797,7 +797,7 @@
   "backup.password_required": "Ta kopia zapasowa jest chroniona. Podaj jej hasło.",
   "backup.wrong_password": "Nieprawidłowe hasło lub uszkodzony plik.",
   "backup.newer_version": "Ta kopia pochodzi z nowszej wersji Lastboard. Najpierw zaktualizuj ten serwer, a potem ją przywróć.",
-  "backup.warn_plain": "Ta kopia zawiera klucze API Twoich usług, token Proxmox, sekrety logowania dwuetapowego i skrót hasła każdego konta, bez szyfrowania. Ustaw hasło, jeśli kopia ma opuścić ten serwer.",
+  "backup.warn_plain": "Ta kopia zawiera klucze API Twoich usług, token Proxmox, tokeny kanałów powiadomień, sekrety logowania dwuetapowego i skrót hasła każdego konta, bez szyfrowania. Ustaw hasło, jeśli kopia ma opuścić ten serwer.",
   "backup.warn_no_recovery": "Nie ma odzyskiwania: kopia, której nie da się otworzyć, nie jest kopią. Zachowaj hasło w bezpiecznym miejscu.",
   "backup.password_label": "Hasło kopii zapasowej (opcjonalne)",
   "backup.password_mismatch": "Hasła nie są takie same.",
