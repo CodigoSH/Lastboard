@@ -123,7 +123,9 @@ const act = (cls: string, label: string): string => `<button type="button" class
 /**
  * One service. What it shows depends on what there is to do with it: a row to add can be ticked and edited and
  * ignored; one that is already on the board only says so, and can be added anyway; one that is ignored can be
- * taken back. The inputs of a row to add are folded away until it is edited, because nearly nobody edits.
+ * taken back. A row that is on the board only because a bookmark seems to be it, and is tied to nothing, can be ignored as
+ * well: it is counted as left to do until it is tied, and a person who does not want it tied needs a way to say so. The
+ * inputs of a row to add are folded away until it is edited, because nearly nobody edits.
  */
 export function rowHtml(r: RowView, t: T): string {
     const head = `<div class="row row--${r.group}" data-key="${e(r.key)}" data-group="${r.group}" data-search="${e(`${r.name} ${r.key}`.toLowerCase())}">`;
@@ -132,7 +134,7 @@ export function rowHtml(r: RowView, t: T): string {
         return `${head}
         ${faceButton(r, t)}
         <div class="row__body"><div class="row__title"><span class="row__name">${e(r.name)}</span></div><div class="row__sub"><span class="chip chip--linked" title="${e(t('detect.already', { name: r.linkedTo }))}">${e(t('detect.already', { name: r.linkedTo }))}</span></div></div>
-        <div class="row__actions">${r.canLink ? act('link', t('detect.link')) : ''}${act('anyway', t('detect.add_anyway'))}</div>
+        <div class="row__actions">${r.canLink ? act('link', t('detect.link')) + act('ignore', t('detect.ignore')) : ''}${act('anyway', t('detect.add_anyway'))}</div>
     </div>`;
     }
     if (r.group === 'ignored') {

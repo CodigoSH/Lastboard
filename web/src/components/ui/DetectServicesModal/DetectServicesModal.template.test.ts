@@ -56,6 +56,12 @@ describe('a row', () => {
         // The row to add has nothing to tie.
         expect(rowHtml(row({ canLink: true }), t)).not.toContain('act--link"');
     });
+    test('one that is tied to nothing can be ignored, so it stops being counted, and one that is tied has nothing to ignore', () => {
+        const can = rowHtml(row({ group: 'linked', linkedTo: 'My Plex', canLink: true }), t);
+        expect(can).toContain('act--ignore');
+        const tied = rowHtml(row({ group: 'linked', linkedTo: 'My Plex' }), t);
+        expect(tied).not.toContain('act--ignore');
+    });
     test('the group of bookmarks already on the board offers to tie them all, and says how many', () => {
         const rows = [row({ key: 'a', group: 'linked', canLink: true }), row({ key: 'b', group: 'linked', canLink: true }), row({ key: 'c', group: 'linked' })];
         const html = groupHtml('linked', rows, { open: { linked: false, ignored: false } }, t);
