@@ -44,14 +44,30 @@ curl -fsSL https://git.codigosh.com/CodigoSH/Lastboard/raw/branch/main/install.s
 
 ## What Happens During an Update?
 
-When updating natively or via the web interface:
+When updating from the web interface:
 1. The new release binary is downloaded from Forgejo.
 2. Its checksum is verified against the line of the release's `checksums.txt` that names that archive, and a download over the size limit is refused.
 3. When release signing is enabled, `checksums.txt` must carry a valid
    signature (`checksums.txt.sig`) — a missing or invalid signature aborts the
    update, so a tampered mirror cannot serve a forged binary.
-4. The existing `lastboard` binary is replaced. If that fails, the previous binary is put back
-   and the update window says so. Only one update runs at a time, and each one works in a directory of its own that is removed afterwards.
-5. The systemd service (or container process) automatically restarts.
+4. The new binary is run once on your server, to ask its version, before anything is touched.
+   One that cannot run there — built for another processor, or damaged — stops the update.
+5. The database is copied beside itself, as `lastboard.db.backup-<date>-<time>`, and the copy is
+   opened and checked, and only the account the server runs as can read it. If it cannot be
+   copied (most often, a full disk) the update stops. The three newest copies are kept, counting
+   the ones the install script takes.
+6. The current binary is kept beside the new one as `lastboard.old`, and the new one takes its
+   place in a single step.
+7. The server restarts into the new version **without closing its port**: a request that arrives
+   meanwhile waits a moment and is answered by the new version, so a reverse proxy or tunnel in
+   front never sees the server down. Open pages reconnect by themselves.
+
+If any step before the last fails, the update window shows which one and why, and says that
+nothing was changed: the version you had is still installed and still running. Only one update
+runs at a time, and each one works in a directory of its own that is removed afterwards.
+
+Updating with the install script also copies the database first (see
+[Installation](installation.md#running-it-again)); with Docker, the new image replaces the
+container.
 
 See [Release Signing](../security/release-signing.md) for how the signature is produced and verified.

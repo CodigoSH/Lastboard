@@ -540,33 +540,10 @@ func (h *UpdateHandler) runUpdate(assetURL string, parsedURL *url.URL, emit func
 	}
 	emit(UpdateEvent{Step: StepExtract, Status: StatusOK})
 
-	// 5. Atomic swap
+	// 5. Install: tried, the database copied, and swapped without a moment with no binary (update_install.go).
 	emit(UpdateEvent{Step: StepInstall, Status: StatusRunning})
-	oldExe := currentExe + ".old"
-	os.Remove(oldExe) // clear previous backup if any
-
-	// Move current to old
-	if err := h.moveFile(currentExe, oldExe); err != nil {
-		slog.Error("Update failed: could not back up current binary", "current_exe", currentExe, "error", err)
-		return fail(StepInstall, "notifier.update_install_failed", "notifier.update_rolled_back")
-	}
-
-	// Move new to current
-	if err := h.moveFile(binaryPath, currentExe); err != nil {
-		// Rollback attempt — the two outcomes are very different for whoever is
-		// watching, so they are reported apart instead of as one generic failure.
-		if rbErr := h.moveFile(oldExe, currentExe); rbErr != nil {
-			slog.Error("Update install failed AND rollback failed — binary may be missing",
-				"install_error", err, "rollback_error", rbErr, "old_exe", oldExe, "current_exe", currentExe)
-			return fail(StepInstall, "notifier.update_install_failed", "notifier.update_rollback_failed")
-		}
-		slog.Error("Update failed: could not install new binary (rolled back)", "current_exe", currentExe, "error", err)
-		return fail(StepInstall, "notifier.update_install_failed", "notifier.update_rolled_back")
-	}
-
-	if err := os.Chmod(currentExe, 0700); err != nil {
-		slog.Error("Update failed: could not set permissions on new binary", "current_exe", currentExe, "error", err)
-		return fail(StepInstall, "notifier.update_install_failed", "")
+	if f := h.installBinary(binaryPath, currentExe); f != nil {
+		return fail(StepInstall, f.key, f.detail)
 	}
 	emit(UpdateEvent{Step: StepInstall, Status: StatusOK})
 
@@ -870,6 +847,13 @@ func (h *UpdateHandler) extractTarGz(archivePath, destPath, expectedName string)
 			out.Close()
 			os.Remove(destPath)
 			return fmt.Errorf("binary in archive exceeds %d bytes (possible zip bomb)", maxBinarySize)
+		}
+		// On disk before it is renamed into place: a rename can reach the disk before the bytes it names, and a
+		// power cut then leaves an empty binary where the service starts from.
+		if err := out.Sync(); err != nil {
+			out.Close()
+			os.Remove(destPath)
+			return err
 		}
 		if err := out.Close(); err != nil {
 			return err

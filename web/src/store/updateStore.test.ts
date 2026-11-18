@@ -86,13 +86,13 @@ describe('updateStore', () => {
 
     it('keeps the rollback outcome of a failed install', async () => {
         performImpl = async (_url, emit) => {
-            emit({ step: 'install', status: 'error', error: 'notifier.update_install_failed', detail: 'notifier.update_rollback_failed' });
+            emit({ step: 'install', status: 'error', error: 'notifier.update_install_failed', detail: 'notifier.update_unchanged' });
         };
 
         await updateStore.start(INFO.asset_url);
 
         expect(updateStore.getState().errorKey).toBe('notifier.update_install_failed');
-        expect(updateStore.getState().errorDetail).toBe('notifier.update_rollback_failed');
+        expect(updateStore.getState().errorDetail).toBe('notifier.update_unchanged');
     });
 
     // The old binary answers for a moment after replying, so "the server is up"
