@@ -864,6 +864,7 @@
   "settings.monitoring_mode": "Surveillance 24/7",
   "settings.monitoring_mode_desc": "Enregistre l'historique d'état de tes services en continu, même quand Lastboard n'est pas ouvert.",
   "settings.monitoring_interval": "Intervalle de vérification",
+  "settings.interval_30s": "Toutes les 30 secondes",
   "settings.interval_1m": "Chaque minute",
   "settings.interval_5m": "Toutes les 5 minutes",
   "settings.interval_10m": "Toutes les 10 minutes",

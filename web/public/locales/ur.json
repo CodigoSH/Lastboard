@@ -864,6 +864,7 @@
   "settings.monitoring_mode": "24/7 نگرانی",
   "settings.monitoring_mode_desc": "اپنی سروسز کی اسٹیٹس ہسٹری چوبیس گھنٹے ریکارڈ کریں، چاہے Lastboard کھلا نہ ہو۔",
   "settings.monitoring_interval": "چیک وقفہ",
+  "settings.interval_30s": "ہر 30 سیکنڈ",
   "settings.interval_1m": "ہر منٹ",
   "settings.interval_5m": "ہر 5 منٹ",
   "settings.interval_10m": "ہر 10 منٹ",

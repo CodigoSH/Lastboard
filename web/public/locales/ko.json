@@ -864,6 +864,7 @@
   "settings.monitoring_mode": "24/7 모니터링",
   "settings.monitoring_mode_desc": "Lastboard를 열어두지 않아도 서비스 상태 기록을 24시간 남깁니다.",
   "settings.monitoring_interval": "확인 간격",
+  "settings.interval_30s": "30초마다",
   "settings.interval_1m": "1분마다",
   "settings.interval_5m": "5분마다",
   "settings.interval_10m": "10분마다",

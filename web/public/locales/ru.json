@@ -864,6 +864,7 @@
   "settings.monitoring_mode": "Мониторинг 24/7",
   "settings.monitoring_mode_desc": "Записывайте историю состояния сервисов круглосуточно, даже когда Lastboard закрыт.",
   "settings.monitoring_interval": "Интервал проверки",
+  "settings.interval_30s": "Каждые 30 секунд",
   "settings.interval_1m": "Каждую минуту",
   "settings.interval_5m": "Каждые 5 минут",
   "settings.interval_10m": "Каждые 10 минут",

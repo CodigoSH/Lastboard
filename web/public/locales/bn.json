@@ -864,6 +864,7 @@
   "settings.monitoring_mode": "24/7 মনিটরিং",
   "settings.monitoring_mode_desc": "Lastboard খোলা না থাকলেও আপনার সার্ভিসের স্ট্যাটাস ইতিহাস দিনরাত রেকর্ড করুন।",
   "settings.monitoring_interval": "চেক ব্যবধান",
+  "settings.interval_30s": "প্রতি ৩০ সেকেন্ডে",
   "settings.interval_1m": "প্রতি মিনিটে",
   "settings.interval_5m": "প্রতি 5 মিনিটে",
   "settings.interval_10m": "প্রতি 10 মিনিটে",

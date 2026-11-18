@@ -864,6 +864,7 @@
   "settings.monitoring_mode": "مراقبة على مدار الساعة",
   "settings.monitoring_mode_desc": "سجّل تاريخ حالة خدماتك على مدار الساعة، حتى عندما لا يكون Lastboard مفتوحًا.",
   "settings.monitoring_interval": "فترة الفحص",
+  "settings.interval_30s": "كل 30 ثانية",
   "settings.interval_1m": "كل دقيقة",
   "settings.interval_5m": "كل 5 دقائق",
   "settings.interval_10m": "كل 10 دقائق",

@@ -243,7 +243,7 @@ func (s *PushSender) SendToUser(ctx context.Context, userID int, m PushMessage) 
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			outcomes[i] = s.sendOne(ctx, sub, payload, priv, m.Up)
+			outcomes[i] = s.sendOne(ctx, sub, payload, priv)
 		}()
 	}
 	wg.Wait()
@@ -268,7 +268,7 @@ const (
 	pushFailed
 )
 
-func (s *PushSender) sendOne(ctx context.Context, sub pushSubscription, payload []byte, private string, up bool) pushOutcome {
+func (s *PushSender) sendOne(ctx context.Context, sub pushSubscription, payload []byte, private string) pushOutcome {
 	if !s.allowed(sub.Endpoint) {
 		// Stored before this check existed, or written by hand: never sent to, and said so.
 		slog.Warn("push: a subscription is not on a push service's domain; skipped", "subscription", sub.ID)
@@ -294,11 +294,11 @@ func (s *PushSender) sendOne(ctx context.Context, sub pushSubscription, payload 
 	// Twelve hours: an outage reported to a phone that is switched off is still news when it is
 	// switched on, and a day-old one is not.
 	req.Header.Set("TTL", "43200")
-	if up {
-		req.Header.Set("Urgency", "normal")
-	} else {
-		req.Header.Set("Urgency", "high")
-	}
+	// Always high. A message of normal urgency is what Android holds back while the phone idles (Doze), for
+	// minutes or until the screen is switched on, and that was the delay: a recovery and the test button sent
+	// as "normal" arrived late or only when the app was opened. Every alert here is shown to a person who is
+	// waiting for it, so none is the kind of background chatter the lower urgencies are for.
+	req.Header.Set("Urgency", "high")
 
 	resp, err := s.Client.Do(req)
 	if err != nil {

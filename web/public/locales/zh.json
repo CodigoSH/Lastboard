@@ -864,6 +864,7 @@
   "settings.monitoring_mode": "24/7 监控",
   "settings.monitoring_mode_desc": "全天候记录服务的状态历史，即使 Lastboard 未打开。",
   "settings.monitoring_interval": "检查间隔",
+  "settings.interval_30s": "每 30 秒",
   "settings.interval_1m": "每分钟",
   "settings.interval_5m": "每5分钟",
   "settings.interval_10m": "每10分钟",

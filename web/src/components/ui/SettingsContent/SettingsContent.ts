@@ -2051,6 +2051,9 @@ class SettingsContent extends HTMLElement {
         const monitoringIntervalSelect = this.shadowRoot!.getElementById('monitoring-interval') as any;
         if (monitoringIntervalSelect) {
             monitoringIntervalSelect.options = [
+                // The server has always accepted 30 s as its floor; an outage is noticed at the next check, so a
+                // shorter wait is the only way to hear of it sooner.
+                { value: '30', label: i18n.t('settings.interval_30s') },
                 { value: '60', label: i18n.t('settings.interval_1m') },
                 { value: '300', label: i18n.t('settings.interval_5m') },
                 { value: '600', label: i18n.t('settings.interval_10m') },

@@ -864,6 +864,7 @@
   "settings.monitoring_mode": "24/7 निगरानी",
   "settings.monitoring_mode_desc": "अपनी सेवाओं का स्थिति इतिहास चौबीसों घंटे रिकॉर्ड करें, भले ही Lastboard खुला न हो।",
   "settings.monitoring_interval": "जाँच अंतराल",
+  "settings.interval_30s": "हर 30 सेकंड",
   "settings.interval_1m": "हर मिनट",
   "settings.interval_5m": "हर 5 मिनट",
   "settings.interval_10m": "हर 10 मिनट",

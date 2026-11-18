@@ -864,6 +864,7 @@
   "settings.monitoring_mode": "7/24 izleme",
   "settings.monitoring_mode_desc": "Lastboard açık olmasa bile servislerinin durum geçmişini 7/24 kaydet.",
   "settings.monitoring_interval": "Kontrol aralığı",
+  "settings.interval_30s": "Her 30 saniyede",
   "settings.interval_1m": "Her dakika",
   "settings.interval_5m": "Her 5 dakikada",
   "settings.interval_10m": "Her 10 dakikada",

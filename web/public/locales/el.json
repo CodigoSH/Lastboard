@@ -864,6 +864,7 @@
   "settings.monitoring_mode": "Παρακολούθηση 24/7",
   "settings.monitoring_mode_desc": "Κατέγραψε το ιστορικό κατάστασης των υπηρεσιών σου όλο το εικοσιτετράωρο, ακόμη κι όταν το Lastboard είναι κλειστό.",
   "settings.monitoring_interval": "Διάστημα ελέγχου",
+  "settings.interval_30s": "Κάθε 30 δευτερόλεπτα",
   "settings.interval_1m": "Κάθε λεπτό",
   "settings.interval_5m": "Κάθε 5 λεπτά",
   "settings.interval_10m": "Κάθε 10 λεπτά",

@@ -244,7 +244,7 @@ func TestAMessageReachesThePushServiceSignedAndEncryptedForTheBrowser(t *testing
 	}
 }
 
-func TestAMessageForGoodNewsIsNotUrgentAndATapOnlyEverOpensTheInstance(t *testing.T) {
+func TestGoodNewsIsAsUrgentAsBadAndATapOnlyEverOpensTheInstance(t *testing.T) {
 	f := newFakePushService(t, http.StatusCreated)
 	s, owner := senderTo(t, f)
 	b := newBrowser(t)
@@ -256,8 +256,9 @@ func TestAMessageForGoodNewsIsNotUrgentAndATapOnlyEverOpensTheInstance(t *testin
 		}
 	}
 	for _, r := range f.got() {
-		if r.header.Get("Urgency") != "normal" {
-			t.Errorf("urgency %q for good news", r.header.Get("Urgency"))
+		// Normal urgency is what a phone in Doze holds back for minutes: a recovery and the test button waited on it.
+		if r.header.Get("Urgency") != "high" {
+			t.Errorf("urgency %q for good news: it would arrive late on a phone that is idle", r.header.Get("Urgency"))
 		}
 		var m PushMessage
 		_ = json.Unmarshal(b.open(t, r.body), &m)

@@ -864,6 +864,7 @@
   "settings.monitoring_mode": "24/7 monitoring",
   "settings.monitoring_mode_desc": "Record your services' status history around the clock, even when Lastboard isn't open.",
   "settings.monitoring_interval": "Check interval",
+  "settings.interval_30s": "Every 30 seconds",
   "settings.interval_1m": "Every minute",
   "settings.interval_5m": "Every 5 minutes",
   "settings.interval_10m": "Every 10 minutes",

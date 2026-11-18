@@ -864,6 +864,7 @@
   "settings.monitoring_mode": "24/7-monitoring",
   "settings.monitoring_mode_desc": "Leg de statusgeschiedenis van je diensten dag en nacht vast, ook als Lastboard niet open is.",
   "settings.monitoring_interval": "Controle-interval",
+  "settings.interval_30s": "Elke 30 seconden",
   "settings.interval_1m": "Elke minuut",
   "settings.interval_5m": "Elke 5 minuten",
   "settings.interval_10m": "Elke 10 minuten",

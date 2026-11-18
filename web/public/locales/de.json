@@ -864,6 +864,7 @@
   "settings.monitoring_mode": "24/7-Überwachung",
   "settings.monitoring_mode_desc": "Zeichne den Statusverlauf deiner Dienste rund um die Uhr auf, auch wenn Lastboard nicht offen ist.",
   "settings.monitoring_interval": "Prüfintervall",
+  "settings.interval_30s": "Alle 30 Sekunden",
   "settings.interval_1m": "Jede Minute",
   "settings.interval_5m": "Alle 5 Minuten",
   "settings.interval_10m": "Alle 10 Minuten",

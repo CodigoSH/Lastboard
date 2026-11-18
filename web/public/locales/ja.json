@@ -864,6 +864,7 @@
   "settings.monitoring_mode": "24時間監視",
   "settings.monitoring_mode_desc": "Lastboard を開いていなくても、サービスの状態履歴を24時間記録します。",
   "settings.monitoring_interval": "チェック間隔",
+  "settings.interval_30s": "30秒ごと",
   "settings.interval_1m": "1分ごと",
   "settings.interval_5m": "5分ごと",
   "settings.interval_10m": "10分ごと",

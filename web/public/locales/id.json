@@ -864,6 +864,7 @@
   "settings.monitoring_mode": "Pemantauan 24/7",
   "settings.monitoring_mode_desc": "Rekam riwayat status layanan Anda sepanjang waktu, bahkan saat Lastboard tidak terbuka.",
   "settings.monitoring_interval": "Interval pemeriksaan",
+  "settings.interval_30s": "Setiap 30 detik",
   "settings.interval_1m": "Setiap menit",
   "settings.interval_5m": "Setiap 5 menit",
   "settings.interval_10m": "Setiap 10 menit",

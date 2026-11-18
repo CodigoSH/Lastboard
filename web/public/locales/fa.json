@@ -864,6 +864,7 @@
   "settings.monitoring_mode": "نظارت ۲۴/۷",
   "settings.monitoring_mode_desc": "تاریخچه وضعیت سرویس‌هایتان را شبانه‌روز ثبت کنید، حتی وقتی Lastboard باز نیست.",
   "settings.monitoring_interval": "بازه بررسی",
+  "settings.interval_30s": "هر ۳۰ ثانیه",
   "settings.interval_1m": "هر دقیقه",
   "settings.interval_5m": "هر ۵ دقیقه",
   "settings.interval_10m": "هر ۱۰ دقیقه",
