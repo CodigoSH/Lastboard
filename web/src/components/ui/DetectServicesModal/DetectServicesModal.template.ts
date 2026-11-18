@@ -184,7 +184,7 @@ export function groupHtml(group: RowGroup, rows: RowView[], v: Pick<WindowView, 
     // Bookmarks that seem to be these services but are tied to none can be tied all at once, without opening the group.
     const linkable = group === 'linked' ? rows.filter(r => r.canLink).length : 0;
     const bar = linkable
-        ? `<div class="group__bar"><span class="group__hint">${e(t('detect.link_hint'))}</span><button type="button" class="act act--linkall">${e(t('detect.link_all', { count: String(linkable) }))}</button></div>`
+        ? `<div class="group__bar"><span class="group__hint">${e(t('detect.link_hint', { count: String(linkable) }))}</span><button type="button" class="act act--linkall">${e(t('detect.link_all'))}</button><button type="button" class="act act--ignoreall">${e(t('detect.ignore_all'))}</button></div>`
         : '';
     return `<section class="group group--${group}" data-group="${group}">
             <button type="button" class="group__head group__head--fold" data-fold="${group}" aria-expanded="${open}">${CHEVRON}<span class="group__title">${title}</span></button>${bar}

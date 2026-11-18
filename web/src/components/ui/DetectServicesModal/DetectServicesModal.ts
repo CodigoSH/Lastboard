@@ -519,6 +519,25 @@ class DetectServicesModal extends HTMLElement {
         this.renderList();
     }
 
+    /**
+     * Ignores every service that a bookmark only seems to be, at once, so that a person who does not want them tied need not
+     * open the group to do it one by one. Like ignoring a single row it asks nothing, since the group "Ignored" takes each
+     * one back; the choices travel in one request.
+     */
+    private ignoreAll(states: RowState[]): void {
+        if (states.length === 0 || this.view.busy) return;
+        const keys: string[] = [];
+        for (const state of states) {
+            state.ignored = true;
+            state.checked = false;
+            keys.push(dismissKey(state.proposal.link));
+        }
+        this.editing.clear();
+        void saveDismissals({ add: keys, remove: [] }).then(() => this.announce());
+        this.renderList();
+        this.refreshCount();
+    }
+
     /** A service that seems to be on the board already can be added anyway, since a name that matches is only a guess. */
     private addAnyway(row: { el: HTMLElement; state: RowState }): void {
         row.state.forced = true;
@@ -617,6 +636,7 @@ class DetectServicesModal extends HTMLElement {
         const fold = target.closest<HTMLElement>('[data-fold]');
         if (fold) { this.foldGroup(fold.dataset.fold as 'linked' | 'ignored'); return; }
         if (button?.classList.contains('act--linkall')) { void this.link([...this.rows.values()].filter(r => this.canLink(r))); return; }
+        if (button?.classList.contains('act--ignoreall')) { this.ignoreAll([...this.rows.values()].filter(r => this.canLink(r))); return; }
         const row = this.rowOf(target);
         if (row && button?.classList.contains('act')) {
             const kind = [...button.classList].find(c => c.startsWith('act--'))?.slice(5);

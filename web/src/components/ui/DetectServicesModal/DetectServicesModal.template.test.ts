@@ -56,6 +56,18 @@ describe('a row', () => {
         // The row to add has nothing to tie.
         expect(rowHtml(row({ canLink: true }), t)).not.toContain('act--link"');
     });
+    test('the group offers to tie them all, or to ignore them all, and says once how many that is', () => {
+        const rows = [row({ key: 'a', group: 'linked', linkedTo: 'A', canLink: true }), row({ key: 'b', group: 'linked', linkedTo: 'B', canLink: true }), row({ key: 'c', group: 'linked', linkedTo: 'C' })];
+        const html = groupHtml('linked', rows, { open: { linked: false, ignored: false } }, (k, p) => `${k}:${p?.count ?? ''}`);
+        expect(html).toContain('act--linkall');
+        expect(html).toContain('act--ignoreall');
+        // The number is in the sentence that says what the two buttons are about, and not repeated on each of them.
+        expect(html).toContain('detect.link_hint:2');
+        expect(html).toContain('detect.link_all:<');
+        expect(html).toContain('detect.ignore_all:<');
+        const none = groupHtml('linked', [row({ group: 'linked', linkedTo: 'C' })], { open: { linked: false, ignored: false } }, (k) => k);
+        expect(none).not.toContain('act--ignoreall');
+    });
     test('one that is tied to nothing can be ignored, so it stops being counted, and one that is tied has nothing to ignore', () => {
         const can = rowHtml(row({ group: 'linked', linkedTo: 'My Plex', canLink: true }), t);
         expect(can).toContain('act--ignore');
@@ -66,7 +78,9 @@ describe('a row', () => {
         const rows = [row({ key: 'a', group: 'linked', canLink: true }), row({ key: 'b', group: 'linked', canLink: true }), row({ key: 'c', group: 'linked' })];
         const html = groupHtml('linked', rows, { open: { linked: false, ignored: false } }, t);
         expect(html).toContain('act--linkall');
-        expect(html).toContain('[detect.link_all:{&quot;count&quot;:&quot;2&quot;}]');
+        // How many is said once, in the sentence beside the buttons.
+        expect(html).toContain('[detect.link_hint:{&quot;count&quot;:&quot;2&quot;}]');
+        expect(html).toContain('>[detect.link_all]<');
         expect(groupHtml('linked', [row({ group: 'linked' })], { open: { linked: false, ignored: false } }, t)).not.toContain('act--linkall');
     });
     test('can be found by its name', () => {
