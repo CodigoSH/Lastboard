@@ -1044,7 +1044,7 @@
   "settings.notify_none": "Nenhum",
   "settings.notify_webhook": "Webhook",
   "settings.notify_push": "Notificações push",
-  "settings.alert_texts": "Mensagens dos alertas",
+  "settings.alert_texts": "Avançado · mensagens dos alertas",
   "settings.alert_texts_desc": "Escreva seu próprio texto para cada evento. Deixe um campo vazio para usar o texto padrão no seu idioma.",
   "settings.alert_texts_markers": "Marcadores que você pode usar:",
   "settings.alert_text_down_title": "Queda: título",

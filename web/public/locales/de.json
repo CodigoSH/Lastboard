@@ -1044,7 +1044,7 @@
   "settings.notify_none": "Keine",
   "settings.notify_webhook": "Webhook",
   "settings.notify_push": "Push-Benachrichtigungen",
-  "settings.alert_texts": "Alarmtexte",
+  "settings.alert_texts": "Erweitert · Alarmtexte",
   "settings.alert_texts_desc": "Schreibe für jedes Ereignis deinen eigenen Text. Lass ein Feld leer, um den Standardtext in deiner Sprache zu verwenden.",
   "settings.alert_texts_markers": "Platzhalter, die du verwenden kannst:",
   "settings.alert_text_down_title": "Ausfall: Titel",

@@ -1044,7 +1044,7 @@
   "settings.notify_none": "なし",
   "settings.notify_webhook": "Webhook",
   "settings.notify_push": "プッシュ通知",
-  "settings.alert_texts": "アラートのメッセージ",
+  "settings.alert_texts": "詳細設定 · アラートのメッセージ",
   "settings.alert_texts_desc": "イベントごとに独自の文面を書けます。空のままにすると、お使いの言語の既定の文面が使われます。",
   "settings.alert_texts_markers": "使えるプレースホルダー:",
   "settings.alert_text_down_title": "停止: タイトル",

@@ -1044,7 +1044,7 @@
   "settings.notify_none": "کوئی نہیں",
   "settings.notify_webhook": "Webhook",
   "settings.notify_push": "پش نوٹیفکیشن",
-  "settings.alert_texts": "الرٹ پیغامات",
+  "settings.alert_texts": "اعلیٰ ترتیبات · الرٹ پیغامات",
   "settings.alert_texts_desc": "ہر واقعے کے لیے اپنا متن لکھیں۔ اپنی زبان کا ڈیفالٹ متن استعمال کرنے کے لیے خانہ خالی چھوڑ دیں۔",
   "settings.alert_texts_markers": "استعمال ہو سکنے والے نشانات:",
   "settings.alert_text_down_title": "بندش: عنوان",

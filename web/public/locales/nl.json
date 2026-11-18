@@ -1044,7 +1044,7 @@
   "settings.notify_none": "Geen",
   "settings.notify_webhook": "Webhook",
   "settings.notify_push": "Pushmeldingen",
-  "settings.alert_texts": "Meldingsteksten",
+  "settings.alert_texts": "Geavanceerd · meldingsteksten",
   "settings.alert_texts_desc": "Schrijf je eigen tekst voor elke gebeurtenis. Laat een veld leeg om de standaardtekst in jouw taal te gebruiken.",
   "settings.alert_texts_markers": "Plaatsaanduidingen die je kunt gebruiken:",
   "settings.alert_text_down_title": "Storing: titel",

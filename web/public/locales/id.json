@@ -1044,7 +1044,7 @@
   "settings.notify_none": "Tidak ada",
   "settings.notify_webhook": "Webhook",
   "settings.notify_push": "Notifikasi push",
-  "settings.alert_texts": "Pesan peringatan",
+  "settings.alert_texts": "Lanjutan · pesan peringatan",
   "settings.alert_texts_desc": "Tulis kalimat Anda sendiri untuk setiap kejadian. Biarkan kolom kosong untuk memakai teks bawaan dalam bahasa Anda.",
   "settings.alert_texts_markers": "Penanda yang dapat dipakai:",
   "settings.alert_text_down_title": "Gangguan: judul",

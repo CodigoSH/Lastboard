@@ -1044,7 +1044,7 @@
   "settings.notify_none": "None",
   "settings.notify_webhook": "Webhook",
   "settings.notify_push": "Push notifications",
-  "settings.alert_texts": "Alert messages",
+  "settings.alert_texts": "Advanced · alert messages",
   "settings.alert_texts_desc": "Write your own wording for each event. Leave a field empty to use the default text in your language.",
   "settings.alert_texts_markers": "Markers you can use:",
   "settings.alert_text_down_title": "Outage: title",

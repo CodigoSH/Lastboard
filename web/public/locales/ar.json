@@ -1044,7 +1044,7 @@
   "settings.notify_none": "بدون",
   "settings.notify_webhook": "Webhook",
   "settings.notify_push": "إشعارات الدفع",
-  "settings.alert_texts": "رسائل التنبيه",
+  "settings.alert_texts": "متقدم · رسائل التنبيه",
   "settings.alert_texts_desc": "اكتب صياغتك الخاصة لكل حدث. اترك الحقل فارغًا لاستخدام النص الافتراضي بلغتك.",
   "settings.alert_texts_markers": "العلامات التي يمكنك استخدامها:",
   "settings.alert_text_down_title": "التوقف: العنوان",

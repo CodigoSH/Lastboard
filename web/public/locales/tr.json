@@ -1044,7 +1044,7 @@
   "settings.notify_none": "Yok",
   "settings.notify_webhook": "Webhook",
   "settings.notify_push": "Anlık bildirimler",
-  "settings.alert_texts": "Uyarı iletileri",
+  "settings.alert_texts": "Gelişmiş · uyarı iletileri",
   "settings.alert_texts_desc": "Her olay için kendi metninizi yazın. Dilinizdeki varsayılan metni kullanmak için alanı boş bırakın.",
   "settings.alert_texts_markers": "Kullanabileceğiniz işaretler:",
   "settings.alert_text_down_title": "Kesinti: başlık",

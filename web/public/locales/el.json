@@ -1044,7 +1044,7 @@
   "settings.notify_none": "Καμία",
   "settings.notify_webhook": "Webhook",
   "settings.notify_push": "Ειδοποιήσεις push",
-  "settings.alert_texts": "Μηνύματα ειδοποιήσεων",
+  "settings.alert_texts": "Για προχωρημένους · μηνύματα ειδοποιήσεων",
   "settings.alert_texts_desc": "Γράψτε δικό σας κείμενο για κάθε συμβάν. Αφήστε ένα πεδίο κενό για να χρησιμοποιηθεί το προεπιλεγμένο κείμενο στη γλώσσα σας.",
   "settings.alert_texts_markers": "Σημαντήρες που μπορείτε να χρησιμοποιήσετε:",
   "settings.alert_text_down_title": "Διακοπή: τίτλος",

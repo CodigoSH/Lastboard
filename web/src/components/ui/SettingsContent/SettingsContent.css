@@ -1452,6 +1452,24 @@ input:checked+.slider:before {
     color: var(--text-dim);
 }
 
+/* A group of settings kept folded until it is wanted: advanced wording, not something most people change. */
+.settings-content__fold {
+    margin-top: 14px;
+}
+
+.settings-content__fold > summary {
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-dim);
+    padding: 6px 0;
+}
+
+.settings-content__fold > summary:hover,
+.settings-content__fold[open] > summary {
+    color: var(--text-main);
+}
+
 .user-dialog__custom {
     margin-top: 12px;
 }

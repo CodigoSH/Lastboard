@@ -525,9 +525,10 @@ export const usersTemplate = (users: any[]) => `
  * The wording of the alerts: four texts an account may write for itself. Empty means the translated
  * default, which the field shows as its placeholder so there is always something to start from.
  */
-const alertTextsTemplate = (monitoring: Record<string, unknown>) => `
-                <div class="settings-content__form-group" style="margin-top: 14px;">
-                    <label class="settings-content__label">${esc(i18n.t('settings.alert_texts'))}</label>
+const alertTextsTemplate = (monitoring: Record<string, unknown>, open: boolean) => `
+                <details class="settings-content__fold" data-fold="alert-texts"${open ? ' open' : ''}>
+                <summary>${esc(i18n.t('settings.alert_texts'))}</summary>
+                <div class="settings-content__form-group" style="margin-top: 10px;">
                     <p class="settings-content__text-dim" style="font-size: 12px; margin: 0 0 10px 0;">${esc(i18n.t('settings.alert_texts_desc'))}</p>
                     ${ALERT_TEXT_FIELDS.map(f => `
                     <label class="settings-content__label" style="font-size: 12px; margin-top: 8px;">${esc(i18n.t(f.label))}</label>
@@ -537,7 +538,8 @@ const alertTextsTemplate = (monitoring: Record<string, unknown>) => `
                 <div class="settings-content__action-row">
                     <div class="settings-content__action-info"></div>
                     <app-button variant="ghost" data-action="alert-texts-reset">${esc(i18n.t('settings.alert_texts_reset'))}</app-button>
-                </div>`;
+                </div>
+                </details>`;
 
 /**
  * The Push channel: which devices of this account get an alert as a notification, and whether this
@@ -585,7 +587,7 @@ const pushTemplate = (push: PushView | undefined) => {
 export const monitoringTemplate = (monitoring: {
     mode: string; interval_sec: number; alerts_enabled: boolean;
     notify_type: string; notify_url: string; notify_has_token: boolean; fail_threshold: number;
-}, loaded: boolean, failed: boolean, mayAlert = true, push?: PushView) => {
+}, loaded: boolean, failed: boolean, mayAlert = true, push?: PushView, alertTextsOpen = false) => {
     // Until the server has answered there is nothing true to draw. The switches
     // used to be painted from the placeholder, so this section claimed 24/7 and
     // alerts were off before it knew — and a switch flipped in that window saved
@@ -680,7 +682,7 @@ export const monitoringTemplate = (monitoring: {
                     </div>
                     <app-select id="fail-threshold" value="${monitoring.fail_threshold}"></app-select>
                 </div>
-                ${alertTextsTemplate(monitoring)}
+                ${alertTextsTemplate(monitoring, alertTextsOpen)}
                 ` : ''}
                 ` : ''}
             </div>

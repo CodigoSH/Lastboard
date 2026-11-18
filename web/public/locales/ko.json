@@ -1044,7 +1044,7 @@
   "settings.notify_none": "없음",
   "settings.notify_webhook": "Webhook",
   "settings.notify_push": "푸시 알림",
-  "settings.alert_texts": "알림 메시지",
+  "settings.alert_texts": "고급 · 알림 메시지",
   "settings.alert_texts_desc": "이벤트마다 직접 문구를 작성할 수 있습니다. 비워 두면 사용 중인 언어의 기본 문구가 쓰입니다.",
   "settings.alert_texts_markers": "사용할 수 있는 표시자:",
   "settings.alert_text_down_title": "장애: 제목",

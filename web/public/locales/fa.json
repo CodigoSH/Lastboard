@@ -1044,7 +1044,7 @@
   "settings.notify_none": "هیچ‌کدام",
   "settings.notify_webhook": "Webhook",
   "settings.notify_push": "اعلان‌های فشاری",
-  "settings.alert_texts": "پیام‌های هشدار",
+  "settings.alert_texts": "پیشرفته · پیام‌های هشدار",
   "settings.alert_texts_desc": "برای هر رویداد متن دلخواه خود را بنویسید. برای استفاده از متن پیش‌فرض به زبان خود، فیلد را خالی بگذارید.",
   "settings.alert_texts_markers": "نشانه‌هایی که می‌توانید استفاده کنید:",
   "settings.alert_text_down_title": "قطعی: عنوان",

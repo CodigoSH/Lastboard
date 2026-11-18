@@ -72,6 +72,8 @@ class SettingsContent extends HTMLElement {
     private monitoringFailed = false;
     /** The account's push devices and whether this browser can be one. Loaded only when the alert channel is Push. */
     private push: PushView = pushIdle;
+    /** Whether the advanced wording of the alerts is unfolded: kept here because the panel is redrawn on every save. */
+    private alertTextsOpen = false;
     /**
      * Bumped on every save so a slower GET that started earlier cannot land
      * afterwards and paint the state the user just changed.
@@ -130,6 +132,12 @@ class SettingsContent extends HTMLElement {
      */
     private setupDelegation() {
         const root = this.shadowRoot!;
+
+        // A fold's `toggle` does not bubble, so it is heard on the way down.
+        root.addEventListener('toggle', (e) => {
+            const fold = e.target as HTMLElement;
+            if (fold instanceof HTMLDetailsElement && fold.dataset.fold === 'alert-texts') this.alertTextsOpen = fold.open;
+        }, true);
 
         // Keyboard activation for the non-native controls (the avatar / background
         // upload tiles are focusable role="button" divs). matches() (not closest())
@@ -1733,7 +1741,7 @@ class SettingsContent extends HTMLElement {
             // pointing there lands on the section that absorbed it.
             case 'monitoring':
             case 'notifications':
-                return monitoringTemplate(this.monitoring, this.monitoringLoaded, this.monitoringFailed, accessAllows(userStore.getUser(), 'watch_alerts'), this.push);
+                return monitoringTemplate(this.monitoring, this.monitoringLoaded, this.monitoringFailed, accessAllows(userStore.getUser(), 'watch_alerts'), this.push, this.alertTextsOpen);
 
             case 'docker':
                 return dockerTemplate(this.docker, this.dockerLoaded, this.dockerFailed, this.dockerStatus);

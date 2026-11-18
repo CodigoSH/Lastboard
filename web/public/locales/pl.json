@@ -1044,7 +1044,7 @@
   "settings.notify_none": "Brak",
   "settings.notify_webhook": "Webhook",
   "settings.notify_push": "Powiadomienia push",
-  "settings.alert_texts": "Treść alertów",
+  "settings.alert_texts": "Zaawansowane · treść alertów",
   "settings.alert_texts_desc": "Wpisz własny tekst dla każdego zdarzenia. Zostaw pole puste, aby użyć domyślnego tekstu w Twoim języku.",
   "settings.alert_texts_markers": "Znaczniki, których możesz użyć:",
   "settings.alert_text_down_title": "Awaria: tytuł",

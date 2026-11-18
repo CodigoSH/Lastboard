@@ -1044,7 +1044,7 @@
   "settings.notify_none": "Aucune",
   "settings.notify_webhook": "Webhook",
   "settings.notify_push": "Notifications push",
-  "settings.alert_texts": "Messages d'alerte",
+  "settings.alert_texts": "Avancé · messages d'alerte",
   "settings.alert_texts_desc": "Écrivez votre propre texte pour chaque événement. Laissez un champ vide pour utiliser le texte par défaut dans votre langue.",
   "settings.alert_texts_markers": "Marqueurs utilisables :",
   "settings.alert_text_down_title": "Panne : titre",

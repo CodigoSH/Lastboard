@@ -1044,7 +1044,7 @@
   "settings.notify_none": "কোনোটি নয়",
   "settings.notify_webhook": "Webhook",
   "settings.notify_push": "পুশ নোটিফিকেশন",
-  "settings.alert_texts": "অ্যালার্টের বার্তা",
+  "settings.alert_texts": "উন্নত · অ্যালার্টের বার্তা",
   "settings.alert_texts_desc": "প্রতিটি ঘটনার জন্য নিজের লেখা লিখুন। আপনার ভাষার ডিফল্ট লেখা ব্যবহার করতে ঘরটি ফাঁকা রাখুন।",
   "settings.alert_texts_markers": "যে চিহ্নগুলো ব্যবহার করা যায়:",
   "settings.alert_text_down_title": "বন্ধ হওয়া: শিরোনাম",

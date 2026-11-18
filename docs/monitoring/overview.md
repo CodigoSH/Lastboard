@@ -118,7 +118,7 @@ Use **Send test** to fire a test notification with the current settings and conf
 
 Every method says the same thing, and says it in **the language of the account that owns the service** (the one it chose under **Personalization → Language**), in all twenty languages Lastboard speaks. An outage names what failed and why — "No response", or the HTTP status the check got back — and how many checks in a row failed; a recovery says how long the service was down. After a restart Lastboard does not know when an outage began, so a recovery of a service that was already down then only says that it responds again.
 
-You can write the wording yourself. Under **Alert messages**, in the same card as the failure threshold, there is a box for the title and the text of an outage and of a recovery. Each one that you leave empty keeps the translated default, which the box shows as its placeholder, and **Use the default texts** empties all four. What you write is used as you write it, in whatever language you choose, with these markers filled in:
+You can write the wording yourself. Under **Advanced · alert messages**, a fold that starts closed at the foot of the same card as the failure threshold (press its title to open it), there is a box for the title and the text of an outage and of a recovery. Each one that you leave empty keeps the translated default, which the box shows as its placeholder, and **Use the default texts** empties all four. What you write is used as you write it, in whatever language you choose, with these markers filled in:
 
 | Marker | Replaced by |
 | :--- | :--- |

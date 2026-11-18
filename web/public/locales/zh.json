@@ -1044,7 +1044,7 @@
   "settings.notify_none": "无",
   "settings.notify_webhook": "Webhook",
   "settings.notify_push": "推送通知",
-  "settings.alert_texts": "警报消息",
+  "settings.alert_texts": "高级 · 警报消息",
   "settings.alert_texts_desc": "可以为每个事件自定义文字。留空则使用你所用语言的默认文字。",
   "settings.alert_texts_markers": "可用的占位符：",
   "settings.alert_text_down_title": "故障：标题",
