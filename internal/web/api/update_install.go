@@ -121,20 +121,26 @@ func backupDatabase(db *sql.DB) error {
 	if file == "" {
 		return fmt.Errorf("the database has no file to copy beside")
 	}
-	target := file + dbBackupPrefix + time.Now().Format("20060102-150405")
+	started := time.Now()
+	target := file + dbBackupPrefix + started.Format("20060102-150405")
 	// Two updates within the same second share a name, and VACUUM INTO refuses a file that exists.
 	_ = os.Remove(target)
 	if _, err := db.Exec(`VACUUM INTO ?`, target); err != nil {
 		_ = os.Remove(target)
 		return fmt.Errorf("VACUUM INTO: %w", err)
 	}
+	copied := time.Now()
 	if err := checkDatabaseCopy(target); err != nil {
 		_ = os.Remove(target)
 		return err
 	}
+	checked := time.Now()
 	_ = os.Chmod(target, 0o600)
 	pruneDatabaseCopies(file, dbBackupsKept)
-	slog.Info("Update: database copied before updating", "copy", target)
+	// How long each part took: on a large database on a slow disk this is the step that makes the window wait, and
+	// which part weighs more decides whether the check can be made lighter.
+	slog.Info("Update: database copied before updating", "copy", target,
+		"copying", copied.Sub(started).Round(time.Millisecond), "checking", checked.Sub(copied).Round(time.Millisecond))
 	return nil
 }
 
