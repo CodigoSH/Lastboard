@@ -42,15 +42,12 @@ export const gridTemplate = (icons: IconInfo[], selectedIcon: string, isLoading:
     }
 
     // Group icons by provider
-    const grouped = icons.reduce((acc, icon) => {
-        if (!acc[icon.provider]) acc[icon.provider] = [];
-        acc[icon.provider].push(icon);
-        return acc;
-    }, {} as Record<string, IconInfo[]>);
+    const grouped = Object.groupBy(icons, icon => icon.provider);
 
     let html = '';
 
     for (const [provider, providerIcons] of Object.entries(grouped)) {
+        if (!providerIcons) continue;
         html += `
             <div class="icon-picker__group">
                 <div class="icon-picker__group-header">${escapeHtml(provider)} <span style="opacity:0.5;font-weight:400;">(${providerIcons.length})</span></div>

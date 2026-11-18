@@ -456,7 +456,7 @@ window.addEventListener('click', (e: Event) => {
 function renderDashboard() {
     if (!dashboardRoot) return;
 
-    dashboardRoot.innerHTML = '';
+    dashboardRoot.replaceChildren();
     const grid = document.createElement('bookmark-grid');
     dashboardRoot.appendChild(grid);
 }

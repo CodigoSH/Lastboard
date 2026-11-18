@@ -480,7 +480,7 @@ export function outagesPanelHtml(list: Outage[], t: T, fmt: Fmt, all = false): s
 
 /** `total`: how many checks the range has, when `checks` are only the newest of them. */
 export function checksTabHtml(checks: Check[], retentionSec: number, t: T, fmt: Fmt, all = false, total = checks.length): string {
-    const every = [...checks].reverse();
+    const every = checks.toReversed();
     const newest = all ? every : every.slice(0, CHECK_LINES);
     const head = `<div class="chk chk--h" aria-hidden="true"><span>${e(t('monitorpage.col_time'))}</span><span>${e(t('monitor.response'))}</span><span>${e(t('monitorpage.col_result'))}</span></div>`;
     const lines = newest.map(c => c.up

@@ -124,7 +124,7 @@ class RightDrawer extends HTMLElement {
             this.selectedSection = null;
             this.updateSelection();
             const body = this.shadowRoot?.querySelector('.right-drawer__content-body');
-            if (body) body.innerHTML = '';
+            if (body) body.replaceChildren();
         }, SLIDE_MS);
     }
 

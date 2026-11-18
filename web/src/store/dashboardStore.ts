@@ -639,8 +639,8 @@ class DashboardStore {
         // Serialize concurrent addItem calls so collision detection always reads
         // the up-to-date items array and two rapid adds never land on the same slot.
         const prev = this._addItemQueue;
-        let resolveCurrent!: () => void;
-        this._addItemQueue = new Promise(r => { resolveCurrent = r; });
+        const { promise, resolve: resolveCurrent } = Promise.withResolvers<void>();
+        this._addItemQueue = promise;
         await prev;
 
         try {

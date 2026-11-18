@@ -260,7 +260,7 @@ export function matches(c: DockerContainer, query: string): boolean {
 
 /** Running first, then by name: the ones that need looking at are the ones that are up. */
 export function sortContainers(list: DockerContainer[]): DockerContainer[] {
-    return [...list].sort((a, b) => {
+    return list.toSorted((a, b) => {
         const ra = stateLevel(a.State || a.Status) === 'off' ? 1 : 0;
         const rb = stateLevel(b.State || b.Status) === 'off' ? 1 : 0;
         return ra - rb || containerName(a).localeCompare(containerName(b));

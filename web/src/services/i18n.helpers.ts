@@ -81,7 +81,7 @@ function isolate(value: string): string {
 export function sortLocales<T extends { name: string }>(locales: T[]): T[] {
     const isLatin = (str: string) => /^[a-zA-Z]/.test(str);
 
-    return [...locales].sort((a, b) => {
+    return locales.toSorted((a, b) => {
         const aIsLatin = isLatin(a.name);
         const bIsLatin = isLatin(b.name);
 

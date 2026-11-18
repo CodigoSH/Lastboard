@@ -203,7 +203,7 @@ export const collisionService = {
      * the space it would have had.
      */
     planSectionResize<T extends { x: number; y: number; w: number; h: number }>(children: T[], newW: number, newH: number): { keep: T[]; eject: T[] } {
-        const ordered = [...children].sort((a, b) => (a.y - b.y) || (a.x - b.x));
+        const ordered = children.toSorted((a, b) => (a.y - b.y) || (a.x - b.x));
         const placed: { x: number; y: number; w: number; h: number }[] = [];
         const keep: T[] = [];
         const eject: T[] = [];

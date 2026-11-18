@@ -973,7 +973,7 @@ class MonitorPage extends HTMLElement {
             } else {
                 const pg = hist?.lite ? this.pages : null;
                 // Oldest first is how the list is handed in; the pages come newest first.
-                const checks = pg ? [...pg.list].reverse() : hist?.checks ?? [];
+                const checks = pg ? pg.list.toReversed() : hist?.checks ?? [];
                 name = `${r?.name ?? ''} · ${t('monitorpage.tab_checks')}`; n = pg ? (hist?.total ?? checks.length) : checks.length;
                 html = checksTabHtml(checks, (this.setup?.retention_days ?? 30) * 86400, t, fmt, true);
                 if (pg && (pg.next || pg.loading)) {

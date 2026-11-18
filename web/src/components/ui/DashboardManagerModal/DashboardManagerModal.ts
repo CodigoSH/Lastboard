@@ -26,7 +26,7 @@ export class DashboardManagerModal extends HTMLElement {
 
     connectedCallback() {
         const state = dashboardStore.getState();
-        this._dashboards = [...state.dashboards].sort((a, b) => a.position - b.position);
+        this._dashboards = state.dashboards.toSorted((a, b) => a.position - b.position);
         this.render();
         this.bindEvents();
         // Renaming or deleting happens at once, in the store; the list being

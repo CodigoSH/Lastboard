@@ -82,7 +82,7 @@ export class TaskPanel {
         this.html = '';
         this.open = null;
         this.log = null;
-        this.el.innerHTML = '';
+        this.el.replaceChildren();
     }
 
     /** Words are written into the shell once, so a change of language writes it again. */
@@ -311,7 +311,7 @@ export class TaskGroups {
         this.loaded = false;
         this.err = '';
         this.html = '';
-        this.el.innerHTML = '';
+        this.el.replaceChildren();
     }
 
     setView(view: 'cards' | 'list') {
@@ -392,7 +392,7 @@ export class JournalPanel {
         this.target = null;
         this.lines = null;
         this.err = '';
-        this.el.innerHTML = '';
+        this.el.replaceChildren();
     }
 
     relabel() {

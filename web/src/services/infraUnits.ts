@@ -58,7 +58,7 @@ export function sortUnits(list: InfraUnit[], key: SortKey): InfraUnit[] {
         : key === 'cpu' ? desc(u => u.cpu)
             : key === 'mem' ? desc(u => u.mem)
                 : byName;
-    return [...list].sort(cmp);
+    return list.toSorted(cmp);
 }
 
 export interface UnitGroup { name: string; units: InfraUnit[] }

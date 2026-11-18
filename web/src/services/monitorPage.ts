@@ -134,7 +134,7 @@ export function fleetTotals(rows: ServiceRow[]): FleetTotals {
     const answering = rows.filter(r => r.status === 'up' && r.latency_ms !== null);
     if (answering.length) {
         t.latencyNow = answering.reduce((a, r) => a + (r.latency_ms as number), 0) / answering.length;
-        t.slowest = [...answering].sort((a, b) => (b.latency_ms as number) - (a.latency_ms as number))[0];
+        t.slowest = answering.toSorted((a, b) => (b.latency_ms as number) - (a.latency_ms as number))[0];
     }
     const avgs = rows.filter(r => r.avg_ms_24h !== null).map(r => r.avg_ms_24h as number);
     if (avgs.length) t.latencyAvg = avgs.reduce((a, b) => a + b, 0) / avgs.length;
@@ -222,7 +222,7 @@ export function sortRows(list: ServiceRow[], key: SortKey): ServiceRow[] {
             // Slowest first; a service that did not answer has no time to compare and goes last.
             : key === 'response' ? (a: ServiceRow, b: ServiceRow) => (b.latency_ms ?? -1) - (a.latency_ms ?? -1) || byName(a, b)
                 : byName;
-    return [...list].sort(cmp);
+    return list.toSorted(cmp);
 }
 
 export interface RowGroup { name: string; rows: ServiceRow[] }
@@ -326,7 +326,7 @@ export const isOutageFilter = (v: unknown): v is OutageFilter => v === 'all' || 
 /** The most pressing first: what is down now, then the rest from the newest to the oldest. Never changes the list it is given. */
 export function sortOutages<T extends { start: string; end: string | null }>(list: T[]): T[] {
     const at = (o: T) => { const n = Date.parse(o.start); return Number.isFinite(n) ? n : 0; };
-    return [...list].sort((x, y) => (x.end === null ? 0 : 1) - (y.end === null ? 0 : 1) || at(y) - at(x));
+    return list.toSorted((x, y) => (x.end === null ? 0 : 1) - (y.end === null ? 0 : 1) || at(y) - at(x));
 }
 
 export function filterOutages(list: Outage[], filter: OutageFilter): Outage[] {

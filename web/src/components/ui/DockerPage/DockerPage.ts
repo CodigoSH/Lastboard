@@ -660,7 +660,7 @@ class DockerPage extends HTMLElement {
         this.logSeq++;
         this.last.dbody = this.last.dhead = this.last.dfoot = '';
         const box = this.v('lg-box');
-        if (box) box.innerHTML = '';
+        if (box) box.replaceChildren();
     }
 
     private setTab(tab: Tab) {

@@ -191,7 +191,7 @@ export function overviewHtml(o: OverviewData, t: T, fmt: Fmt, tfmt: TaskFmt): st
 
     const nodes = o.nodes.length ? `<div class="cards">${o.nodes.map(n => nodeCardHtml(n, showHost, t, fmt)).join('')}</div>` : `<div class="chart__empty">${e(t('proxmox.not_configured'))}</div>`;
     const stores = o.stores.length
-        ? `<div class="card tasks">${[...o.stores].sort((a, b) => b.percent - a.percent).slice(0, 5).map(s => storeRowHtml(s, showHost, t, fmt)).join('')}</div>`
+        ? `<div class="card tasks">${o.stores.toSorted((a, b) => b.percent - a.percent).slice(0, 5).map(s => storeRowHtml(s, showHost, t, fmt)).join('')}</div>`
         : `<div class="card"><div class="chart__empty">${e(t('dockerpage.none'))}</div></div>`;
     const hosts = showHost
         ? boxHtml(t('proxmox.hypervisors'), `<div class="cards">${o.hosts.map(h => {

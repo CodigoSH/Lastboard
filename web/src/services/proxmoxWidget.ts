@@ -47,7 +47,7 @@ const pct = (n: number): number => (Number.isFinite(n) ? Math.max(0, n) : 0);
 /** The node under most pressure: the one the line of totals speaks for. */
 export function worstNode(nodes: WNode[]): WNode | null {
     if (!nodes.length) return null;
-    return [...nodes].sort((a, b) => Math.max(b.cpu, b.mem, b.disk) - Math.max(a.cpu, a.mem, a.disk))[0];
+    return nodes.toSorted((a, b) => Math.max(b.cpu, b.mem, b.disk) - Math.max(a.cpu, a.mem, a.disk))[0];
 }
 
 function guestMetric(g: WGuest, m: Metric, i: WidgetInput): ShellMetric | null {
@@ -85,7 +85,7 @@ export function orderedGuests(guests: WGuest[], settings: GuestSettings, linked:
     if (hasChosenOrder(settings)) return chosen;
     // Until somebody arranges them, what needs saying comes first.
     const rank = (g: WGuest) => (g.running ? 2 : linked(g) ? 0 : 1);
-    return [...chosen].sort((a, b) => rank(a) - rank(b) || a.vmid - b.vmid);
+    return chosen.toSorted((a, b) => rank(a) - rank(b) || a.vmid - b.vmid);
 }
 
 export function proxmoxShell(i: WidgetInput): ShellSpec {

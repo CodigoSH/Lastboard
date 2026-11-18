@@ -16,18 +16,12 @@ export function searchIcons<T extends { name: string; provider: string }>(
         : icons;
 
     // Group by provider so a single provider can't dominate the top N.
-    const grouped = results.reduce(
-        (acc, icon) => {
-            if (!acc[icon.provider]) acc[icon.provider] = [];
-            acc[icon.provider].push(icon);
-            return acc;
-        },
-        {} as Record<string, T[]>,
-    );
+    const grouped = Object.groupBy(results, icon => icon.provider);
 
     // Take up to `limit` per provider.
     const finalResults: T[] = [];
     for (const providerIcons of Object.values(grouped)) {
+        if (!providerIcons) continue;
         finalResults.push(...providerIcons.slice(0, limit));
     }
 
