@@ -709,6 +709,7 @@
   "update.done_badge": "تم التحديث",
   "update.signature_unsigned": "لا يوجد مفتاح توقيع مُعدّ في هذه النسخة",
   "update.waiting_for_server": "في انتظار الخادم…",
+  "update.copying_database": "جارٍ نسخ قاعدة البيانات…",
   "update.step.download": "تنزيل الحزمة",
   "update.step.signature": "التحقق من التوقيع",
   "update.step.checksum": "التحقق من السلامة",

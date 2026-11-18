@@ -709,6 +709,7 @@
   "update.done_badge": "已更新",
   "update.signature_unsigned": "此构建未配置签名密钥",
   "update.waiting_for_server": "正在等待服务器…",
+  "update.copying_database": "正在复制数据库…",
   "update.step.download": "下载安装包",
   "update.step.signature": "校验签名",
   "update.step.checksum": "校验完整性",

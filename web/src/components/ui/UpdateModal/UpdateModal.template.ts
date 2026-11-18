@@ -49,7 +49,23 @@ export interface UpdateModalData {
     changelogUrl: string;
 }
 
-const ICON_CHECK = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`;
+/**
+ * The i18n key of the short note a step carries in a given state, or null.
+ *
+ * "install" running says what it is doing because it is the step that can take
+ * a while: before replacing anything the server copies the database, and on a
+ * large one that is many seconds with nothing else changing on screen. The note
+ * is short on purpose: it sits beside the label, and a longer one would wrap
+ * and make the row taller, which moves the centred dialog.
+ */
+export const stepNoteKey = (id: string, status: StepStatus): string | null => {
+    if (id === 'signature' && status === 'skipped') return 'update.signature_unsigned';
+    if (id === 'install' && status === 'running') return 'update.copying_database';
+    if (id === 'restart' && status === 'running') return 'update.waiting_for_server';
+    return null;
+};
+
+const ICON_CHECK =`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`;
 const ICON_CROSS = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`;
 const ICON_DASH = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><line x1="5" y1="12" x2="19" y2="12"/></svg>`;
 

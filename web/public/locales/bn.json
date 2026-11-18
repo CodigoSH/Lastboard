@@ -709,6 +709,7 @@
   "update.done_badge": "আপডেট হয়েছে",
   "update.signature_unsigned": "এই বিল্ডে কোনও স্বাক্ষর কী সেট করা নেই",
   "update.waiting_for_server": "সার্ভারের অপেক্ষা…",
+  "update.copying_database": "ডেটাবেস কপি হচ্ছে…",
   "update.step.download": "প্যাকেজ ডাউনলোড",
   "update.step.signature": "স্বাক্ষর যাচাই",
   "update.step.checksum": "অখণ্ডতা পরীক্ষা",

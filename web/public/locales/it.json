@@ -709,6 +709,7 @@
   "update.done_badge": "Aggiornato",
   "update.signature_unsigned": "In questa build non è configurata alcuna chiave di firma",
   "update.waiting_for_server": "In attesa del server…",
+  "update.copying_database": "Copia del database in corso…",
   "update.step.download": "Scaricare il pacchetto",
   "update.step.signature": "Verificare la firma",
   "update.step.checksum": "Controllare l'integrità",

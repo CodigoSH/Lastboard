@@ -709,6 +709,7 @@
   "update.done_badge": "अपडेट हो गया",
   "update.signature_unsigned": "इस बिल्ड में कोई हस्ताक्षर कुंजी सेट नहीं है",
   "update.waiting_for_server": "सर्वर की प्रतीक्षा…",
+  "update.copying_database": "डेटाबेस की प्रतिलिपि बन रही है…",
   "update.step.download": "पैकेज डाउनलोड करें",
   "update.step.signature": "हस्ताक्षर सत्यापित करें",
   "update.step.checksum": "अखंडता जांचें",

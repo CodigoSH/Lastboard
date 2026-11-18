@@ -709,6 +709,7 @@
   "update.done_badge": "Обновлено",
   "update.signature_unsigned": "В этой сборке не настроен ключ подписи",
   "update.waiting_for_server": "Ожидание сервера…",
+  "update.copying_database": "Копирование базы данных…",
   "update.step.download": "Скачать пакет",
   "update.step.signature": "Проверить подпись",
   "update.step.checksum": "Проверить целостность",

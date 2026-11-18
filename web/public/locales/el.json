@@ -709,6 +709,7 @@
   "update.done_badge": "Ενημερώθηκε",
   "update.signature_unsigned": "Σε αυτό το build δεν έχει ρυθμιστεί κλειδί υπογραφής",
   "update.waiting_for_server": "Αναμονή για τον διακομιστή…",
+  "update.copying_database": "Αντιγραφή βάσης δεδομένων…",
   "update.step.download": "Λήψη πακέτου",
   "update.step.signature": "Έλεγχος υπογραφής",
   "update.step.checksum": "Έλεγχος ακεραιότητας",

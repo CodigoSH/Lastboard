@@ -276,11 +276,31 @@ dialog[open] {
     display: none;
 }
 
-/* Running: accent ring with a pulse, so the eye lands on the current step. */
+/* Running: a dim ring with an arc turning on it, and a soft pulse around it.
+   The turning arc is what says "working": the pulse alone read as a frozen
+   screen during a step that takes twenty seconds. */
 .tl-step.is-running .tl-dot {
-    border-color: var(--accent);
+    border-color: rgba(var(--accent-rgb), 0.28);
     box-shadow: 0 0 0 4px rgba(var(--accent-rgb), 0.15);
     animation: dotPulse 1.4s ease-in-out infinite;
+}
+
+.tl-step.is-running .tl-dot::after {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    border-radius: 50%;
+    border: 2px solid transparent;
+    border-top-color: var(--accent);
+    animation: dotSpin 0.9s linear infinite;
+}
+
+/* The note of the install step appears only if the step is slow: a step that
+   finishes in a moment is gone before it shows. It takes its room from the
+   start (opacity, not display), so appearing moves nothing. */
+.tl-step[data-step="install"].is-running .tl-note {
+    opacity: 0;
+    animation: noteIn 0.4s ease 2s forwards;
 }
 
 .tl-step.is-running .tl-label {
@@ -337,6 +357,18 @@ dialog[open] {
     }
 }
 
+@keyframes dotSpin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes noteIn {
+    to {
+        opacity: 0.75;
+    }
+}
+
 @keyframes dotPop {
     from {
         transform: scale(0.4);
@@ -357,6 +389,21 @@ dialog[open] {
     .tl-step.is-running .tl-dot,
     .tl-step.is-ok .tl-dot,
     .tl-step.is-error .tl-dot {
+        animation: none;
+    }
+
+    /* Without motion the arc would be a still, odd-looking piece of ring: the
+       step is marked by a full accent ring instead, as before. */
+    .tl-step.is-running .tl-dot {
+        border-color: var(--accent);
+    }
+
+    .tl-step.is-running .tl-dot::after {
+        display: none;
+    }
+
+    .tl-step[data-step="install"].is-running .tl-note {
+        opacity: 0.75;
         animation: none;
     }
 }

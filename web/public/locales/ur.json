@@ -709,6 +709,7 @@
   "update.done_badge": "اپ ڈیٹ ہو گیا",
   "update.signature_unsigned": "اس بلڈ میں دستخط کی کلید مقرر نہیں ہے",
   "update.waiting_for_server": "سرور کا انتظار…",
+  "update.copying_database": "ڈیٹا بیس کاپی ہو رہا ہے…",
   "update.step.download": "پیکیج ڈاؤن لوڈ کریں",
   "update.step.signature": "دستخط کی تصدیق",
   "update.step.checksum": "سالمیت کی جانچ",

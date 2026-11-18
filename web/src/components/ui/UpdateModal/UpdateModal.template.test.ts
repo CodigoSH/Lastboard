@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'bun:test';
-import { body, stepItem, UpdateModalData, TimelineStep, StepStatus, UpdatePhase } from './UpdateModal.template';
+import { body, stepItem, stepNoteKey, UpdateModalData, TimelineStep, StepStatus, UpdatePhase } from './UpdateModal.template';
 
 /**
  * The timeline is the part of this modal that carries information: which step
@@ -125,5 +125,26 @@ describe('UpdateModal template', () => {
         expect(out).toContain('https://example.test/releases');
         // The timeline describes a binary swap this deployment never performs.
         expect(out).not.toContain('data-step="install"');
+    });
+});
+
+describe('which step carries a note', () => {
+    it('says what the install step is doing while it runs, and only then', () => {
+        expect(stepNoteKey('install', 'running')).toBe('update.copying_database');
+        for (const status of ['pending', 'ok', 'skipped', 'error'] as StepStatus[]) {
+            expect(stepNoteKey('install', status)).toBeNull();
+        }
+    });
+
+    it('keeps the notes the other steps already had', () => {
+        expect(stepNoteKey('signature', 'skipped')).toBe('update.signature_unsigned');
+        expect(stepNoteKey('signature', 'ok')).toBeNull();
+        expect(stepNoteKey('restart', 'running')).toBe('update.waiting_for_server');
+    });
+
+    it('leaves the steps that finish in a moment without one', () => {
+        for (const id of ['download', 'checksum', 'extract']) {
+            expect(stepNoteKey(id, 'running')).toBeNull();
+        }
     });
 });

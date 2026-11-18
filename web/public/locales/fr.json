@@ -709,6 +709,7 @@
   "update.done_badge": "Mise à jour terminée",
   "update.signature_unsigned": "Aucune clé de signature n'est configurée dans cette version",
   "update.waiting_for_server": "En attente du serveur…",
+  "update.copying_database": "Copie de la base de données…",
   "update.step.download": "Télécharger le paquet",
   "update.step.signature": "Vérifier la signature",
   "update.step.checksum": "Vérifier l'intégrité",

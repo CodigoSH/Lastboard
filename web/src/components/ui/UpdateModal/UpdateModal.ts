@@ -1,4 +1,4 @@
-import { shell, body, stepItem, TimelineStep, UpdateModalData } from './UpdateModal.template';
+import { shell, body, stepItem, stepNoteKey, TimelineStep, UpdateModalData } from './UpdateModal.template';
 import { adoptSharedStyles } from '../../../services/sharedStyles';
 import { i18n } from '../../../services/i18n';
 import { updateStore, UpdatePhase, UpdateState } from '../../../store/updateStore';
@@ -177,9 +177,8 @@ export class UpdateModal extends HTMLElement {
     private buildSteps(state: UpdateState): TimelineStep[] {
         return UPDATE_STEPS.map(id => {
             const status = state.steps[id];
-            let note = '';
-            if (id === 'signature' && status === 'skipped') note = i18n.t('update.signature_unsigned');
-            if (id === 'restart' && status === 'running') note = i18n.t('update.waiting_for_server');
+            const noteKey = stepNoteKey(id, status);
+            const note = noteKey ? i18n.t(noteKey) : '';
             return { id, label: i18n.t(`update.step.${id}`), status, note };
         });
     }

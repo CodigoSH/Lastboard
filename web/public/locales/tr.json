@@ -709,6 +709,7 @@
   "update.done_badge": "Güncellendi",
   "update.signature_unsigned": "Bu derlemede imzalama anahtarı yapılandırılmamış",
   "update.waiting_for_server": "Sunucu bekleniyor…",
+  "update.copying_database": "Veritabanı kopyalanıyor…",
   "update.step.download": "Paketi indir",
   "update.step.signature": "İmzayı doğrula",
   "update.step.checksum": "Bütünlüğü denetle",

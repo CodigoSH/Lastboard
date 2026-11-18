@@ -709,6 +709,7 @@
   "update.done_badge": "به‌روزرسانی شد",
   "update.signature_unsigned": "در این بیلد کلید امضا تنظیم نشده است",
   "update.waiting_for_server": "در انتظار سرور…",
+  "update.copying_database": "در حال کپی پایگاه داده…",
   "update.step.download": "دانلود بسته",
   "update.step.signature": "بررسی امضا",
   "update.step.checksum": "بررسی یکپارچگی",

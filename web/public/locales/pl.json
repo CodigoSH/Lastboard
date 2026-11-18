@@ -709,6 +709,7 @@
   "update.done_badge": "Zaktualizowano",
   "update.signature_unsigned": "W tej kompilacji nie skonfigurowano klucza podpisu",
   "update.waiting_for_server": "Czekam na serwer…",
+  "update.copying_database": "Kopiuję bazę danych…",
   "update.step.download": "Pobierz pakiet",
   "update.step.signature": "Zweryfikuj podpis",
   "update.step.checksum": "Sprawdź integralność",

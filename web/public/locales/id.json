@@ -709,6 +709,7 @@
   "update.done_badge": "Diperbarui",
   "update.signature_unsigned": "Build ini tidak memiliki kunci penandatanganan",
   "update.waiting_for_server": "Menunggu server…",
+  "update.copying_database": "Menyalin basis data…",
   "update.step.download": "Unduh paket",
   "update.step.signature": "Verifikasi tanda tangan",
   "update.step.checksum": "Periksa integritas",

@@ -709,6 +709,7 @@
   "update.done_badge": "Aktualisiert",
   "update.signature_unsigned": "In diesem Build ist kein Signaturschlüssel konfiguriert",
   "update.waiting_for_server": "Warten auf den Server…",
+  "update.copying_database": "Datenbank wird kopiert…",
   "update.step.download": "Paket herunterladen",
   "update.step.signature": "Signatur prüfen",
   "update.step.checksum": "Integrität prüfen",

@@ -709,6 +709,7 @@
   "update.done_badge": "更新完了",
   "update.signature_unsigned": "このビルドには署名鍵が設定されていません",
   "update.waiting_for_server": "サーバーを待っています…",
+  "update.copying_database": "データベースをコピー中…",
   "update.step.download": "パッケージをダウンロード",
   "update.step.signature": "署名を検証",
   "update.step.checksum": "整合性を確認",
