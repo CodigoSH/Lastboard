@@ -86,7 +86,11 @@ func (s *Server) StartBackground(ctx context.Context, wg *sync.WaitGroup) {
 	tasks := map[string]func(){
 		"websocket hub":   func() { s.WSHub.Run(ctx) },
 		"stats broadcast": func() { s.WSHub.StartBroadcasting(ctx, 1*time.Second) },
-		"update check":    func() { api.NewUpdateHandler(s.DB).CheckForUpdatesBackground(ctx, s.WSHub) },
+		"update check": func() {
+			h := api.NewUpdateHandler(s.DB)
+			h.Texts, h.Push = alerttext.New(s.assets), api.NewPushSender(s.DB)
+			h.CheckForUpdatesBackground(ctx, s.WSHub)
+		},
 		// Idle unless monitoring_mode is "background"; then it records status
 		// history 24/7 on its own interval.
 		"monitor scheduler": func() { api.NewMonitorScheduler(s.DB).WithCatalog(alerttext.New(s.assets)).Run(ctx) },

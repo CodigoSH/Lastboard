@@ -252,7 +252,7 @@ func (m *MonitorScheduler) notifyCfg(userID int) notifyConfig {
 	var rest []notifyConfig
 	first := true
 	for _, ch := range channelsOf(NewUserSettings(m.store.DB), userID) {
-		if !ch.Enabled {
+		if !ch.takesAlerts() {
 			continue
 		}
 		c := common

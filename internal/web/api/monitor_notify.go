@@ -83,6 +83,25 @@ type Notice struct {
 	Title   string
 	Body    string
 	Up      bool
+
+	// Event is what the notice is about: empty for an alert, noticeUpdate for a new version. Version and
+	// Current are the release available and the one that runs, for an update.
+	Event   string
+	Version string
+	Current string
+}
+
+// noticeUpdate is the Event of the notice of a new version.
+const noticeUpdate = "update"
+
+// isUpdate says whether the notice is the one of a new version, which is news and not an alarm: it goes with the
+// lowest urgency each channel has.
+func (n Notice) isUpdate() bool { return n.Event == noticeUpdate }
+
+// updateNotice writes the notice of a new version for an account, in its language.
+func (c notifyConfig) updateNotice(version, current string) Notice {
+	title, body := c.Catalog.Update(c.Lang, alerttext.Values{Version: version, Current: current})
+	return Notice{Service: "Lastboard", Title: title, Body: body, Up: true, Event: noticeUpdate, Version: version, Current: current}
 }
 
 // outageNotice and recoveryNotice write an alert for an account. count is how many checks in a row
@@ -171,9 +190,13 @@ func sendPush(ctx context.Context, cfg notifyConfig, n Notice) error {
 	if cfg.Push == nil {
 		return errors.New("push is not available")
 	}
-	res, err := cfg.Push.SendToUser(ctx, cfg.UserID, PushMessage{
-		Title: n.Title, Body: n.Body, Tag: "service:" + n.Service, URL: "/?view=monitor", Up: n.Up,
-	})
+	msg := PushMessage{Title: n.Title, Body: n.Body, Tag: "service:" + n.Service, URL: "/?view=monitor", Up: n.Up}
+	if n.isUpdate() {
+		// A new version waits for whoever reads it: it is not what a phone should wake for, so it does not ask for the
+		// high urgency the alerts do, and it replaces the notice of the version before it.
+		msg.Tag, msg.URL, msg.Urgency = "update", "/", "low"
+	}
+	res, err := cfg.Push.SendToUser(ctx, cfg.UserID, msg)
 	if err != nil {
 		return err
 	}
@@ -202,7 +225,10 @@ func sendNtfy(ctx context.Context, cfg notifyConfig, n Notice) error {
 		return err
 	}
 	req.Header.Set("Title", headerText(n.Title))
-	if n.Up {
+	if n.isUpdate() {
+		req.Header.Set("Tags", "package")
+		req.Header.Set("Priority", "low")
+	} else if n.Up {
 		req.Header.Set("Tags", "white_check_mark")
 		req.Header.Set("Priority", "default")
 	} else {
@@ -217,7 +243,11 @@ func sendNtfy(ctx context.Context, cfg notifyConfig, n Notice) error {
 
 func sendGotify(ctx context.Context, cfg notifyConfig, n Notice) error {
 	url := strings.TrimRight(cfg.URL, "/") + "/message"
-	body, _ := json.Marshal(map[string]any{"title": n.Title, "message": n.Body, "priority": 5})
+	priority := 5
+	if n.isUpdate() {
+		priority = 3
+	}
+	body, _ := json.Marshal(map[string]any{"title": n.Title, "message": n.Body, "priority": priority})
 	req, err := http.NewRequestWithContext(ctx, "POST", url, bytes.NewReader(body))
 	if err != nil {
 		return err
@@ -231,17 +261,24 @@ func sendGotify(ctx context.Context, cfg notifyConfig, n Notice) error {
 	return doNotify(req)
 }
 
-// sendWebhook posts JSON. "service" and "status" are the fields another system can rely on and stay
-// as they were; "title" and "message" are text for people, in the language of the account.
+// sendWebhook posts JSON. "event", "service" and "status" are the fields another system can rely on and stay
+// as they were; "title" and "message" are text for people, in the language of the account. "event" is "alert"
+// for an outage or a recovery and "update" for a new version, which also carries "version" and
+// "current_version" and the status "update_available".
 func sendWebhook(ctx context.Context, cfg notifyConfig, n Notice) error {
 	status := "down"
 	if n.Up {
 		status = "up"
 	}
-	body, _ := json.Marshal(map[string]any{
-		"service": n.Service, "status": status, "title": n.Title, "message": n.Body,
+	fields := map[string]any{
+		"event": "alert", "service": n.Service, "status": status, "title": n.Title, "message": n.Body,
 		"timestamp": time.Now().UTC().Format(time.RFC3339),
-	})
+	}
+	if n.isUpdate() {
+		fields["event"], fields["status"] = noticeUpdate, "update_available"
+		fields["version"], fields["current_version"] = n.Version, n.Current
+	}
+	body, _ := json.Marshal(fields)
 	req, err := http.NewRequestWithContext(ctx, "POST", cfg.URL, bytes.NewReader(body))
 	if err != nil {
 		return err

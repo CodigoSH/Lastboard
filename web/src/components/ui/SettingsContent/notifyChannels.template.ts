@@ -152,6 +152,26 @@ export function channelModalHtml(t: T): string {
                     <span class="slider"></span>
                 </label>
             </div>
+            <div class="settings-content__action-row">
+                <div class="settings-content__action-info">
+                    <h3>${esc(t('notify.kind_alerts'))}</h3>
+                    <p>${esc(t('notify.kind_alerts_desc'))}</p>
+                </div>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="channel-alerts">
+                    <span class="slider"></span>
+                </label>
+            </div>
+            <div class="settings-content__action-row" id="channel-updates-row">
+                <div class="settings-content__action-info">
+                    <h3>${esc(t('notify.kind_updates'))}</h3>
+                    <p>${esc(t('notify.kind_updates_desc'))}</p>
+                </div>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="channel-updates">
+                    <span class="slider"></span>
+                </label>
+            </div>
         </div>
 
         <p class="settings-content__text-dim" id="channel-test-result" role="status" style="font-size: 12px; margin: 16px 0 0; min-height: 1.4em;"></p>

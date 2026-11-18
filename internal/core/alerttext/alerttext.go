@@ -35,6 +35,8 @@ const (
 	KeyReasonNone  = "alert.reason.none"
 	KeyReasonCode  = "alert.reason.code"
 	KeyTestLabel   = "alert.test_label"
+	KeyUpdateTitle = "alert.update.title"
+	KeyUpdateBody  = "alert.update.body"
 	KeyUnitMin     = "alert.unit.min"
 	KeyUnitHour    = "alert.unit.hour"
 	KeyUnitDay     = "alert.unit.day"
@@ -50,6 +52,8 @@ var english = map[string]string{
 	KeyReasonNone:  "No response",
 	KeyReasonCode:  "Answered with HTTP {code}",
 	KeyTestLabel:   "Test",
+	KeyUpdateTitle: "Lastboard {version} is available",
+	KeyUpdateBody:  "You are on {current}. Update it in Settings → About.",
 	KeyUnitMin:     "min",
 	KeyUnitHour:    "h",
 	KeyUnitDay:     "d",
@@ -80,6 +84,8 @@ type Values struct {
 	Code  int
 	// Down is how long the outage lasted. Zero when it is not known, as after a restart.
 	Down time.Duration
+	// Version is the release that is available and Current the one that runs, for the notice of an update.
+	Version, Current string
 }
 
 // Catalog reads the locale files once per language.
@@ -266,6 +272,13 @@ func (c *Catalog) Up(lang string, v Values, t Templates) (title, body string) {
 		bodyKey = KeyUpBodyPlain
 	}
 	return fill(pick(t.UpTitle, KeyUpTitle, c, lang), m, iso), fill(pick(t.UpBody, bodyKey, c, lang), m, iso)
+}
+
+// Update is the notification of a new version: its title and its body. It has no wording of the account's own,
+// since it is not one of the events an account writes for.
+func (c *Catalog) Update(lang string, v Values) (title, body string) {
+	m, iso := map[string]string{"version": v.Version, "current": v.Current}, rtl[lang]
+	return fill(c.Text(lang, KeyUpdateTitle), m, iso), fill(c.Text(lang, KeyUpdateBody), m, iso)
 }
 
 // TestLabel is the word put before a test notification, so it cannot be taken for a real outage.

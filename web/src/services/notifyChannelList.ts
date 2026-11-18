@@ -25,6 +25,10 @@ export interface NotifyChannel {
     type: ChannelType;
     url: string;
     enabled: boolean;
+    /** Outages and recoveries go to this channel. On unless the account turned it off. */
+    alerts: boolean;
+    /** The notice of a new version goes to this channel. Off until the administrator asks for it. */
+    updates: boolean;
     has_token: boolean;
     last: ChannelResult | null;
 }
@@ -48,8 +52,8 @@ export const takesAddress = (type: ChannelType): boolean => type !== 'push';
 
 export const hasPush = (list: Pick<NotifyChannel, 'type'>[]): boolean => list.some(c => c.type === 'push');
 
-/** Alerts are on when any channel is. */
-export const alertsOn = (list: Pick<NotifyChannel, 'enabled'>[]): boolean => list.some(c => c.enabled);
+/** Alerts are on when any channel is on and carries them. */
+export const alertsOn = (list: Pick<NotifyChannel, 'enabled' | 'alerts'>[]): boolean => list.some(c => c.enabled && c.alerts);
 
 /** Whether a channel of this kind can be added: there is room, and push is one only. */
 export function canAdd(list: Pick<NotifyChannel, 'type'>[], max: number, type: ChannelType): boolean {
@@ -99,6 +103,9 @@ export function channelsPayload(list: ChannelEdit[]): { channels: Record<string,
                 type: c.type,
                 url: takesAddress(c.type) ? c.url : '',
                 enabled: c.enabled,
+                // Always sent: a request that left them out would reset them to what a new channel has.
+                alerts: c.alerts,
+                updates: c.updates,
             };
             if (takesAddress(c.type) && c.tokenBox !== undefined) {
                 const change = secretChange(c.tokenBox, c.has_token);

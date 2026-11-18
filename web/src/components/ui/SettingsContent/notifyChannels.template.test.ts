@@ -6,7 +6,7 @@ import { channelModalHtml, channelNote, channelRowHtml, channelsCardHtml, channe
 const t: T = (key, params) => `[${key}${params ? ':' + JSON.stringify(params) : ''}]`;
 const ctx: RowContext = { devices: 2, when: s => `@${s}` };
 const ch = (o: Partial<NotifyChannel> = {}): NotifyChannel => ({
-    id: 'nc1', name: '', type: 'ntfy', url: 'https://ntfy.sh/secret-topic', enabled: true, has_token: false, last: null, ...o,
+    id: 'nc1', name: '', type: 'ntfy', url: 'https://ntfy.sh/secret-topic', enabled: true, alerts: true, updates: false, has_token: false, last: null, ...o,
 });
 
 describe('a channel on its row', () => {
@@ -114,5 +114,16 @@ describe('the window of a channel', () => {
         expect(html).toContain('data-action="test-channel"');
         expect(html).toContain('data-action="save-channel"');
         expect(html).toContain('data-action="close-modal" data-modal="channel-modal"');
+    });
+});
+
+describe('the window of a channel', () => {
+    test('has a switch for each kind it carries, and a row for updates that can be hidden', () => {
+        const html = channelModalHtml((k: string) => k);
+        expect(html).toContain('id="channel-alerts"');
+        expect(html).toContain('id="channel-updates"');
+        expect(html).toContain('id="channel-updates-row"');
+        expect(html).toContain('notify.kind_alerts');
+        expect(html).toContain('notify.kind_updates');
     });
 });

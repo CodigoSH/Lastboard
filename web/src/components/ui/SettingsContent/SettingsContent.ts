@@ -1381,6 +1381,13 @@ class SettingsContent extends HTMLElement {
         set('channel-token', c?.has_token ? SECRET_MASK : '');
         const on = input('channel-enabled');
         if (on) on.checked = c ? c.enabled : true;
+        // Alerts are on for a channel that is new, and updates are off: they are for whoever asks. Only the
+        // administrator can update the server, so only they are offered the second.
+        const alerts = input('channel-alerts');
+        if (alerts) alerts.checked = c ? c.alerts : true;
+        const updates = input('channel-updates');
+        if (updates) updates.checked = c ? c.updates : false;
+        show('channel-updates-row', this.isAdministrator());
         const result = root.getElementById('channel-test-result');
         if (result) { result.textContent = ''; result.style.color = ''; }
         sync();
@@ -1407,6 +1414,8 @@ class SettingsContent extends HTMLElement {
             type,
             url: takesAddress(type) ? val('channel-url').trim() : '',
             enabled: !!(root.getElementById('channel-enabled') as HTMLInputElement | null)?.checked,
+            alerts: !!(root.getElementById('channel-alerts') as HTMLInputElement | null)?.checked,
+            updates: this.isAdministrator() && !!(root.getElementById('channel-updates') as HTMLInputElement | null)?.checked,
             has_token: !!existing?.has_token && takesAddress(type),
             last: existing?.last ?? null,
             tokenBox: takesAddress(type) ? val('channel-token') : undefined,
@@ -2300,12 +2309,16 @@ class SettingsContent extends HTMLElement {
         }, 0);
     }
 
+    /** Whether the signed-in account is the administrator: the only one that can update the server. */
+    private isAdministrator(): boolean {
+        const role = userStore.getUser()?.role?.toLowerCase();
+        return role === 'admin' || role === 'administrator';
+    }
+
     private updateUpdateUI() {
         const wrapper = this.shadowRoot!.getElementById('update-zone-wrapper');
         if (wrapper) {
-            const user = userStore.getUser();
-            const isAdmin = user?.role?.toLowerCase() === 'admin' || user?.role?.toLowerCase() === 'administrator';
-            wrapper.innerHTML = updateZoneTemplate(isAdmin, this.updateInfo, this.isCheckingUpdates);
+            wrapper.innerHTML = updateZoneTemplate(this.isAdministrator(), this.updateInfo, this.isCheckingUpdates);
         }
         const versionLabel = this.shadowRoot!.getElementById('current-version-label');
         if (versionLabel && this.version) {

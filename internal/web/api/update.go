@@ -24,6 +24,7 @@ import (
 
 	"database/sql"
 
+	"git.codigosh.com/CodigoSH/Lastboard/internal/core/alerttext"
 	"git.codigosh.com/CodigoSH/Lastboard/internal/version"
 	"git.codigosh.com/CodigoSH/Lastboard/internal/web/util"
 )
@@ -33,6 +34,11 @@ const updateInProgress = "notifier.update_in_progress"
 
 type UpdateHandler struct {
 	DB *sql.DB
+
+	// Texts and Push are what the notice of a new version needs to be written in the account's language and to
+	// reach its browsers. Nil is valid: the notice is then in English and push is left out.
+	Texts *alerttext.Catalog
+	Push  *PushSender
 
 	// latest replaces the call to the forge in tests; nil means the forge.
 	latest func(beta bool) (tag string, notes string, err error)
@@ -195,6 +201,7 @@ func (h *UpdateHandler) CheckForUpdatesBackground(ctx context.Context, hub *Hub)
 			slog.Info("New version detected", "latest", latest, "current", version.Current)
 			announceUpdate(ctx, hub, latest)
 		}
+		h.notifyUpdate(ctx)
 	}
 
 	// First run

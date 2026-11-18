@@ -16,7 +16,7 @@ export * from './notifyChannelList';
 // Demo mode has no server to keep a list, so it keeps one for as long as the page lives.
 let demo: NotifyChannels = {
     max: 10,
-    channels: [{ id: 'demo-ntfy', name: '', type: 'ntfy', url: 'https://ntfy.sh/lastboard-demo', enabled: true, has_token: false, last: null }],
+    channels: [{ id: 'demo-ntfy', name: '', type: 'ntfy', url: 'https://ntfy.sh/lastboard-demo', enabled: true, alerts: true, updates: false, has_token: false, last: null }],
 };
 
 /** What the server sent, whatever its shape: only well-formed channels, and a ceiling. */
@@ -26,7 +26,9 @@ function normalise(raw: Partial<NotifyChannels> | null | undefined): NotifyChann
         if (!c || typeof c.id !== 'string' || !isChannelType(c.type)) continue;
         list.push({
             id: c.id, name: typeof c.name === 'string' ? c.name : '', type: c.type,
-            url: typeof c.url === 'string' ? c.url : '', enabled: !!c.enabled, has_token: !!c.has_token,
+            url: typeof c.url === 'string' ? c.url : '', enabled: !!c.enabled,
+            // A server that predates the kinds sends neither: it carried alerts and nothing else.
+            alerts: c.alerts !== false, updates: !!c.updates, has_token: !!c.has_token,
             last: c.last && typeof c.last.at === 'number' ? { at: c.last.at, ok: !!c.last.ok, error: c.last.error } : null,
         });
     }
@@ -44,7 +46,7 @@ export async function saveChannels(list: ChannelEdit[]): Promise<NotifyChannels>
         demo = {
             max: demo.max,
             channels: list.map((c, i) => ({
-                id: c.id || `demo-${i}-${c.type}`, name: c.name, type: c.type, url: c.url, enabled: c.enabled,
+                id: c.id || `demo-${i}-${c.type}`, name: c.name, type: c.type, url: c.url, enabled: c.enabled, alerts: c.alerts, updates: c.updates,
                 has_token: c.has_token || !!(c.tokenBox && secretChange(c.tokenBox, c.has_token).action === 'set'), last: c.last,
             })),
         };

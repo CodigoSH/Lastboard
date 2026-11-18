@@ -89,7 +89,7 @@ When **24/7 monitoring** is on, Lastboard can send an alert when a service goes 
 
 ![Settings → Notifications: the list of channels, each with its own switch, the push devices and the settings every channel shares](../assets/p-notifications.png)
 
-An alert is sent to **every channel that is on**, each on its own, so one that is down does not stop the others. You can have several of the same kind (two ntfy topics, one for you and one for someone else) and up to **10** in all; push is the only one that can be there once, because its destination is your own browsers. There is no switch for alerts as a whole: they are on when any channel is, and the section says when every one is off.
+An alert is sent to **every channel that is on**, each on its own, so one that is down does not stop the others. You can have several of the same kind (two ntfy topics, one for you and one for someone else) and up to **10** in all; push is the only one that can be there once, because its destination is your own browsers. There is no switch for alerts as a whole: they are on when any channel is on and carries them, and the section says when none does.
 
 Each channel is a row with its name (or its kind, if you gave it none), where it goes (the host, never the whole address, since the path of a topic or a webhook is what keeps strangers from sending to it), its own **switch**, and **Edit** and **Remove** (which asks first). Under the name, the row says how the **last alert** to that channel went: delivered, or failed with the reason in words — "the server answered HTTP 401", "no answer in time", "it could not be reached". **+ Add channel** opens a window:
 
@@ -99,7 +99,9 @@ Each channel is a row with its name (or its kind, if you gave it none), where it
 | **Name** | Optional, up to 40 characters, to tell channels apart ("My phone"). |
 | **URL** | The ntfy topic URL, the Gotify server URL, or your webhook endpoint. Not used by Push notifications. |
 | **Token** | Optional. Bearer token for ntfy/webhook, or the app token for Gotify. Once saved it is never shown: the field holds dots, so you can tell one is there, and has no reveal option. Type a new token to replace it; empty the field to remove it. Not used by Push notifications. |
-| **On** | Whether alerts are sent to this channel. |
+| **On** | Whether anything is sent to this channel. While it is off, nothing is. |
+| **Outages and recoveries** | Whether the alerts about your monitored services go to this channel. On by default, and on for every channel that existed before this switch. |
+| **New versions of Lastboard** | Whether this channel is told when a new version is out (see [New versions](#new-versions)). Off by default and off for every channel that existed before; it is offered only to the administrator, the only account that can update the server. |
 
 **Send test**, in the same window, fires a test notification to that channel as the window holds it — before you save it, if you like — and says what came of it right there. The result also shows on the channel's row.
 
@@ -110,15 +112,16 @@ Below the list, in an **Alerts** card, are the settings every channel shares:
 | **Failures before an alert** | How many **consecutive** failed checks trigger a down alert: **1, 2, 3, or 5**. A higher value avoids alerts on brief blips. |
 | **Advanced · alert messages** | The wording of the alerts (see [Language and wording](#language-and-wording-of-alerts)), in a fold that starts closed. |
 
-An account that had one method set up before channels existed finds it as the first entry of its list when it updates, on or off as its alerts switch was, with its address and token: nothing to do. A backup from before channels is restored the same way.
+An account that had one method set up before channels existed finds it as the first entry of its list when it updates, on or off as its alerts switch was, with its address and token: nothing to do. A backup from before channels is restored the same way, and a channel from before the two kinds keeps carrying alerts and not new versions.
 
 ### What each method sends
 
-- **ntfy** — a message to your topic, with the title and text of the alert (see [Language and wording](#language-and-wording-of-alerts)). Outages use a high priority and an alarm tag; recoveries use a normal priority and a check-mark tag. A title that is not plain ASCII, such as a Japanese one, is sent as an RFC 2047 word, which ntfy decodes.
-- **Gotify** — a titled message posted to your Gotify server (`/message`), with the app token sent in the `X-Gotify-Key` header so it never appears in a URL or in the logs of anything between Lastboard and Gotify.
+- **ntfy** — a message to your topic, with the title and text of the alert (see [Language and wording](#language-and-wording-of-alerts)). Outages use a high priority and an alarm tag; recoveries use a normal priority and a check-mark tag; the notice of a new version uses a low priority and a package tag. A title that is not plain ASCII, such as a Japanese one, is sent as an RFC 2047 word, which ntfy decodes.
+- **Gotify** — a titled message posted to your Gotify server (`/message`), with the app token sent in the `X-Gotify-Key` header so it never appears in a URL or in the logs of anything between Lastboard and Gotify. An alert goes with priority 5 and the notice of a new version with 3.
 - **Webhook** — a JSON payload to your endpoint:
   ```json
   {
+    "event": "alert",
     "service": "My Service",
     "status": "down",
     "title": "My Service is down",
@@ -126,8 +129,20 @@ An account that had one method set up before channels existed finds it as the fi
     "timestamp": "2026-01-01T12:00:00Z"
   }
   ```
-  `service`, `status` (`down` or `up`) and `timestamp` are the fields to build on: they do not change with the language. `title` and `message` are text for people, written in the language of the account and, if it wrote its own, in its wording. If a token is set, it is sent as an `Authorization: Bearer …` header.
-- **Push notifications** — a notification on the phones, tablets and computers you turn it on for, even when Lastboard is closed. An outage stays on the screen until you dismiss it; a recovery replaces the outage it ends. See below.
+  `event`, `service`, `status` and `timestamp` are the fields to build on: they do not change with the language. `event` is `alert` for an outage or a recovery and `update` for a new version; `status` is `down` or `up` for an alert. The notice of a new version has the same fields, with `service` set to `Lastboard`, `status` set to `update_available`, and two more, `version` (the release that is out) and `current_version` (the one that runs). `title` and `message` are text for people, written in the language of the account and, if it wrote its own, in its wording. If a token is set, it is sent as an `Authorization: Bearer …` header.
+- **Push notifications** — a notification on the phones, tablets and computers you turn it on for, even when Lastboard is closed. An outage stays on the screen until you dismiss it; a recovery replaces the outage it ends. The notice of a new version is sent with low urgency, so a phone that is idle shows it when it is next picked up, and it replaces the notice of the version before it. See below.
+
+### New versions
+
+The administrator can be told when a new version of Lastboard is out, through any channel that has **New versions of Lastboard** on. Nothing is sent until a channel asks for it.
+
+- **Once for each version.** Lastboard looks for a new version when it starts and then about every 24 hours, so the notice can arrive up to a day after the release is published. The same version is not told again; the next one is.
+- **Only the administrator.** Other accounts cannot update the server, so the option is not offered to them and one sent is not kept.
+- **Pre-releases only if you receive them.** An account that has **Beta channel** on (**Settings → About**) is told of betas as well; otherwise only stable releases.
+- **If it reached no channel,** the next check tries again. If no channel asked for it, nothing is sent and nothing is marked as told, so a channel that you switch on later is told of the version that is waiting.
+- **Docker installs too:** the notice says there is a new version, and the way to get it there is to pull the new image (see [Updating](../getting-started/updating.md)).
+
+The notice says which version is out, which one you run and where to update, in the language of the account. **Send test** sends a test alert, not this notice. The result of the last delivery to each channel includes it.
 
 ### Language and wording of alerts
 

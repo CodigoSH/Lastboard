@@ -201,7 +201,7 @@ func (h *MonitorHandler) GetSettings(w http.ResponseWriter, r *http.Request) {
 	}
 	methods := []string{}
 	for _, ch := range channelsOf(NewUserSettings(h.DB), uid) {
-		if ch.Enabled {
+		if ch.takesAlerts() {
 			methods = append(methods, ch.Type)
 		}
 	}
@@ -264,7 +264,7 @@ func (h *MonitorHandler) UpdateSettings(w http.ResponseWriter, r *http.Request) 
 	// What goes back is what is saved; the channels are read, not written, here.
 	s.NotifyMethods = []string{}
 	for _, ch := range channelsOf(NewUserSettings(h.DB), uid) {
-		if ch.Enabled {
+		if ch.takesAlerts() {
 			s.NotifyMethods = append(s.NotifyMethods, ch.Type)
 		}
 	}

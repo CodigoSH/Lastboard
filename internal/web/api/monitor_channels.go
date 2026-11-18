@@ -52,7 +52,18 @@ type notifyChannel struct {
 	// Never leaves the server: the screen learns that one is saved from has_token.
 	Token   string `json:"token,omitempty"`
 	Enabled bool   `json:"enabled"`
+	// What the channel carries besides being on. A channel carries alerts unless it says not to, and updates
+	// only if it says so: the first is a negative so that a list saved before there were kinds reads as it
+	// always did, and the second is off for everything that existed, since nobody asked for it.
+	AlertsOff bool `json:"alerts_off,omitempty"`
+	Updates   bool `json:"updates,omitempty"`
 }
+
+// takesAlerts says whether outages and recoveries go to this channel.
+func (c notifyChannel) takesAlerts() bool { return c.Enabled && !c.AlertsOff }
+
+// takesUpdates says whether the notice of a new version goes to this channel.
+func (c notifyChannel) takesUpdates() bool { return c.Enabled && c.Updates }
 
 func validChannelType(t string) bool {
 	switch t {
@@ -226,6 +237,8 @@ type channelView struct {
 	Type     string         `json:"type"`
 	URL      string         `json:"url"`
 	Enabled  bool           `json:"enabled"`
+	Alerts   bool           `json:"alerts"`
+	Updates  bool           `json:"updates"`
 	HasToken bool           `json:"has_token"`
 	Last     *channelResult `json:"last"`
 }
@@ -239,7 +252,8 @@ func channelsViewOf(store *UserSettings, uid int) channelsView {
 	out := channelsView{Channels: []channelView{}, Max: notifyMaxChannels}
 	results := channelResults(store, uid)
 	for _, ch := range channelsOf(store, uid) {
-		v := channelView{ID: ch.ID, Name: ch.Name, Type: ch.Type, URL: ch.URL, Enabled: ch.Enabled, HasToken: ch.Token != ""}
+		v := channelView{ID: ch.ID, Name: ch.Name, Type: ch.Type, URL: ch.URL, Enabled: ch.Enabled,
+			Alerts: !ch.AlertsOff, Updates: ch.Updates, HasToken: ch.Token != ""}
 		if r, ok := results[ch.ID]; ok {
 			r := r
 			v.Last = &r
@@ -272,6 +286,9 @@ func (h *MonitorHandler) UpdateChannels(w http.ResponseWriter, r *http.Request) 
 			Token      string `json:"token"`
 			ClearToken bool   `json:"clear_token"`
 			Enabled    bool   `json:"enabled"`
+			// Alerts is on unless the request says it is not; Updates is off unless it says it is.
+			Alerts  *bool `json:"alerts"`
+			Updates bool  `json:"updates"`
 		} `json:"channels"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&in); err != nil || len(in.Channels) > notifyMaxChannels {
@@ -283,6 +300,10 @@ func (h *MonitorHandler) UpdateChannels(w http.ResponseWriter, r *http.Request) 
 	for _, ch := range channelsOf(store, uid) {
 		previous[ch.ID] = ch
 	}
+
+	// Only the administrator can update the server, so only the administrator's channels can carry the
+	// notice of a new version: for anyone else the option is not offered, and one sent is not kept.
+	mayHearOfUpdates := isFirstAdmin(h.DB, uid)
 
 	list := make([]notifyChannel, 0, len(in.Channels))
 	seen := map[string]bool{}
@@ -319,7 +340,8 @@ func (h *MonitorHandler) UpdateChannels(w http.ResponseWriter, r *http.Request) 
 		}
 		seen[id] = true
 
-		ch := notifyChannel{ID: id, Name: clipRunes(strings.TrimSpace(raw.Name), 40), Type: kind, URL: address, Enabled: raw.Enabled}
+		ch := notifyChannel{ID: id, Name: clipRunes(strings.TrimSpace(raw.Name), 40), Type: kind, URL: address, Enabled: raw.Enabled,
+			AlertsOff: raw.Alerts != nil && !*raw.Alerts, Updates: raw.Updates && mayHearOfUpdates}
 		switch {
 		case !takesURL(kind):
 		case strings.TrimSpace(raw.Token) != "":

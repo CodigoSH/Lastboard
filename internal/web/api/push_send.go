@@ -93,6 +93,9 @@ type PushMessage struct {
 	URL string `json:"url,omitempty"`
 	// Up says whether it is good news; the notification of an outage stays until it is dismissed.
 	Up bool `json:"up"`
+	// Urgency is how hard a push service should try to deliver it at once: empty is "high", which is what every
+	// alert goes with, and only the notice of a new version asks for less. It is for the push service, not for the page.
+	Urgency string `json:"-"`
 }
 
 // PushResult says what became of one send.
@@ -234,6 +237,11 @@ func (s *PushSender) SendToUser(ctx context.Context, userID int, m PushMessage) 
 	if err != nil {
 		return res, err
 	}
+	urgency := "high"
+	switch m.Urgency {
+	case "very-low", "low", "normal":
+		urgency = m.Urgency
+	}
 
 	// All devices at once: they are different push services and each answer can take the full timeout,
 	// so one slow device must not hold back the alert on the others. At most maxPushDevices of them.
@@ -243,7 +251,7 @@ func (s *PushSender) SendToUser(ctx context.Context, userID int, m PushMessage) 
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			outcomes[i] = s.sendOne(ctx, sub, payload, priv)
+			outcomes[i] = s.sendOne(ctx, sub, payload, priv, urgency)
 		}()
 	}
 	wg.Wait()
@@ -268,7 +276,7 @@ const (
 	pushFailed
 )
 
-func (s *PushSender) sendOne(ctx context.Context, sub pushSubscription, payload []byte, private string) pushOutcome {
+func (s *PushSender) sendOne(ctx context.Context, sub pushSubscription, payload []byte, private, urgency string) pushOutcome {
 	if !s.allowed(sub.Endpoint) {
 		// Stored before this check existed, or written by hand: never sent to, and said so.
 		slog.Warn("push: a subscription is not on a push service's domain; skipped", "subscription", sub.ID)
@@ -294,11 +302,12 @@ func (s *PushSender) sendOne(ctx context.Context, sub pushSubscription, payload 
 	// Twelve hours: an outage reported to a phone that is switched off is still news when it is
 	// switched on, and a day-old one is not.
 	req.Header.Set("TTL", "43200")
-	// Always high. A message of normal urgency is what Android holds back while the phone idles (Doze), for
+	// High for every alert. A message of normal urgency is what Android holds back while the phone idles (Doze), for
 	// minutes or until the screen is switched on, and that was the delay: a recovery and the test button sent
-	// as "normal" arrived late or only when the app was opened. Every alert here is shown to a person who is
-	// waiting for it, so none is the kind of background chatter the lower urgencies are for.
-	req.Header.Set("Urgency", "high")
+	// as "normal" arrived late or only when the app was opened. Every alert is shown to a person who is
+	// waiting for it, so none is the kind of background chatter the lower urgencies are for. Only the notice of a
+	// new version asks for less: it can wait until the phone is next in someone's hand.
+	req.Header.Set("Urgency", urgency)
 
 	resp, err := s.Client.Do(req)
 	if err != nil {

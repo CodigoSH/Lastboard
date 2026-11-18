@@ -6,7 +6,7 @@ import {
 } from './notifyChannelList';
 
 const ch = (o: Partial<NotifyChannel> = {}): NotifyChannel => ({
-    id: 'nc1', name: '', type: 'ntfy', url: 'https://ntfy.sh/secret-topic', enabled: true, has_token: false, last: null, ...o,
+    id: 'nc1', name: '', type: 'ntfy', url: 'https://ntfy.sh/secret-topic', enabled: true, alerts: true, updates: false, has_token: false, last: null, ...o,
 });
 
 describe('what can still be added', () => {
@@ -79,5 +79,22 @@ describe('the body that saves the list', () => {
         const body = channelsPayload([edit({ id: 'nc1' }), edit({ id: '', name: 'Partner', enabled: false })]).channels;
         expect(body.map(c => c.id)).toEqual(['nc1', '']);
         expect(body[1]).toMatchObject({ name: 'Partner', enabled: false, type: 'ntfy' });
+    });
+});
+
+describe('what a channel carries', () => {
+    test('always sends both kinds, so saving a switch cannot reset them', () => {
+        const [c] = channelsPayload([ch({ alerts: false, updates: true })]).channels;
+        expect(c.alerts).toBe(false);
+        expect(c.updates).toBe(true);
+        const [d] = channelsPayload([ch()]).channels;
+        expect(d.alerts).toBe(true);
+        expect(d.updates).toBe(false);
+    });
+
+    test('counts alerts as on only for a channel that is on and carries them', () => {
+        expect(alertsOn([ch({ alerts: false })])).toBe(false);
+        expect(alertsOn([ch({ alerts: false, updates: true }), ch({ enabled: false })])).toBe(false);
+        expect(alertsOn([ch({ alerts: false }), ch()])).toBe(true);
     });
 });
