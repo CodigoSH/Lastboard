@@ -20,7 +20,6 @@ import (
 	"strings"
 	"sync"
 	"sync/atomic"
-	"syscall"
 	"time"
 
 	"database/sql"
@@ -878,14 +877,4 @@ func (h *UpdateHandler) extractTarGz(archivePath, destPath, expectedName string)
 		return nil
 	}
 	return fmt.Errorf("binary not found in archive (expected %s, lastboard, or dashboard)", expectedName)
-}
-
-func (h *UpdateHandler) restartSelf(exePath string) {
-	env := os.Environ()
-	args := os.Args
-
-	if err := syscall.Exec(exePath, args, env); err != nil {
-		slog.Error("Failed to restart, exiting for supervisor", "error", err)
-		os.Exit(0)
-	}
 }

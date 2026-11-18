@@ -49,6 +49,17 @@ func NewHub() *Hub {
 	}
 }
 
+// CloseAll closes every connected client with a close frame, so a page and any proxy in between see the socket
+// closed on purpose rather than cut. Used before the server is replaced; the pages reconnect to the new one.
+func (h *Hub) CloseAll() {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+	for client := range h.clients {
+		_ = client.Close()
+		delete(h.clients, client)
+	}
+}
+
 // wsWriteTimeout bounds how long a single slow client can stall the broadcast
 // loop. Past it the send fails and the client is dropped, so one stuck peer
 // cannot block telemetry for everyone.

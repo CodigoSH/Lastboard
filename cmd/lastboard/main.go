@@ -2,9 +2,11 @@ package main
 
 import (
 	"context"
+	"errors"
 	"flag"
 	"fmt"
 	"log/slog"
+	"net"
 	"net/http"
 	"os"
 	"os/signal"
@@ -130,14 +132,30 @@ func main() {
 		ReadHeaderTimeout: 5 * time.Second,
 	}
 
-	slog.Info("Starting server", "addr", ":"+port)
+	// After an update the port comes already open from the process this one replaced, with whatever arrived in
+	// between waiting in its queue (see internal/web/api/restart.go). Otherwise it is opened here.
+	ln := api.ListenerFromParent(port)
+	inherited := ln != nil
+	if ln == nil {
+		var err error
+		if ln, err = net.Listen("tcp", ":"+port); err != nil {
+			slog.Error("server failed", "error", err)
+			os.Exit(1)
+		}
+	}
+	slog.Info("Starting server", "addr", ":"+port, "inherited", inherited)
 
+	// What an update does before replacing this process: keep a duplicate of the socket so the port never closes,
+	// stop accepting, close the WebSockets cleanly, and answer the requests in flight — briefly, since the new
+	// binary is waiting. Serve ends with net.ErrClosed when that happens: the process is about to be replaced.
+	serveOn, handoff := api.Handoff(server, ln, srv.WSHub.CloseAll)
 	go func() {
-		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+		if err := server.Serve(serveOn); err != nil && !errors.Is(err, http.ErrServerClosed) && !errors.Is(err, net.ErrClosed) {
 			slog.Error("server failed", "error", err)
 			os.Exit(1)
 		}
 	}()
+	api.SetRestartHandoff(handoff)
 
 	// Boards built before icons were stored locally still point at the CDN
 	// they were made with. Bring those home, off the critical path: it is
