@@ -50,6 +50,24 @@ describe('the demo answers for the API', () => {
         expect(await a.post('/api/proxmox/settings', {})).toEqual({ status: 'ok' });
     });
 
+    test('the machines of the hypervisor have addresses, so the window that adds them to the board has something to offer', async () => {
+        const a = await api();
+        const s = await a.get<{ hosts: { url: string }[] }>('/api/proxmox/settings');
+        expect(s.hosts[0].url).toMatch(/^https:\/\//);
+        const r = await a.post<{ addresses: Record<string, string> }>('/api/proxmox/addresses', {
+            host: 'demo', guests: [{ node: 'pve', kind: 'lxc', vmid: 100 }, { node: 'pve', kind: 'qemu', vmid: 102 }],
+        });
+        expect(r.addresses).toEqual({ 'pve|100': '192.168.1.100', 'pve|102': '192.168.1.102' });
+    });
+
+    test('what the visitor ignores when adding services is remembered for the visit, and can be taken back', async () => {
+        const a = await api();
+        await a.post('/api/detect/dismissed', { add: ['p:demo/pve|100', 'd:demo/plex'], remove: [] });
+        expect((await a.get<{ keys: string[] }>('/api/detect/dismissed')).keys.sort()).toEqual(['d:demo/plex', 'p:demo/pve|100']);
+        await a.post('/api/detect/dismissed', { add: [], remove: ['d:demo/plex'] });
+        expect((await a.get<{ keys: string[] }>('/api/detect/dismissed')).keys).toEqual(['p:demo/pve|100']);
+    });
+
     test('a health check is up, and clearing monitor history deletes nothing', async () => {
         const a = await api();
         expect(await a.get('/api/dashboard/health?url=x')).toEqual({ status: 'up' });

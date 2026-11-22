@@ -5,6 +5,9 @@
  * `demoService` and the generators beside it. A URL nobody wrote an answer for gets an empty object and a
  * warning, which is what the page tolerates from a server that has nothing to say.
  */
+/** What the visitor chose to ignore when adding services to the board; it forgets on reload, like the rest of the demo's state. */
+const demoDismissed = new Set<string>();
+
 export async function demoRequest<T>(url: string, options: RequestInit): Promise<T> {
     const { demoService } = await import('./demoService');
     const method = (options.method || 'GET').toUpperCase();
@@ -73,12 +76,22 @@ export async function demoRequest<T>(url: string, options: RequestInit): Promise
         if (url === '/api/proxmox/settings' && method === 'GET') {
             return {
                 enabled: true,
-                hosts: [{ id: 'demo', name: 'Proxmox', url: '', token_id: '', insecure: true, enabled: true, has_secret: false }],
+                // An address, though nothing answers at it: it is what a machine's console opens at, and without it the window that
+                // adds machines to the board finds nothing to propose.
+                hosts: [{ id: 'demo', name: 'Proxmox', url: 'https://pve.demo.lan:8006', token_id: '', insecure: true, enabled: true, has_secret: false }],
             } as any;
         }
         if (url === '/api/proxmox/settings' && method === 'POST') {
             // Nothing to save: the demo has no hypervisor to point at.
             return { status: 'ok' } as any;
+        }
+        if (url === '/api/proxmox/addresses' && method === 'POST') {
+            // The addresses the machines asked for would have on a home network: the demo's machines live on 192.168.1.x,
+            // each at its own number.
+            const { addressKey } = await import('./discoverServices');
+            const addresses: Record<string, string> = {};
+            for (const g of Array.isArray(body.guests) ? body.guests : []) addresses[addressKey(String(g.node), Number(g.vmid))] = `192.168.1.${g.vmid}`;
+            return { addresses, urls: {} } as any;
         }
         if (url.startsWith('/api/proxmox/overview')) {
             // The answer is a list of hypervisors now. The demo has one,
@@ -117,6 +130,15 @@ export async function demoRequest<T>(url: string, options: RequestInit): Promise
             const { setRunning } = await import('./demoProxmox');
             setRunning(Number(body.vmid), body.action === 'start');
             return { status: 'ok' } as any;
+        }
+
+        // What was ignored in the window that adds services to the board: kept for as long as the visit lasts.
+        if (url === '/api/detect/dismissed') {
+            if (method === 'POST') {
+                for (const k of Array.isArray(body.add) ? body.add : []) demoDismissed.add(String(k));
+                for (const k of Array.isArray(body.remove) ? body.remove : []) demoDismissed.delete(String(k));
+            }
+            return { keys: [...demoDismissed] } as any;
         }
 
         // Multi-Dashboard (Demo: persisted in localStorage via demoService)
