@@ -1,4 +1,4 @@
-# Preferences
+# Settings
 
 All personalization and system options live in the **Settings** panel, opened from the icon in the top navigation bar. While it is open the address reads `/?view=settings`, so reloading keeps it open and that address brings it up from a link; the browser's Back button closes it and leaves you on your board.
 

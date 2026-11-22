@@ -180,7 +180,7 @@ shows it beside the services it runs.
   your language rather than flashing English first.
 - **Installable as an app** (web app manifest) on Android, iOS and the desktop.
 
-→ [Preferences](using/preferences.md)
+→ [Settings](using/preferences.md)
 
 ## Your data stays yours
 
@@ -226,7 +226,7 @@ shows it beside the services it runs.
   - [Updating](getting-started/updating.md)
 - **Using Lastboard**
   - [Dashboards](using/dashboards.md)
-  - [Preferences](using/preferences.md)
+  - [Settings](using/preferences.md)
   - [Import, Export & Backup](using/import-export.md)
 - **Widgets**
   - [Clock](widgets/clock.md)

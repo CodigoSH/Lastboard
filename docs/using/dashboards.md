@@ -58,7 +58,7 @@ All selected items move together and are auto-placed on the target dashboard.
 | Monitoring settings, alert channel, Proxmox connections | **Per user** — each account has its own |
 | Users, backups, updates | **Server-wide**, administrator only |
 
-So a background you set in **Settings → Look & Feel** applies to all of your dashboards at once, not only the one that was open. See [Preferences](preferences.md) for the appearance options.
+So a background you set in **Settings → Look & Feel** applies to all of your dashboards at once, not only the one that was open. See [Settings](preferences.md) for the appearance options.
 
 ## Deleting a dashboard
 

@@ -2,7 +2,7 @@
 
 Lastboard is designed to work out-of-the-box, but you can customize its behavior using environment variables.
 
-> Looking for the in-app settings (theme, language, monitoring, backups)? Those are covered in **[Preferences](../using/preferences.md)**. This page is about deployment and environment configuration.
+> Looking for the in-app settings (theme, language, monitoring, backups)? Those are covered in **[Settings](../using/preferences.md)**. This page is about deployment and environment configuration.
 
 ## Environment Variables
 
