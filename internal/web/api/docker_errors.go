@@ -22,10 +22,6 @@ const (
 	keyTimeout    = "docker.connection_timeout"
 )
 
-// dockerErrorKeys are the keys the server may answer with that the page shows
-// in their own words. The page keeps this list in step.
-var dockerErrorKeys = []string{keyConnection, keyMissing, keyDenied, keyRefused, keyTimeout, "docker.unauthorized"}
-
 // connectionKey names why the dial or the request failed.
 func connectionKey(err error) string {
 	switch {
