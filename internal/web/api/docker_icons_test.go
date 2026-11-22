@@ -2,10 +2,12 @@ package api_test
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"os"
 	"strings"
+	"sync"
 	"testing"
 
 	"git.codigosh.com/CodigoSH/Lastboard/internal/platform/database"
@@ -91,6 +93,35 @@ func dkIcons(t *testing.T, base string, s *userSession) map[string]string {
 	}
 	json.Unmarshal(body, &out)
 	return out.Icons
+}
+
+// The icons are one setting row stored whole, and the page sends one request per
+// container without waiting for the one before: each would read the row before
+// any wrote it and only the last choice would be left.
+func TestContainerIconsChosenAtTheSameTimeAreAllKept(t *testing.T) {
+	server, db, cleanup := setupDockerIconsServer(t)
+	defer cleanup()
+	createUser(t, db.DB, "root", "password", "admin")
+	s := doLogin(t, server.URL, "root", "password")
+	id := dkHost(t, server.URL, s)
+
+	const n = 20
+	var wg sync.WaitGroup
+	for i := 0; i < n; i++ {
+		wg.Add(1)
+		go func(i int) {
+			defer wg.Done()
+			body := fmt.Sprintf(`{"host_id":"%s","name":"c%02d","icon":"/api/icons/i%02d"}`, id, i, i)
+			if code, _ := dkCall(t, server.URL, "POST", "/api/docker/icon", s, body); code != http.StatusNoContent {
+				t.Errorf("c%02d: %d", i, code)
+			}
+		}(i)
+	}
+	wg.Wait()
+
+	if got := len(dkIcons(t, server.URL, s)); got != n {
+		t.Errorf("%d of %d chosen icons were kept", got, n)
+	}
 }
 
 func TestAContainersIconIsKeptByHostAndNameForItsOwner(t *testing.T) {

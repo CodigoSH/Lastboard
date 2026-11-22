@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"strings"
+	"sync"
 )
 
 /*
@@ -48,6 +49,12 @@ func (s dockerScope) icons() map[string]string {
 	return out
 }
 
+// dockerIconsMu makes every read-change-write of the icons take turns. They are
+// one setting row stored whole, and the page sends one request per container
+// without waiting for the one before: each would read the row before any wrote
+// it and only the last choice would be left.
+var dockerIconsMu sync.Mutex
+
 func (s dockerScope) saveIcons(icons map[string]string) error {
 	blob, err := json.Marshal(icons)
 	if err != nil {
@@ -59,6 +66,8 @@ func (s dockerScope) saveIcons(icons map[string]string) error {
 // pruneIcons drops the icons of hosts that are no longer in the list: nothing
 // can read them, and a full map would refuse the next container.
 func (s dockerScope) pruneIcons(keep []dockerHost) {
+	dockerIconsMu.Lock()
+	defer dockerIconsMu.Unlock()
 	icons := s.icons()
 	ids := map[string]bool{}
 	for _, h := range keep {
@@ -108,6 +117,8 @@ func (h *DockerHandler) SetIcon(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	dockerIconsMu.Lock()
+	defer dockerIconsMu.Unlock()
 	icons := s.icons()
 	key := dockerIconKey(host.ID, name)
 	if icon == "" {
