@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
+	"sync"
 	"time"
 
 	"git.codigosh.com/CodigoSH/Lastboard/internal/web/middleware"
@@ -169,6 +170,12 @@ func (s dockerScope) hosts() []dockerHost {
 	return dockerHostsOf(NewUserSettings(s.DB), s.uid)
 }
 
+// dockerHostsMu serialises every read-change-write of an account's host list.
+// The list is stored whole, so two writers that read it before either saved
+// would leave only the last one's change: Settings checks every host's engine
+// at once, and each check may correct its host while the person saves the list.
+var dockerHostsMu sync.Mutex
+
 func (s dockerScope) saveHosts(list []dockerHost) error {
 	blob, err := json.Marshal(list)
 	if err != nil {
@@ -291,6 +298,8 @@ func (h *DockerHandler) UpdateSettings(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	dockerHostsMu.Lock()
+	defer dockerHostsMu.Unlock()
 	previous := map[string]dockerHost{}
 	for _, e := range s.hosts() {
 		previous[e.ID] = e

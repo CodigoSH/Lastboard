@@ -2,11 +2,13 @@ package api_test
 
 import (
 	"encoding/json"
+	"fmt"
 	"net"
 	"net/http"
 	"net/http/httptest"
 	"os"
 	"path/filepath"
+	"sync"
 	"testing"
 
 	"git.codigosh.com/CodigoSH/Lastboard/internal/platform/database"
@@ -153,6 +155,59 @@ func engineServer(t *testing.T) (*httptest.Server, *database.DB, func()) {
 	mux.Handle("POST /api/docker/engine", protect(http.HandlerFunc(dk.EngineFor)))
 	server := httptest.NewServer(mux)
 	return server, db, func() { server.Close(); db.Close(); os.Remove(tmp.Name()) }
+}
+
+// Settings checks every host at once, and each check may correct its host's
+// engine by rewriting the account's whole list. Two corrections that read the
+// list before either wrote it would leave only the last one standing.
+func TestEngineCorrectionsMadeTogetherAllStick(t *testing.T) {
+	server, db, cleanup := engineServer(t)
+	defer cleanup()
+	createUser(t, db.DB, "root", "password", "admin")
+	s := doLogin(t, server.URL, "root", "password")
+	sock := fakeEngine(t, `{"Version":"6.2.0","Components":[{"Name":"Podman Engine","Version":"6.2.0"}]}`)
+
+	const n = 12
+	hosts := make([]map[string]any, n)
+	for i := range hosts {
+		hosts[i] = map[string]any{"name": fmt.Sprintf("h%d", i), "type": "local", "url": sock, "enabled": true}
+	}
+	body, _ := json.Marshal(map[string]any{"hosts": hosts})
+	if code, _ := dkCall(t, server.URL, "POST", "/api/docker/settings", s, string(body)); code != http.StatusNoContent {
+		t.Fatalf("save: %d", code)
+	}
+	_, listed := dkCall(t, server.URL, "GET", "/api/docker/settings", s, "")
+	var out struct {
+		Hosts []struct {
+			ID string `json:"id"`
+		} `json:"hosts"`
+	}
+	json.Unmarshal(listed, &out)
+	if len(out.Hosts) != n {
+		t.Fatalf("saved %d hosts, want %d", len(out.Hosts), n)
+	}
+
+	var wg sync.WaitGroup
+	for _, h := range out.Hosts {
+		wg.Add(1)
+		go func(id string) {
+			defer wg.Done()
+			if code, ans := dkCall(t, server.URL, "POST", "/api/docker/engine", s, `{"host_id":"`+id+`"}`); code != http.StatusOK {
+				t.Errorf("engine %s: %d %s", id, code, ans)
+			}
+		}(h.ID)
+	}
+	wg.Wait()
+
+	wrong := 0
+	for _, h := range dkHostsOf(t, server.URL, s) {
+		if h.Engine != "podman" {
+			wrong++
+		}
+	}
+	if wrong > 0 {
+		t.Errorf("%d of %d corrections were lost: each rewrote a list another had just changed", wrong, n)
+	}
 }
 
 func TestTheEngineAHostSaysItRunsCorrectsWhatWasChosen(t *testing.T) {

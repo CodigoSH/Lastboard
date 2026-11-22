@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"strings"
 )
@@ -103,7 +104,11 @@ func (h *DockerHandler) EngineFor(w http.ResponseWriter, r *http.Request) {
 }
 
 // setEngine records what a host runs, for the host with this id and no other.
+// The answer stands either way, so a failed save is only logged: the next check
+// corrects it again.
 func (s dockerScope) setEngine(id, engine string) {
+	dockerHostsMu.Lock()
+	defer dockerHostsMu.Unlock()
 	list := s.hosts()
 	for i := range list {
 		if list[i].ID != id {
@@ -113,7 +118,9 @@ func (s dockerScope) setEngine(id, engine string) {
 		if engine == enginePodman {
 			list[i].Engine = enginePodman
 		}
-		_ = s.saveHosts(list)
+		if err := s.saveHosts(list); err != nil {
+			slog.Warn("docker: could not record a host's engine", "error", err)
+		}
 		return
 	}
 }
