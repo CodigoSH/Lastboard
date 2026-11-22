@@ -16,7 +16,7 @@ It lives at `$XDG_RUNTIME_DIR/podman/podman.sock` — `/run/user/1000/podman/pod
 
 ## Run Lastboard with it
 
-Mount the socket where Docker's would be, and turn SELinux labelling off for that one container:
+Mount the socket where Docker's would be, and turn SELinux labeling off for that one container:
 
 ```bash
 podman run -d --name lastboard -p 8080:8080 \

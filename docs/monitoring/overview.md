@@ -174,13 +174,13 @@ Your enabled devices are listed under **Your devices** with the last time someth
 | Device | What it needs |
 | :--- | :--- |
 | Android — Chrome, Edge, Firefox, Samsung Internet | Nothing more. Installing Lastboard as an app is optional. |
-| Windows, macOS, Linux — Chrome, Edge, Firefox | Nothing more, but the browser has to be running (minimised, or in the tray, is fine). |
+| Windows, macOS, Linux — Chrome, Edge, Firefox | Nothing more, but the browser has to be running (minimized, or in the tray, is fine). |
 | macOS — Safari | macOS 13 or later. |
 | **iPhone and iPad** | iOS or iPadOS 16.4 or later, and Lastboard **added to the Home Screen** (Share → Add to Home Screen) and opened from there. In a Safari tab the browser offers no push at all, so the page says to install first. |
 
 Two requirements apply everywhere. The page must be served over **HTTPS** (or be `localhost`): browsers do not allow notifications, or the service worker that receives them, on a plain `http://` address. And the device needs internet access to its browser maker's push service even if Lastboard itself is only on your network.
 
-**If alerts reach an Android phone late.** Every push is sent with the highest urgency, which is what makes Android deliver it at once even when the phone is idle. What can still hold it back is the phone's own battery saving: in **Settings → Apps → your browser → Battery**, choose **Unrestricted** (or **Not optimised**), and do not let Android pause or remove the browser's permissions for apps you do not use. The wait before an outage is *noticed* is the check interval above, which is separate.
+**If alerts reach an Android phone late.** Every push is sent with the highest urgency, which is what makes Android deliver it at once even when the phone is idle. What can still hold it back is the phone's own battery saving: in **Settings → Apps → your browser → Battery**, choose **Unrestricted** (or **Not optimized**), and do not let Android pause or remove the browser's permissions for apps you do not use. The wait before an outage is *noticed* is the check interval above, which is separate.
 
 **How it gets there, and what that means for privacy.** Lastboard does not deliver these itself. When a browser subscribes, its maker's push service (Google for Chrome, Chromium-based browsers and Android; Apple for Safari and the iPhone and iPad Home Screen apps; Mozilla for Firefox; Microsoft for Edge) gives it an address, and Lastboard sends each notification there. The message is **encrypted for that one browser** ([RFC 8291](https://www.rfc-editor.org/rfc/rfc8291)) and signed by your instance ([VAPID, RFC 8292](https://www.rfc-editor.org/rfc/rfc8292)), so the push service carries it without being able to read it. What it can see is that your instance notified a device, and when. If that is more than you want to share, use ntfy or Gotify instead, which you can host yourself. Lastboard only ever sends to addresses on those push services' own domains. See [Security](../security/overview.md#push-notifications).
 

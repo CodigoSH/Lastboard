@@ -16,7 +16,7 @@ Then a row for each machine, reading from left to right:
 - the machine's **name** and its type and id (`LXC 106`, `VM 105`)
 - its **CPU**, **memory** and **disk**, each with a bar, or *stopped*
 
-A running machine has a green icon frame, a stopped one is grey. A machine that is stopped **and** serves a bookmark is an outage: its row is red and carries a mark on its leading edge. A stopped machine nobody linked stays grey: turning things off is a normal thing to do, and a tile that shouts about it is a tile you learn to ignore.
+A running machine has a green icon frame, a stopped one is gray. A machine that is stopped **and** serves a bookmark is an outage: its row is red and carries a mark on its leading edge. A stopped machine nobody linked stays gray: turning things off is a normal thing to do, and a tile that shouts about it is a tile you learn to ignore.
 
 A virtual machine reports the size of its disk only when it runs the guest agent; one that does not say has no disk figure rather than a zero. Containers always report it.
 

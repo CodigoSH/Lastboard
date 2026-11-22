@@ -657,7 +657,7 @@
   "widget.telemetry.remote.temp_path": "Temperature path",
   "widget.telemetry.remote.test": "Test connection",
   "widget.telemetry.remote.test_missing": "Not reported by this server: {metrics}.",
-  "widget.telemetry.remote.test_no_sensor": "This server reports no temperature sensor, so that ring stays grey.",
+  "widget.telemetry.remote.test_no_sensor": "This server reports no temperature sensor, so that ring stays gray.",
   "widget.telemetry.remote.test_ok": "Connected.",
   "widget.telemetry.remote.test_ok_version": "Connected (API version {version}).",
   "widget.telemetry.remote.url": "Server address",

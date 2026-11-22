@@ -121,7 +121,7 @@ Two figures are weighted rather than averaged, and deliberately: a node of 8 cor
 
 > **Two connections to the same address are allowed, and warned about.** A second token with narrower permissions is a reasonable thing to want, but every total on this page adds the hypervisors up, so the same server connected twice lands in each of them twice. Settings says so when you save it, and saves anyway.
 
-**Every bar on the page reads the same way**, whether it measures a node's CPU, a hypervisor's memory or how full a store is: **green** while the figure is comfortable, **amber from 60%** and **red from 90%**. They are deliberately not your accent colour — an accent belongs to you and may itself be red, and a healthy bar has to look healthy to someone who has never seen your palette. The widget follows the same rule, so a board with both reads one way rather than two.
+**Every bar on the page reads the same way**, whether it measures a node's CPU, a hypervisor's memory or how full a store is: **green** while the figure is comfortable, **amber from 60%** and **red from 90%**. They are deliberately not your accent color — an accent belongs to you and may itself be red, and a healthy bar has to look healthy to someone who has never seen your palette. The widget follows the same rule, so a board with both reads one way rather than two.
 
 ### Machines
 
@@ -195,7 +195,7 @@ This is what turns a list of containers into something Lastboard can say anythin
 The rule is deliberately strict, because naming the wrong service as the one that went down is worse than naming none:
 
 - The leading ordinal machines get filed under is dropped (`15-myspeed` → `myspeed`, `90--haos` → `haos`), then case, spaces and punctuation are ignored.
-- The bookmark is matched on its **name** or on the **icon it wears** — so a bookmark labelled *Donetic* still finds the container `08-donetick`.
+- The bookmark is matched on its **name** or on the **icon it wears** — so a bookmark labeled *Donetic* still finds the container `08-donetick`.
 - A machine is matched only when **exactly one** bookmark fits. Two Jellyfins and one `jellyfin` container: no match, rather than a coin toss.
 
 Measured on a host with twenty-nine containers and a board of fifty-five bookmarks, none of them configured: **sixteen machines matched, none wrongly.**

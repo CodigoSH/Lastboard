@@ -54,7 +54,7 @@ It is **one static Go binary** and **one SQLite file**. No database server, no R
 | **Storage** | One SQLite file — `cp lastboard.db` is a complete backup |
 | **Setup** | A browser wizard. Zero configuration files |
 | **Languages** | 20, hand-translated, with full RTL support |
-| **Licence** | Apache-2.0 |
+| **License** | Apache-2.0 |
 | **Telemetry** | None. Ever |
 
 ---
@@ -64,7 +64,7 @@ It is **one static Go binary** and **one SQLite file**. No database server, no R
 ### The board
 
 - **A native drag-and-drop grid**, written from scratch in plain JavaScript — no grid library, no framework. Drag tiles anywhere, resize them a cell at a time from the corner. A live outline shows where a tile will land and turns **red** when the target is occupied: nothing is ever pushed aside behind your back, and a drop onto a taken cell is refused rather than guessed at.
-- **Bookmarks** with an icon, a label you can place above, below, inside or hide entirely, a border colour and width of their own, and an optional **status dot** in any corner that says whether the service is answering.
+- **Bookmarks** with an icon, a label you can place above, below, inside or hide entirely, a border color and width of their own, and an optional **status dot** in any corner that says whether the service is answering.
 - **Sections** — containers that group bookmarks under a title. Drop tiles inside and they travel together; move the section to another dashboard and its contents follow. Delete a section and what is inside goes with it — or turn on **Only the section** in the confirmation to keep the contents on the board, where they are.
 - **Multiple independent dashboards per user**, each with its own layout and items, switched from the top bar, reorderable by drag, with one marked as the one that opens first.
 - **Move items between dashboards** — one at a time from a tile's menu, or many at once with the selection mode. Arrivals are auto-placed and briefly highlighted so you can see where they landed.
@@ -79,7 +79,7 @@ It is **one static Go binary** and **one SQLite file**. No database server, no R
 | **Clock** | The time and date for any city you search for, on that city's time zone — one dashboard, several clocks |
 | **Server Health** | CPU, RAM and temperature as ring gauges: of the host with no agent and no exporter, or of another server through Glances, Netdata or a JSON endpoint |
 | **Weather** | Current conditions and an optional multi-day forecast from Open-Meteo. No API key, no registration |
-| **Notepad** | A rich-text scratchpad with a real toolbar: headings, colours, lists, checklists, links and images |
+| **Notepad** | A rich-text scratchpad with a real toolbar: headings, colors, lists, checklists, links and images |
 | **Markdown** | A Markdown block rendered on the board, with a source/preview toggle and a lock |
 | **Monitoring** | Every monitored service on a tile: status dot, heartbeat, latency and 24-hour uptime |
 | **Docker** | Containers from one or many hosts, with live CPU/RAM and start/stop/restart |
@@ -106,9 +106,9 @@ Give a bookmark a URL and a status position and Lastboard watches it. No second 
 - **Hosts belong to your account**, set up once in Preferences and chosen by each widget. **Many hosts, one list**: tick the containers you care about on each host; they appear together, each row naming where it runs.
 - **Live state and resource use** on the board, and **start / stop / restart** from a container's panel on the Docker page for any account allowed to control Docker; a click on a row of the widget opens that container's panel over the board. A member reaches Docker only through its own agents; the server's socket and TCP or TLS daemons are the administrator's.
 - **A Docker page** with an overview of every host (what is running, what needs attention, CPU and memory), an inventory of all the containers, and a side panel for each one: how it is set up — ports, mounts, networks, the *names* of its environment variables, never their values — and its log, which can follow live. Details and logs on an agent host need Lastboard Agent v1.3.0 or later.
-- **A container's panel opens its service**, from its bookmark or, failing that, from a `lastboard.url` or `homepage.href` label, then its first published port — so containers already labelled for another dashboard work here unchanged.
+- **A container's panel opens its service**, from its bookmark or, failing that, from a `lastboard.url` or `homepage.href` label, then its first published port — so containers already labeled for another dashboard work here unchanged.
 - **Add a host's containers to your board in one go.** A window proposes a bookmark for each container, with a name, an address and an icon you can change on its row: the address the container names itself (`lastboard.url`, `homepage.href`, Traefik or Caddy labels), or its published ports. It opens by itself when you add a host, sorts what it finds into *To add*, *Already on your board* and *Ignored*, says which addresses answer, lets you name the section and see it first, and asks before it makes anything.
-- **A host that stops answering** doesn't make its containers vanish: they stay, greyed out, with the host line saying it isn't responding.
+- **A host that stops answering** doesn't make its containers vanish: they stay, grayed out, with the host line saying it isn't responding.
 
 ### Proxmox VE
 
@@ -132,8 +132,8 @@ Give a bookmark a URL and a status position and Lastboard watches it. No second 
 
 - **Multi-user** with per-user boards, preferences, avatar and password. Exactly one administrator — the account the wizard creates.
 - **Per-account permissions**, chosen when the administrator creates an account and editable later: start from *View only*, *Standard* or *Homelab*, or set each one yourself — editing the board, several boards, import and export, fetching icons, API widgets, other machines' health, reaching the local network, the up/down dots, monitoring and alerts, the server's own load, and Docker and Proxmox at none, view or control. What an account may not use is left out of its screens, and the server checks every request. A **label** of your choosing replaces the role under the name.
-- **Real dark/light mode** with dedicated colour token sets per theme, not a CSS filter — plus a **System** option that follows the device and changes with it.
-- **Accent colour**, a **background image** per user, and **your own panel name and logo** in the tab and top bar.
+- **Real dark/light mode** with dedicated color token sets per theme, not a CSS filter — plus a **System** option that follows the device and changes with it.
+- **Accent color**, a **background image** per user, and **your own panel name and logo** in the tab and top bar.
 - **Metric or imperial units**, applied across every widget that shows one.
 - **20 languages, hand-translated** — Arabic, Bengali, Chinese, Dutch, English, Farsi, French, German, Greek, Hindi, Indonesian, Italian, Japanese, Korean, Polish, Portuguese, Russian, Spanish, Turkish, Urdu — with **full right-to-left layout** for Arabic, Farsi and Urdu. The language is applied on the server for the first paint, so even the login page arrives in your language instead of flashing English.
 - **Installable as an app** on Android, iOS and the desktop.

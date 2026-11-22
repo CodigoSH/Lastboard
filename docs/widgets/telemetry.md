@@ -44,9 +44,9 @@ Pick **Glances**, **Netdata** or **Custom JSON** as the **Source** and enter the
 
 **Test connection** tries what is on the form, without saving: it tells you whether the server answered, which API version it speaks, and which of the metrics you chose it does not report.
 
-- **A metric the server does not report** — the usual case is temperature on a virtual machine or a server without sensors — draws a **grey ring** with a dash, and hovering it says why. It is not drawn as 0.
+- **A metric the server does not report** — the usual case is temperature on a virtual machine or a server without sensors — draws a **gray ring** with a dash, and hovering it says why. It is not drawn as 0.
 - **Temperature** is the processor's package reading. Disks, batteries, ACPI zones and Wi-Fi cards are ignored, so an NVMe drive never stands for the CPU.
-- **A server that cannot be reached** turns every ring grey. One lost reading keeps the last numbers; the second in a row greys them, so a hiccup does not make the widget flash. Wrong or missing credentials grey it at once.
+- **A server that cannot be reached** turns every ring gray. One lost reading keeps the last numbers; the second in a row grays them, so a hiccup does not make the widget flash. Wrong or missing credentials gray it at once.
 - **Clicking the widget** opens the server's own page in a new tab — the address you entered for Glances and Netdata, and the optional **Page to open on click** for Custom JSON. Nothing opens while you are editing the board, and only `http` and `https` addresses are followed.
 - **The password is a secret.** It is stored on the Lastboard server apart from the widget, shown as dots, never sent back to your browser and left out of a dashboard export. A full [backup](../using/import-export.md) does carry it, so give the backup a password if it will leave your server. Type a new one to replace it, or empty the box to remove it. Your browser only names the widget; the address and password are read on the server.
 - Several widgets, or several open tabs, pointing at the same server share one reading for a few seconds instead of asking it each time.

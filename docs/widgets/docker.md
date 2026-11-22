@@ -18,7 +18,7 @@ Connecting a host, the Lastboard Agent, who can use which kind of host and the D
 
 The icon is the one you chose for the container on the Docker page, or else the icon of the bookmark that serves it. A container with neither wears the board's own default.
 
-Rows are coloured by what needs saying: a container that fails its health check, ended with an error, or uses almost all its memory is red; a restarting or paused one is amber. A container that a bookmark of yours depends on and that is stopped is an outage, and its row carries a mark on its leading edge. Until you [arrange the list yourself](#arranging-the-list), what needs attention comes first.
+Rows are colored by what needs saying: a container that fails its health check, ended with an error, or uses almost all its memory is red; a restarting or paused one is amber. A container that a bookmark of yours depends on and that is stopped is an outage, and its row carries a mark on its leading edge. Until you [arrange the list yourself](#arranging-the-list), what needs attention comes first.
 
 ### Opening the page
 
@@ -55,18 +55,18 @@ Hosts that don't answer say so in their own section, and their containers keep w
 
 Its containers don't disappear from the widget. They stay where they are and the line under their name says the host isn't responding instead — so you can see at a glance which services you've lost and which are fine.
 
-A host that was already down when the dashboard loaded listed nothing, so there are no rows of its to grey out. That one gets a single line naming it and saying it doesn't answer.
+A host that was already down when the dashboard loaded listed nothing, so there are no rows of its to gray out. That one gets a single line naming it and saying it doesn't answer.
 
 ### Opening a container's service
 
 The widget doesn't link to a container's web interface any more: a click opens the page. The page does: its side panel has an **Open bookmark** button when a bookmark of yours serves the container, and **Open service** when only the container says where it answers. Lastboard works that address out in this order:
 
-1. **A label on the container.** `lastboard.url` is read first, then `homepage.href` — so a container already labelled for another dashboard works here without changes, and you can override it with ours. Only `http://` and `https://` addresses are used.
+1. **A label on the container.** `lastboard.url` is read first, then `homepage.href` — so a container already labeled for another dashboard works here without changes, and you can override it with ours. Only `http://` and `https://` addresses are used.
 2. **The first published port**, combined with the host's address. For a local host that's whatever address you're using to read the dashboard; for a remote one it's that host's own address.
 
 A container that publishes no port and carries no label has no such button.
 
-Example of labelling a container so it advertises its own address:
+Example of labeling a container so it advertises its own address:
 
 ```yaml
 services:

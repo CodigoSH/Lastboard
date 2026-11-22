@@ -11,10 +11,10 @@ It reads the same data as the full [Monitoring & Uptime](../monitoring/overview.
 Under the title, a line with the **uptime** of the services shown (the average over the last 24 hours, with a bar) and their average **response**. Then a row for each service, reading from left to right:
 
 - the **icon** and the **name** of the bookmark being monitored: change them on the bookmark and they change here
-- the **latency** of the last check and the **uptime** over the last 24 hours, coloured green from 99%, amber from 95% and red below
+- the **latency** of the last check and the **uptime** over the last 24 hours, colored green from 99%, amber from 95% and red below
 - under them, the **heartbeat** of the most recent checks, oldest on the left
 
-A service that is down has its row in red; one that has not been checked yet is grey and has no figures. The foot counts how many are online — *Online: 5/6* — and links to the status page. Turn the link off and the foot goes with it.
+A service that is down has its row in red; one that has not been checked yet is gray and has no figures. The foot counts how many are online — *Online: 5/6* — and links to the status page. Turn the link off and the foot goes with it.
 
 Clicking a row opens that service's side panel over your board — the same panel as when you choose it on the status page, with its outages, checks and latency chart — and the board stays where it is. Close it with the **×**, by clicking outside it, with **Esc** or with the browser's Back button. **See all** opens the status page on the **Services** tab.
 

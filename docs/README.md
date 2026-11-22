@@ -19,7 +19,7 @@ everything Lastboard does and where each part is documented.
 | **Dependencies** | None to install. The frontend ships **zero runtime JavaScript dependencies**; the backend links a pure-Go SQLite driver, so there is no CGO and no system library to match |
 | **Footprint** | Small enough for a Raspberry Pi or a 512 MB LXC container |
 | **First run** | A three-step wizard in the browser. There is no configuration file to write |
-| **Licence** | Apache-2.0, free and open source |
+| **License** | Apache-2.0, free and open source |
 | **Data leaving your server** | Nothing, by default. See [Security Overview](security/overview.md) |
 
 ## The board
@@ -31,7 +31,7 @@ The dashboard itself: a grid you arrange, and the tiles on it.
   will land and turns red when the target is occupied: nothing is ever pushed aside behind your
   back, and a drop onto a taken cell is simply refused.
 - **Bookmarks** — a tile that launches a service, with an icon, a label you can place above,
-  below, inside or hide entirely, a border colour and width of its own, and an optional
+  below, inside or hide entirely, a border color and width of its own, and an optional
   **status dot** in any corner that says whether the service answers.
 - **Sections** — a container that groups bookmarks under a title. Drop tiles inside and they
   travel with it: move the section to another dashboard and its contents go too. Delete a
@@ -55,14 +55,14 @@ The dashboard itself: a grid you arrange, and the tiles on it.
 
 Nine widgets ship in the box. Each one starts its **General** tab with a **Title**: a name shown on the
 tile's top border, like the one a section wears. Leave it empty and the tile wears no name. Each one
-also has a **Personalize** tab with a border colour and border width, on top of its own options.
+also has a **Personalize** tab with a border color and border width, on top of its own options.
 
 | Widget | What it does | Configuration |
 | :--- | :--- | :--- |
 | **[Clock](widgets/clock.md)** *(Time)* | The time and date for a city you search for, on that city's time zone. Several clocks, several cities | 12/24 h, date, city, seconds |
 | **[Telemetry](widgets/telemetry.md)** *(Server Health)* | CPU, RAM and temperature as ring gauges — of the machine Lastboard runs on with no agent and no exporter, or of another server through Glances, Netdata or a JSON endpoint | Source, which gauges, redraw rate |
 | **[Weather](widgets/weather.md)** | Current conditions and an optional multi-day forecast from Open-Meteo. No API key | Coordinates, forecast days |
-| **[Notepad](widgets/notepad.md)** | A rich-text scratchpad with a toolbar: headings, colours, lists, checklists, links, images | None — you write in it |
+| **[Notepad](widgets/notepad.md)** | A rich-text scratchpad with a toolbar: headings, colors, lists, checklists, links, images | None — you write in it |
 | **[Markdown](widgets/markdown.md)** | A Markdown block rendered on the board, with a source/preview toggle | None — you write in it |
 | **[Monitoring](widgets/monitoring.md)** | Your monitored services on a tile: icon, heartbeat, latency, 24-hour uptime; a click opens that service's panel over the board | Which services and their order, summary line, link to the page, refresh |
 | **[Docker](widgets/docker.md)** | Containers from one or many hosts, with live CPU/RAM; a click opens that container's panel over the board | Hosts, which containers and their names, readings, link to the page, refresh |
@@ -110,13 +110,13 @@ Built in, not bolted on. Give a bookmark a URL and a status position and Lastboa
 - **Start, stop and restart** from the row — for any account allowed to control Docker.
 - **A container's name is a link.** The address is worked out from what you typed, then from a
   `lastboard.url` or `homepage.href` label on the container, then from its first published
-  port — so containers already labelled for another dashboard work here unchanged.
+  port — so containers already labeled for another dashboard work here unchanged.
 - **Add a host's containers to your board in one go.** A window proposes a bookmark for each
   container, with a name, an address and an icon you can change on its row. It opens by itself
   when you add a host, sorts what it finds into *To add*, *Already on your board* and *Ignored*,
   says which addresses answer, lets you name the section and see it first, and asks before it
   makes anything.
-- **A host that stops answering** does not make its containers vanish: they stay, greyed out,
+- **A host that stops answering** does not make its containers vanish: they stay, grayed out,
   and the host line says it is not responding.
 - **A Docker page** with an overview of every host — what is running, what needs attention, CPU and
   memory — an inventory of all the containers, and a side panel for each one: its ports, mounts,
@@ -169,7 +169,7 @@ shows it beside the services it runs.
 - **Multi-user** with per-user boards, preferences, avatar and password. Exactly one
   administrator — the account the wizard creates; everyone added afterwards is a Member.
 - **Theme**: Dark, Light, or **System**, which follows the device and changes with it.
-- **Accent colour** from presets or a colour picker.
+- **Accent color** from presets or a color picker.
 - **A background image** per user, resized in the browser before it is stored.
 - **Your own panel name and logo** in the browser tab and the top bar.
 - **Measurement units**, metric or imperial, applied across every widget that shows one.

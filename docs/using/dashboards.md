@@ -54,7 +54,7 @@ All selected items move together and are auto-placed on the target dashboard.
 | Layout, items, sections, widgets | **Per dashboard** |
 | Which dashboard opens first | Per dashboard (the one marked default) |
 | Order in the switcher | Per dashboard |
-| Background image, accent colour, theme, language, units, grid columns | **Per user** — one setting, every dashboard |
+| Background image, accent color, theme, language, units, grid columns | **Per user** — one setting, every dashboard |
 | Monitoring settings, alert channel, Proxmox connections | **Per user** — each account has its own |
 | Users, backups, updates | **Server-wide**, administrator only |
 
