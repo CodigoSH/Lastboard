@@ -96,7 +96,7 @@ Give a bookmark a URL and a status position and Lastboard watches it. No second 
 - **Check interval** of 1, 5, 10 or 30 minutes, with **30 days of history**, pruned daily.
 - **A searchable status page** (in 24/7 mode) with every service's state, a strip of recent checks and its 24-hour, 7-day and 30-day uptime, and a tab with every outage — what was down, why, when and for how long.
 - **Per-service detail** over 24 hours, 7 days or 30 days: uptime percentages, current and average response time, a latency chart with a hover crosshair, a heartbeat strip, and an outage table with durations and recoveries.
-- **Alerts down and up** to as many **channels** as you like, in a list of their own: **ntfy**, **Gotify**, a **webhook** or **push notifications** to your phone and computers even with Lastboard closed (they go through your browser maker's push service, end-to-end encrypted, and only if you turn them on). Each channel has its own switch and its own *Send test*, says how its last alert went, and one that fails does not stop the others; a failure threshold (1, 2, 3 or 5 consecutive failures) keeps a blip from waking you.
+- **Alerts down and up** to as many **channels** as you like, in a list of their own: **ntfy**, **Gotify**, a **webhook** or **push notifications** to your phone and computers even with Lastboard closed (they go through your browser maker's push service, end-to-end encrypted, and only if you turn them on). Each channel has its own switch and its own *Send test*, says how its last alert went, and one that fails does not stop the others; a failure threshold (1, 2, 3 or 5 consecutive failures) keeps a blip from waking you. Each channel chooses what it carries, and the administrator can be told through any of them **when a new version is out**.
 - **Private services just work** — the probe runs from your server, so `10.x`, `192.168.x`, `.local` and self-signed certificates need no extra configuration.
 
 ### Docker
@@ -140,7 +140,7 @@ Give a bookmark a URL and a status position and Lastboard watches it. No second 
 
 ### Operations
 
-- **A web updater** that downloads, verifies the signature and the checksum, extracts, installs and restarts — showing each step as it happens, and putting the old binary back if the swap fails.
+- **A web updater** that downloads, verifies the signature and the checksum, extracts, **runs the new binary once on your server**, **copies your database**, installs and restarts — showing each step as it happens. Nothing is changed unless every step before the swap passed, the version you had stays beside the new one, and the server comes back **without closing its port**, so a reverse proxy or tunnel in front never sees it down.
 - **Beta channel**, opt-in per user.
 - **One-line install** on Linux with a systemd unit, `--uninstall`, `--purge` and `--reinstall`, that tells you which version you have and stops when you already have the latest, and a timestamped copy of your database taken before every upgrade.
 - **Runs unprivileged** on request (`PUID`/`PGID`), fixing data-directory ownership itself before dropping privileges.

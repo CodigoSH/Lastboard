@@ -1005,7 +1005,7 @@ async function seedLiveData(dbPath: string, token: string, csrf: string) {
     await api('/monitor/channels', {
         channels: [
             { type: 'push', name: '', enabled: true },
-            { type: 'ntfy', name: 'Family phone', url: 'https://ntfy.sh/my-topic', enabled: true },
+            { type: 'ntfy', name: 'Family phone', url: 'https://ntfy.sh/my-topic', enabled: true, updates: true },
             { type: 'webhook', name: 'Home Assistant', url: 'https://ha.example.com/api/webhook/lastboard', enabled: false },
         ],
     });

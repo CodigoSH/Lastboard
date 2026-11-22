@@ -87,7 +87,7 @@ Clearing data does not turn monitoring off — new checks start accumulating aga
 
 When **24/7 monitoring** is on, Lastboard can send an alert when a service goes down and again when it recovers. Where alerts go is set in **Settings → Notifications**, a section of its own: a list of **channels**, as Docker and Proxmox have lists of hosts. Alerts only go out while 24/7 monitoring is on (**Settings → Monitoring**); the Notifications section says so, with a button to the place where it is turned on, when it is off.
 
-![Settings → Notifications: the list of channels, each with its own switch, the push devices and the settings every channel shares](../assets/p-notifications.png)
+![Settings → Notifications: the list of channels, each with its own switch and what it carries, the push devices and the settings every channel shares](../assets/p-notifications.png)
 
 An alert is sent to **every channel that is on**, each on its own, so one that is down does not stop the others. You can have several of the same kind (two ntfy topics, one for you and one for someone else) and up to **10** in all; push is the only one that can be there once, because its destination is your own browsers. There is no switch for alerts as a whole: they are on when any channel is on and carries them, and the section says when none does.
 
