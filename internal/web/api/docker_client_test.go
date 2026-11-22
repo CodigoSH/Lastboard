@@ -650,6 +650,33 @@ func TestListContainers_CarriesWhatTheContainerSaysAboutItself(t *testing.T) {
 	}
 }
 
+// What Podman's Docker-compatible list returned for a pod holding one container
+// (read from a real Podman 6.2): the infra entry has no image and shares the
+// pod's published port with the container that runs something.
+func TestAPodsInfraContainerIsNotListed(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		_, _ = w.Write([]byte(`[
+			{"Id":"aaaaaaaaaaaaaaaa","Names":["/4e28cd027619-infra"],"Image":"","State":"running","Status":"Up 3 seconds",
+			 "Ports":[{"PublicPort":18081,"PrivatePort":8081,"Type":"tcp","IP":"127.0.0.1"}]},
+			{"Id":"bbbbbbbbbbbbbbbb","Names":["/web"],"Image":"docker.io/library/alpine:3.24","State":"running","Status":"Up 3 seconds",
+			 "Ports":[{"PublicPort":18081,"PrivatePort":8081,"Type":"tcp","IP":"127.0.0.1"}]},
+			{"Id":"cccccccccccccccc","Names":["/my-infra"],"Image":"nginx:alpine","State":"running","Status":"Up 3 seconds"}]`))
+	}))
+	defer srv.Close()
+	containers, err := ListContainers(srv.URL)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var names []string
+	for _, c := range containers {
+		names = append(names, c.Name)
+	}
+	// The placeholder is gone; a container that merely ends in "-infra" but has an image stays.
+	if len(names) != 2 || names[0] != "web" || names[1] != "my-infra" {
+		t.Errorf("listed %v, want [web my-infra]", names)
+	}
+}
+
 func TestHealthOfReadsPodmansField(t *testing.T) {
 	withHealth := func(state, status, health string) dockerAPIContainer {
 		c := dockerAPIContainer{State: state, Status: status}

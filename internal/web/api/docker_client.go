@@ -453,6 +453,16 @@ func normaliseStatus(state string) string {
 	}
 }
 
+// isPodInfra reports whether a listed container is the placeholder Podman
+// starts for a pod, which holds the pod's network and ports and runs nothing
+// of its own. Podman's Docker-compatible list does not mark it: it is the one
+// entry with no image, named `<id>-infra`. It is left out because the pod's own
+// containers already show the pod's published ports, so keeping it would count
+// every pod as one more container and propose the same service twice.
+func isPodInfra(image, name string) bool {
+	return image == "" && strings.HasSuffix(name, "-infra")
+}
+
 // ListContainers fetches all containers (running and stopped) from the Docker
 // Engine at hostURL and returns them as normalised DockerContainer values.
 func ListContainers(hostURL string) ([]DockerContainer, error) {
@@ -484,6 +494,9 @@ func ListContainers(hostURL string) ([]DockerContainer, error) {
 		name := ""
 		if len(c.Names) > 0 {
 			name = strings.TrimPrefix(c.Names[0], "/")
+		}
+		if isPodInfra(c.Image, name) {
+			continue
 		}
 
 		// Short ID: first 12 hex chars.
