@@ -194,10 +194,13 @@ func TestTheMonitorNamesAreTheOnesTheInterfaceShips(t *testing.T) {
 		if monitorTitles[code] != d["widget.monitor.name"] {
 			t.Errorf("%s: the interface says %q and the migration writes %q", code, d["widget.monitor.name"], monitorTitles[code])
 		}
+		// The Docker widget is now named for both engines, the same in every
+		// language. The migration keeps writing "Docker", the word those widgets
+		// drew when it ran: it records what a board showed then, not today's name.
 		for _, key := range []string{"widget.docker.name", "widget.proxmox.name"} {
-			want := map[string]string{"widget.docker.name": "Docker", "widget.proxmox.name": "Proxmox"}[key]
+			want := map[string]string{"widget.docker.name": "Docker / Podman", "widget.proxmox.name": "Proxmox"}[key]
 			if d[key] != want {
-				t.Errorf("%s: %s is %q and the migration assumes %q", code, key, d[key], want)
+				t.Errorf("%s: %s is %q, expected %q", code, key, d[key], want)
 			}
 		}
 	}
