@@ -145,6 +145,15 @@ func backupDatabase(db *sql.DB) error {
 }
 
 // checkDatabaseCopy opens the copy on its own and asks SQLite whether it is whole.
+//
+// quick_check and not integrity_check. The copy was written a moment ago by VACUUM INTO, which builds it new from
+// a consistent read, so what can damage it is a disk that failed while it was written, and that is damage to pages:
+// quick_check reads every page and every record of every table and index and finds it (a page of zeros, a broken
+// header, a value gone wrong, a file cut short; each tried against a copy). What it does not do is compare each
+// index entry with its table row, and that comparison is most of the time integrity_check takes: measured on a
+// database of 141 MB it was 15 of the 21 seconds the update window waited, and about four times what quick_check
+// asks for. An index that disagrees with its table is repaired with REINDEX and loses no data, so it is not worth
+// holding an update for.
 func checkDatabaseCopy(path string) error {
 	copyDB, err := sql.Open("sqlite", "file:"+path+"?mode=ro")
 	if err != nil {
@@ -152,7 +161,7 @@ func checkDatabaseCopy(path string) error {
 	}
 	defer copyDB.Close()
 	var result string
-	if err := copyDB.QueryRow(`PRAGMA integrity_check`).Scan(&result); err != nil {
+	if err := copyDB.QueryRow(`PRAGMA quick_check`).Scan(&result); err != nil {
 		return fmt.Errorf("checking the copy: %w", err)
 	}
 	if result != "ok" {

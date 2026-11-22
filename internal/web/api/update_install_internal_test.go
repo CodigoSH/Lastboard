@@ -1,6 +1,7 @@
 package api
 
 import (
+	"bytes"
 	"database/sql"
 	"os"
 	"path/filepath"
@@ -197,5 +198,44 @@ func TestACopyTakenTwiceInOneSecondReplacesTheFirst(t *testing.T) {
 	}
 	if copies, _ := filepath.Glob(filepath.Join(dir, "lastboard.db.backup-*")); len(copies) == 0 || len(copies) > 2 {
 		t.Errorf("copies: %v", copies)
+	}
+}
+
+// The copy taken before an update is checked page by page before the update goes on: one whose pages are damaged
+// (a disk that failed while it was written) is refused, one cut short is refused, and a whole one is accepted.
+func TestACopyWithDamagedPagesIsRefusedAndAWholeOneIsAccepted(t *testing.T) {
+	dir := t.TempDir()
+	db := walDatabase(t, dir)
+	for i := 0; i < 20000; i++ {
+		if _, err := db.Exec(`INSERT INTO t VALUES (?)`, strings.Repeat("row-", 30)+strconv.Itoa(i)); err != nil {
+			t.Fatal(err)
+		}
+	}
+	whole := filepath.Join(dir, "whole.db")
+	if _, err := db.Exec(`VACUUM INTO ?`, whole); err != nil {
+		t.Fatal(err)
+	}
+	if err := checkDatabaseCopy(whole); err != nil {
+		t.Fatalf("a whole copy was refused: %v", err)
+	}
+
+	raw, err := os.ReadFile(whole)
+	if err != nil {
+		t.Fatal(err)
+	}
+	const page = 4096
+	middle := (len(raw) / page / 2) * page
+	for name, damage := range map[string]func([]byte) []byte{
+		"a page of data written as zeros":  func(b []byte) []byte { copy(b[middle:middle+page], make([]byte, page)); return b },
+		"the header of a page overwritten": func(b []byte) []byte { copy(b[middle:middle+16], bytes.Repeat([]byte{0xff}, 16)); return b },
+		"the file cut short":               func(b []byte) []byte { return b[:len(b)/2] },
+	} {
+		damaged := filepath.Join(dir, "damaged.db")
+		if err := os.WriteFile(damaged, damage(append([]byte(nil), raw...)), 0o600); err != nil {
+			t.Fatal(err)
+		}
+		if err := checkDatabaseCopy(damaged); err == nil {
+			t.Errorf("%s: the copy was accepted", name)
+		}
 	}
 }
