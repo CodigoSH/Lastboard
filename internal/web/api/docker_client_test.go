@@ -649,3 +649,27 @@ func TestListContainers_CarriesWhatTheContainerSaysAboutItself(t *testing.T) {
 		t.Errorf("hints = %q, %q, %q", c.HintName, c.HintIcon, c.HintGroup)
 	}
 }
+
+func TestHealthOfReadsPodmansField(t *testing.T) {
+	withHealth := func(state, status, health string) dockerAPIContainer {
+		c := dockerAPIContainer{State: state, Status: status}
+		c.Health.Status = health
+		return c
+	}
+	cases := []struct {
+		name string
+		c    dockerAPIContainer
+		want string
+	}{
+		{"docker, in the status line", withHealth("running", "Up 5 hours (unhealthy)", ""), "unhealthy"},
+		{"podman, unhealthy in the field", withHealth("running", "Up 6 seconds", "unhealthy"), "unhealthy"},
+		{"podman, healthy", withHealth("running", "Up 6 seconds", "healthy"), "healthy"},
+		{"podman, no check", withHealth("running", "Up 6 seconds", "none"), ""},
+		{"a stopped container has no verdict", withHealth("exited", "Exited (1) 2 seconds ago", "unhealthy"), ""},
+	}
+	for _, tc := range cases {
+		if got := healthOf(tc.c); got != tc.want {
+			t.Errorf("%s: got %q, want %q", tc.name, got, tc.want)
+		}
+	}
+}

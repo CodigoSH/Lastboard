@@ -315,6 +315,12 @@ type dockerAPIContainer struct {
 	HostConfig struct {
 		NetworkMode string `json:"NetworkMode"`
 	} `json:"HostConfig"`
+
+	// Podman reports the result of a container's own check here and leaves it
+	// out of Status; Docker writes it into Status and has no such field.
+	Health struct {
+		Status string `json:"Status"`
+	} `json:"Health"`
 }
 
 // urlLabelKeys are read in order: the first one present wins. `lastboard.url`
@@ -395,6 +401,23 @@ func healthFromStatus(status string) string {
 		return "healthy"
 	case strings.Contains(s, "(health: starting)"):
 		return "starting"
+	}
+	return ""
+}
+
+// healthOf is the result of a container's own check, from wherever the engine
+// says it: the status line for Docker, the Health field for Podman. Only a
+// container that is running has one worth showing.
+func healthOf(c dockerAPIContainer) string {
+	if h := healthFromStatus(c.Status); h != "" {
+		return h
+	}
+	if !strings.EqualFold(c.State, "running") {
+		return ""
+	}
+	switch strings.ToLower(c.Health.Status) {
+	case "healthy", "unhealthy", "starting":
+		return strings.ToLower(c.Health.Status)
 	}
 	return ""
 }
@@ -494,7 +517,7 @@ func ListContainers(hostURL string) ([]DockerContainer, error) {
 			Created:  c.Created,
 			Ports:    ports,
 			UrlHint:  urlFromLabels(c.Labels),
-			Health:   healthFromStatus(c.Status),
+			Health:   healthOf(c),
 			ExitCode: exitCodeFromStatus(c.Status),
 			Project:  projectFromLabels(c.Labels),
 
