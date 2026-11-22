@@ -2,6 +2,8 @@ package api
 
 import (
 	"encoding/json"
+	"net/http"
+	"net/http/httptest"
 	"testing"
 )
 
@@ -20,6 +22,31 @@ const flatDFSample = `{
  "Volumes":[{"UsageData":{"Size":4000,"RefCount":0}},{"UsageData":{"Size":100,"RefCount":2}}],
  "BuildCache":[{"Size":70,"InUse":false},{"Size":30,"InUse":true}]
 }`
+
+// A daemon of API 1.52 or later leaves the records out of /system/df unless
+// verbose is asked for (the spec's default is false), so a host reached
+// directly is asked for them; an agent takes no query and asks for itself.
+func TestDiskUsageAsksTheEngineForTheRecords(t *testing.T) {
+	var query string
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		query = r.URL.RawQuery
+		_, _ = w.Write([]byte(modernDFSample))
+	}))
+	defer srv.Close()
+	d, err := DiskUsage(srv.URL)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if query != "verbose=true" {
+		t.Errorf("asked with query %q, want verbose=true", query)
+	}
+	if d.Containers.Size == 0 {
+		t.Errorf("the records were not read: %+v", d)
+	}
+	if got := diskPath("agent://nas:2375?token=x"); got != "/system/df" {
+		t.Errorf("an agent is asked for %q, want a bare /system/df", got)
+	}
+}
 
 func TestDiskUsageReadsBothShapesAlike(t *testing.T) {
 	var modern, flat dockerDF

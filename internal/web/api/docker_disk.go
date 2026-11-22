@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"strings"
 	"time"
 )
 
@@ -137,6 +138,18 @@ func summariseDisk(df dockerDF) DockerDisk {
 	return d
 }
 
+// diskPath is what to ask a host for. An engine of API 1.52 or later leaves the
+// records out of /system/df unless asked for them with verbose, and the sizes
+// of containers, volumes and the build cache live in those records; older
+// engines ignore the parameter. An agent takes no query at all: it asks its own
+// engine for the records itself.
+func diskPath(hostURL string) string {
+	if strings.HasPrefix(hostURL, "agent://") {
+		return "/system/df"
+	}
+	return "/system/df?verbose=true"
+}
+
 // DiskUsage reads how much disk the host at hostURL's Docker uses.
 func DiskUsage(hostURL string) (DockerDisk, error) {
 	client, base, err := newDockerClient(hostURL)
@@ -147,7 +160,7 @@ func DiskUsage(hostURL string) (DockerDisk, error) {
 	// time to measure a large host.
 	slow := *client
 	slow.Timeout = dockerDiskWait
-	resp, err := slow.Get(base + "/system/df")
+	resp, err := slow.Get(base + diskPath(hostURL))
 	if err != nil {
 		return DockerDisk{}, fmt.Errorf("docker: GET system/df: %w", err)
 	}
