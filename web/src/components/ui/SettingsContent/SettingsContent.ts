@@ -35,7 +35,7 @@ import {
 } from '../../../services/accountAccess';
 import { userProfilesTemplate, userPermsTemplate, userSummaryTemplate } from './userDialog.template';
 import { connectionKinds, DEFAULT_SOCKET, fetchDockerSettings, saveDockerSettings, startingKind, type AccountDockerHost, type DockerEngine, type DockerHostEdit, type DockerHostType } from '../../../services/dockerHosts';
-import { agentIsOld, fetchAgentVersion, fetchContainers, hostErrorKey } from '../../../services/dockerShared';
+import { agentIsOld, fetchAgentVersion, fetchContainers, fetchEngine, hostErrorKey } from '../../../services/dockerShared';
 import { isEnter } from '../../../services/imeKeys';
 import css from './SettingsContent.css' with { type: 'text' };
 
@@ -1321,11 +1321,16 @@ class SettingsContent extends HTMLElement {
             const host = { id: h.id, name: h.name, type: h.type, url: h.url };
             let status: DockerRowStatus;
             try {
-                const [containers, version] = await Promise.all([
+                const [containers, version, engine] = await Promise.all([
                     fetchContainers(host),
                     h.type === 'agent' ? fetchAgentVersion(host) : Promise.resolve(null),
+                    fetchEngine(host),
                 ]);
                 status = { state: 'ok', containers: containers.length, version };
+                // The host's own word on its engine wins; the server has already saved it.
+                if (engine && engine !== (h.engine ?? 'docker')) {
+                    this.docker = { ...this.docker, hosts: this.docker.hosts.map(x => x.id === h.id ? { ...x, engine } : x) };
+                }
             } catch (err) {
                 status = { state: 'error', key: hostErrorKey(err) };
             }

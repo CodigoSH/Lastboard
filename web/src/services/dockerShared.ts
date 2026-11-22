@@ -200,6 +200,23 @@ export async function fetchAgentVersion(host: DockerHost): Promise<string | null
     }
 }
 
+/**
+ * Which engine a host says it runs. The server also corrects the host it has
+ * saved when the choice made on the form was wrong. Null for a host that did
+ * not say — an agent from before it could — or did not answer.
+ */
+export async function fetchEngine(host: DockerHost): Promise<'docker' | 'podman' | null> {
+    if (isDemoMode()) return null;
+    try {
+        const res = await fetch('/api/docker/engine', dockerPost(hostRef(host)));
+        if (!res.ok) return null;
+        const data = await res.json();
+        return data?.engine === 'podman' || data?.engine === 'docker' ? data.engine : null;
+    } catch {
+        return null;
+    }
+}
+
 /** What the screen prints for an agent's reported version. */
 export function agentVersionLabel(reported: string): string {
     const v = reported.trim();

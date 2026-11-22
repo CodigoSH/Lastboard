@@ -312,12 +312,7 @@ func (h *DockerHandler) UpdateSettings(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		address := strings.TrimSpace(raw.URL)
-		if kind == dockerLocal {
-			if address != "" && !validSocketPath(address) {
-				http.Error(w, "docker.invalid_socket", http.StatusBadRequest)
-				return
-			}
-		} else if bareHost(address) == "" {
+		if kind != dockerLocal && bareHost(address) == "" {
 			http.Error(w, "docker.missing_url", http.StatusBadRequest)
 			return
 		}
@@ -334,6 +329,13 @@ func (h *DockerHandler) UpdateSettings(w http.ResponseWriter, r *http.Request) {
 
 		if !s.admin && needsAdmin(kind) && !(known && old.Type == kind && old.URL == address) {
 			http.Error(w, "docker.admin_only", http.StatusForbidden)
+			return
+		}
+
+		// Who may is settled before what was typed is judged: a member is told it
+		// may not, not that its path is wrong.
+		if kind == dockerLocal && address != "" && !validSocketPath(address) {
+			http.Error(w, "docker.invalid_socket", http.StatusBadRequest)
 			return
 		}
 

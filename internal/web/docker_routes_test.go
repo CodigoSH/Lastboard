@@ -98,7 +98,11 @@ func TestAMemberUsesDockerThroughItsOwnAgentsOnly(t *testing.T) {
 
 	// The kinds reached by being the server are the administrator's.
 	for _, kind := range []string{"local", "tcp", "tls"} {
-		b := fmt.Sprintf(`{"hosts":[{"name":"X","type":%q,"url":"10.0.0.9:2375","enabled":true}]}`, kind)
+		address := "10.0.0.9:2375"
+		if kind == "local" {
+			address = "/run/podman/podman.sock" // a local host's address is the socket it reads
+		}
+		b := fmt.Sprintf(`{"hosts":[{"name":"X","type":%q,"url":%q,"enabled":true}]}`, kind, address)
 		if w := ana(http.MethodPost, "/api/docker/settings", b); w.Code != http.StatusForbidden {
 			t.Errorf("a member adding a %s host = %d, want 403", kind, w.Code)
 		}

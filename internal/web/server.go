@@ -376,6 +376,7 @@ func (s *Server) routes() {
 	s.Router.Handle("POST /api/docker/containers", middleware.GzipJSON(protect(need(access.DockerView, dockerHandler.ListContainersFor))))
 	s.Router.Handle("POST /api/docker/stats", middleware.GzipJSON(protect(need(access.DockerView, dockerHandler.StatsFor))))
 	s.Router.Handle("POST /api/docker/agent-version", protect(need(access.DockerView, dockerHandler.AgentVersionFor)))
+	s.Router.Handle("POST /api/docker/engine", protect(need(access.DockerView, dockerHandler.EngineFor)))
 	s.Router.Handle("POST /api/docker/detail", middleware.GzipJSON(protect(need(access.DockerView, dockerHandler.Detail))))
 	s.Router.Handle("POST /api/docker/host-size", middleware.GzipJSON(protect(need(access.DockerView, dockerHandler.HostSize))))
 	s.Router.Handle("POST /api/docker/disk-usage", middleware.GzipJSON(protect(need(access.DockerView, dockerHandler.DiskUsage))))
