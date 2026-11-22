@@ -2,7 +2,7 @@
 
 All personalization and system options live in the **Settings** panel, opened from the icon in the top navigation bar. While it is open the address reads `/?view=settings`, so reloading keeps it open and that address brings it up from a link; the browser's Back button closes it and leaves you on your board.
 
-Two of the sections — **Users** and **Advanced** — belong to the administrator and are not drawn at all for anybody else. **Monitoring**, **Proxmox** and **Docker** are every account's own: each one sees its own, never anyone else's. A Member account sees **My Profile**, **Look & Feel**, **Personalization**, **Monitoring**, **Proxmox**, **Docker**, **Data** and **About** — the ones its permissions allow — and nothing hints that the rest exist.
+Two of the sections — **Users** and **Advanced** — belong to the administrator and are not drawn at all for anybody else. **Monitoring**, **Notifications**, **Proxmox** and **Docker / Podman** are every account's own: each one sees its own, never anyone else's. A Member account sees **My Profile**, **Look & Feel**, **Personalization**, **Monitoring**, **Notifications**, **Proxmox**, **Docker / Podman**, **Data** and **About** — the ones its permissions allow — and nothing hints that the rest exist.
 
 **Preferences save the moment you change them** — there is no "Save" button. Only actions with a real consequence (changing your password or username, managing users, backup/restore, updates) keep an explicit button.
 
@@ -78,7 +78,7 @@ The permissions, by area:
 - **Board** — edit the board; have several boards (needs *edit the board*); import and export boards; fetch new icons from the internet. Without *edit the board* the account sees the board prepared for it and changes nothing.
 - **Widgets** — use API widgets; read the health of other machines with Server Health. Clock, weather, notes and Markdown widgets are always available.
 - **Network reach** — **reach the local network**. What the account points the server at may be on your LAN only if this is on. Off, the server reaches only the internet on its behalf.
-- **Infrastructure** — **Docker** and **Proxmox**, each at **None**, **View** or **Control**. They are the account's *own* Docker agents and Proxmox servers (see [Docker](#docker) and [Proxmox](#proxmox)); Proxmox is further limited by what its API token allows.
+- **Infrastructure** — **Docker** and **Proxmox**, each at **None**, **View** or **Control**. They are the account's *own* Docker agents and Proxmox servers (see [Docker](#docker--podman) and [Proxmox](#proxmox)); Proxmox is further limited by what its API token allows.
 - **Monitoring** — see the up/down dots; monitor around the clock; send alerts (needs monitoring).
 - **Server** — see the load (CPU, memory, temperature) of the machine Lastboard runs on.
 
@@ -98,7 +98,11 @@ Only the administrator sets labels. A member sees its own label but cannot chang
 
 ## Monitoring
 
-Turn service monitoring on for your own bookmarks, choose how often the server checks them, and configure down/up alerts via ntfy, Gotify, a webhook or push notifications. Every account has its own settings and its own alert channel. See **[Monitoring & Uptime](../monitoring/overview.md)** for the full guide.
+Turn service monitoring on for your own bookmarks and choose how often the server checks them. Every account has its own settings. Where the alerts go is set in **Notifications**, below. See **[Monitoring & Uptime](../monitoring/overview.md)** for the full guide.
+
+## Notifications
+
+The channels your alerts are sent through — ntfy, Gotify, a webhook or push notifications — as a list, each with its own switch and what it carries (a service going down and recovering and, for the administrator, the notice of a new version). The push card lists the devices that receive push notifications, and the same section holds the number of failed checks before an alert and the wording of the messages. Every account has its own channels. See **[Notifications](../monitoring/overview.md#notifications)** for each one.
 
 ## Proxmox
 
@@ -107,11 +111,11 @@ Turn service monitoring on for your own bookmarks, choose how often the server c
 Connect Lastboard to one or more Proxmox VE hosts — one card each, with a name, address, API token and certificate policy. Saving reads every host straight away and says, per card, what that token can see and whether it may start and stop machines. Each account connects its own hypervisors: yours are never listed to, and never used by, anybody else. See **[Proxmox](../proxmox/overview.md)** for the token recipe and the page it unlocks.
 
 
-## Docker
+## Docker / Podman
 
 ![Docker](../assets/p-docker.png)
 
-The Docker hosts of your account — a local socket, a Lastboard Agent with its token, or a daemon reached over TCP or TLS — each with a row that says whether it answers and how many containers it has. Every Docker widget reads this one list; a widget only chooses which of them it shows. A member connects through a Lastboard Agent; the other types are the administrator's. See **[Docker](../docker/overview.md#docker-hosts)** for each type and the token.
+The Docker and Podman hosts of your account — a Lastboard Agent with its token, a local socket at the path you give, or, for Docker, a daemon reached over TCP or TLS — each with a row that says whether it answers and how many containers it has. Each host says which engine it runs, Docker or Podman. Every Docker widget reads this one list; a widget only chooses which of them it shows. A member connects through a Lastboard Agent; the other types are the administrator's. See **[Docker](../docker/overview.md#docker-hosts)** for each type and the token.
 
 ## Data
 
@@ -134,4 +138,4 @@ It also says where your icons come from — how many of your bookmarks this serv
 - **Version** — the running version, with an at-a-glance up-to-date indicator.
 - **Check for Updates** — manually check for a newer release. See **[Updating](../getting-started/updating.md)** for how updates are applied.
 - **Beta channel** — opt in to beta releases, which arrive earlier and may be unstable.
-- **Source Code / Report Issue** — links to the Forgejo repository and its issue tracker.
+- **Source Code**, **Support** and **Donate** — links to the repository, to the support page where questions and bug reports go, and to the project's Open Collective.
