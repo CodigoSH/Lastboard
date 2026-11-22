@@ -683,6 +683,38 @@ func TestChoosingASecondIconLeavesTheFirstAlone(t *testing.T) {
 	}
 }
 
+// The same, but with the writes arriving together: the page fires one request
+// per machine and nothing makes one wait for the one before. Every one reads the
+// stored map before any wrote it, so without something that makes them take
+// turns only the last survives.
+func TestIconsChosenAtTheSameTimeAreAllKept(t *testing.T) {
+	fake := newFakeProxmox(t)
+	server, db, cleanup := setupProxmoxServer(t)
+	defer cleanup()
+	createUser(t, db.DB, "root", "password", "admin")
+	s := doLogin(t, server.URL, "root", "password")
+	pxSave(t, server.URL, s, `{"hosts":[{"enabled":true,"url":"`+fake.URL+`","token_id":"a@pve!b","secret":"c","insecure":true}]}`).Body.Close()
+
+	const n = 20
+	var wg sync.WaitGroup
+	for i := 0; i < n; i++ {
+		wg.Add(1)
+		go func(vmid int) {
+			defer wg.Done()
+			resp := pxIcon(t, server.URL, s, fmt.Sprintf(`{"node":"kprox","vmid":%d,"icon":"/api/icons/i%d"}`, vmid, vmid))
+			resp.Body.Close()
+			if resp.StatusCode != http.StatusNoContent {
+				t.Errorf("vmid %d: %d", vmid, resp.StatusCode)
+			}
+		}(100 + i)
+	}
+	wg.Wait()
+
+	if got := len(iconsFrom(t, server.URL, s)); got != n {
+		t.Errorf("%d of %d chosen icons were kept", got, n)
+	}
+}
+
 func TestAnEmptyIconClearsTheChoice(t *testing.T) {
 	fake := newFakeProxmox(t)
 	server, db, cleanup := setupProxmoxServer(t)

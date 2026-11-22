@@ -344,6 +344,12 @@ func (u proxmoxScope) icons() map[string]string {
 	return out
 }
 
+// proxmoxIconsMu makes the choices of machine icons take turns. They are one
+// setting row, stored whole, and the page sends one request per machine without
+// waiting for the one before: each would read the row before any wrote it and
+// only the last choice would be left.
+var proxmoxIconsMu sync.Mutex
+
 // SetIcon stores, or clears, the icon of one machine, in the caller's own
 // settings like the connection itself.
 func (h *ProxmoxHandler) SetIcon(w http.ResponseWriter, r *http.Request) {
@@ -378,6 +384,8 @@ func (h *ProxmoxHandler) SetIcon(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	proxmoxIconsMu.Lock()
+	defer proxmoxIconsMu.Unlock()
 	icons := u.icons()
 	key := proxmoxIconKey(host.ID, in.Node, in.VMID)
 	if icon == "" {
