@@ -79,7 +79,7 @@ The proxy must forward the `Authorization` header containing the Bearer token in
 
 ## Docker hosts
 
-Hosts belong to your account, as Proxmox hypervisors do: you set them up once in **Preferences → Docker**, and every Docker widget reads the same list. Each row says how the host is doing (*Connected · containers: 12*, or why it isn't), and the version for an agent. Add a host with **+ Add New Host**, change one with the pencil, remove it with the bin, and switch one off to keep it without any widget showing it.
+Hosts belong to your account, as Proxmox hypervisors do: you set them up once in **Settings → Docker**, and every Docker widget reads the same list. Each row says how the host is doing (*Connected · containers: 12*, or why it isn't), and the version for an agent. Add a host with **+ Add New Host**, change one with the pencil, remove it with the bin, and switch one off to keep it without any widget showing it.
 
 ![The Docker hosts of an account](../assets/p-docker.png)
 

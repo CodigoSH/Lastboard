@@ -2,7 +2,7 @@
 
 Podman answers the same API as Docker through a socket of its own, so Lastboard's [Docker widget](../widgets/docker.md) and Docker / Podman page, and the [Lastboard Agent](https://git.codigosh.com/CodigoSH/lastboard-agent), work with it. What follows is for rootless Podman, the way it is normally run.
 
-To add a Podman host, open **Preferences → Docker / Podman**, **+ Add New Host**, choose **Podman** as the engine, and then **Lastboard Agent** (the way that works from every kind of install) or **Local socket**. Podman is not offered on a network port.
+To add a Podman host, open **Settings → Docker / Podman**, **+ Add New Host**, choose **Podman** as the engine, and then **Lastboard Agent** (the way that works from every kind of install) or **Local socket**. Podman is not offered on a network port.
 
 ## Turn the socket on
 

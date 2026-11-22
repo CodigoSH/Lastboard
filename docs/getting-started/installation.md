@@ -105,7 +105,7 @@ The image is the same. Run it with `podman run`, or as a service with a Quadlet 
 
 ## Connecting Docker and Podman hosts
 
-However Lastboard is installed, a host is added in **Preferences → Docker / Podman**, and the Lastboard Agent reaches any of them:
+However Lastboard is installed, a host is added in **Settings → Docker / Podman**, and the Lastboard Agent reaches any of them:
 
 | Lastboard runs as | The machine's own Docker or Podman | Another machine |
 | :--- | :--- | :--- |
@@ -144,7 +144,7 @@ phone with no session.
 > without that sign-in — and offers no install. Lastboard has its own login; leave the one in
 > front off for it.
 
-**The app is named after your panel.** It takes the name you gave it in **Preferences →
+**The app is named after your panel.** It takes the name you gave it in **Settings →
 Personalization**, the one in the top bar, so two servers installed on one phone are not both
 "Lastboard". Install it signed in: from the login page, with no session yet, it is called
 "Lastboard". An app installed before you renamed the panel keeps its old name until the

@@ -32,7 +32,7 @@ Everything the widget shows is set from its configuration screen: enter the dash
 
 ### Hosts
 
-The hosts of your account are listed with a **Show** box each. Leave them all ticked and the widget shows every host, including the ones you add later; untick one to leave it out of this widget. To add, change or remove a host, go to Preferences → Docker (see [Docker hosts](../docker/overview.md#docker-hosts)).
+The hosts of your account are listed with a **Show** box each. Leave them all ticked and the widget shows every host, including the ones you add later; untick one to leave it out of this widget. To add, change or remove a host, go to Settings → Docker (see [Docker hosts](../docker/overview.md#docker-hosts)).
 
 ### Containers
 
