@@ -12,8 +12,18 @@ class AppAvatar extends HTMLElement {
         this.attachShadow({ mode: 'open' });
     }
 
+    private unsubscribeI18n?: () => void;
+
     connectedCallback() {
-        this.render();
+        // Its default text is a phrase of the language, and on a page that draws it before the language has arrived (the
+        // setup wizard) the first drawing has only the key to show. Subscribing draws it now, which is what the service
+        // does on subscribing, and again when the language is there and whenever it changes.
+        this.unsubscribeI18n = i18n.subscribe(() => this.render());
+    }
+
+    disconnectedCallback() {
+        this.unsubscribeI18n?.();
+        this.unsubscribeI18n = undefined;
     }
 
     attributeChangedCallback(_name: string, oldValue: string, newValue: string) {
