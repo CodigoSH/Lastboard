@@ -212,6 +212,7 @@
   "detect.link_failed": "Nicht verknüpft: {count}. Sie wurden inzwischen geändert oder lassen sich nicht verknüpfen.",
   "detect.hint_down": "„Antwortet nicht“ hindert dich nicht am Hinzufügen: Es heißt nur, dass Lastboard diese Adresse nicht öffnen konnte.",
   "detect.nothing_new": "Nichts Neues zum Hinzufügen",
+  "detect.quiet_connected": "{host} ist verbunden.",
   "detect.unreachable": "Antwortet gerade nicht",
   "detect.ignore": "Ignorieren",
   "detect.unignore": "Nicht mehr ignorieren",

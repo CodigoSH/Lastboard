@@ -212,6 +212,7 @@
   "detect.link_failed": "যুক্ত হয়নি: {count}টি। এর মধ্যে বদলে গেছে বা যুক্ত করা যাচ্ছে না।",
   "detect.hint_down": "“সাড়া নেই” যোগ করতে বাধা নয়: এর মানে শুধু Lastboard ওই ঠিকানা খুলতে পারেনি।",
   "detect.nothing_new": "যোগ করার মতো নতুন কিছু নেই",
+  "detect.quiet_connected": "{host} সংযুক্ত হয়েছে।",
   "detect.unreachable": "এখন সাড়া দিচ্ছে না",
   "detect.ignore": "উপেক্ষা করুন",
   "detect.unignore": "উপেক্ষা বন্ধ করুন",

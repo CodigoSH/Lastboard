@@ -212,6 +212,7 @@
   "detect.link_failed": "Tidak ditautkan: {count}. Berubah sementara itu atau tidak dapat ditautkan.",
   "detect.hint_down": "“Tidak merespons” tidak menghalangi penambahan: itu hanya berarti Lastboard tidak bisa membuka alamat itu.",
   "detect.nothing_new": "Tidak ada yang baru untuk ditambahkan",
+  "detect.quiet_connected": "{host} terhubung.",
   "detect.unreachable": "Tidak merespons saat ini",
   "detect.ignore": "Abaikan",
   "detect.unignore": "Berhenti mengabaikan",

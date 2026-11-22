@@ -212,6 +212,7 @@
   "detect.link_failed": "Not linked: {count}. They changed in the meantime or cannot be linked.",
   "detect.hint_down": "“Not answering” does not stop you adding it: it only says Lastboard could not open that address.",
   "detect.nothing_new": "Nothing new to add",
+  "detect.quiet_connected": "{host} is connected.",
   "detect.unreachable": "Not answering now",
   "detect.ignore": "Ignore",
   "detect.unignore": "Stop ignoring",

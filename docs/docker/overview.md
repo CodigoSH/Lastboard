@@ -171,7 +171,7 @@ The last 100 lines when you open it, with **Load more lines** to read the last 1
 
 ### Adding the services of a host to the board
 
-Rather than making one bookmark for each container by hand, ask Lastboard to propose them: the **bookmark** button in the Docker page's header (its tooltip says *Detect services*), or the window that opens by itself when you add a host that answers and has something to offer. If you add several at once it opens once, for the first that has something to add; the others are in the window's list of hosts. It needs permission to edit the board.
+Rather than making one bookmark for each container by hand, ask Lastboard to propose them: the **bookmark** button in the Docker page's header (its tooltip says *Detect services*), or the window that opens by itself when you add a host that answers and has something to offer. If you add several at once it opens once, for the first that has something to add; the others are in the window's list of hosts. When the host answers but everything it has already has a bookmark or is ignored, no window opens and a short notice says the host is connected and there is nothing new to add; the button still opens the window to review it. It needs permission to edit the board.
 
 ![The window that adds a Docker host's containers to the board: four containers to add, each with its address answering, the section they will go in and a preview of it](../assets/docker-add-services.png)
 

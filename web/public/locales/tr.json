@@ -212,6 +212,7 @@
   "detect.link_failed": "Bağlanmadı: {count}. Bu arada değişmişler veya bağlanamıyorlar.",
   "detect.hint_down": "“Yanıt yok” eklemeye engel değildir: yalnızca Lastboard'un o adresi açamadığını söyler.",
   "detect.nothing_new": "Eklenecek yeni bir şey yok",
+  "detect.quiet_connected": "{host} bağlandı.",
   "detect.unreachable": "Şu an yanıt vermiyor",
   "detect.ignore": "Yok say",
   "detect.unignore": "Yok saymayı bırak",

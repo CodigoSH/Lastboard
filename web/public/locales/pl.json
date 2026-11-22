@@ -212,6 +212,7 @@
   "detect.link_failed": "Nie powiązano: {count}. Zmieniły się w międzyczasie lub nie można ich powiązać.",
   "detect.hint_down": "„Brak odpowiedzi” nie przeszkadza w dodaniu: oznacza tylko, że Lastboard nie mógł otworzyć tego adresu.",
   "detect.nothing_new": "Nie ma nic nowego do dodania",
+  "detect.quiet_connected": "{host} jest połączony.",
   "detect.unreachable": "Teraz nie odpowiada",
   "detect.ignore": "Ignoruj",
   "detect.unignore": "Przestań ignorować",

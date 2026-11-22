@@ -212,6 +212,7 @@
   "detect.link_failed": "リンクできませんでした：{count} 件。その間に変更されたか、リンクできません。",
   "detect.hint_down": "「応答なし」でも追加できます。Lastboard がそのアドレスを開けなかったことを示すだけです。",
   "detect.nothing_new": "追加できる新しいものはありません",
+  "detect.quiet_connected": "{host} に接続しました。",
   "detect.unreachable": "現在応答なし",
   "detect.ignore": "無視する",
   "detect.unignore": "無視をやめる",

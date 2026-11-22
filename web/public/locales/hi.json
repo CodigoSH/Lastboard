@@ -212,6 +212,7 @@
   "detect.link_failed": "नहीं जोड़े गए: {count}। वे इस बीच बदल गए या उन्हें जोड़ा नहीं जा सकता।",
   "detect.hint_down": "“कोई जवाब नहीं” जोड़ने से नहीं रोकता: इसका मतलब बस इतना है कि Lastboard वह पता नहीं खोल सका।",
   "detect.nothing_new": "जोड़ने के लिए कुछ नया नहीं",
+  "detect.quiet_connected": "{host} कनेक्ट हो गया।",
   "detect.unreachable": "अभी जवाब नहीं दे रहा",
   "detect.ignore": "अनदेखा करें",
   "detect.unignore": "अनदेखा करना बंद करें",

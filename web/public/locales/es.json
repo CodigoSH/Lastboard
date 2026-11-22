@@ -212,6 +212,7 @@
   "detect.link_failed": "Sin enlazar: {count}. Han cambiado entretanto o no se pueden enlazar.",
   "detect.hint_down": "«No responde» no impide añadirlo: solo avisa de que Lastboard no pudo abrir esa dirección.",
   "detect.nothing_new": "No hay nada nuevo que añadir",
+  "detect.quiet_connected": "{host} está conectado.",
   "detect.unreachable": "No responde ahora",
   "detect.ignore": "Ignorar",
   "detect.unignore": "Dejar de ignorar",

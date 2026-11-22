@@ -212,6 +212,7 @@
   "detect.link_failed": "پیوند نخورد: {count}. در این میان تغییر کرده‌اند یا نمی‌توان پیوندشان داد.",
   "detect.hint_down": "«پاسخی نیست» مانع افزودن نمی‌شود: فقط می‌گوید Lastboard نتوانست آن نشانی را باز کند.",
   "detect.nothing_new": "چیز تازه‌ای برای افزودن نیست",
+  "detect.quiet_connected": "{host} متصل شد.",
   "detect.unreachable": "اکنون پاسخ نمی‌دهد",
   "detect.ignore": "نادیده گرفتن",
   "detect.unignore": "لغو نادیده گرفتن",

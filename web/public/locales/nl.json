@@ -212,6 +212,7 @@
   "detect.link_failed": "Niet gekoppeld: {count}. Ze zijn intussen gewijzigd of kunnen niet worden gekoppeld.",
   "detect.hint_down": "„Geen reactie” belet het toevoegen niet: het betekent alleen dat Lastboard dat adres niet kon openen.",
   "detect.nothing_new": "Niets nieuws om toe te voegen",
+  "detect.quiet_connected": "{host} is verbonden.",
   "detect.unreachable": "Reageert nu niet",
   "detect.ignore": "Negeren",
   "detect.unignore": "Niet meer negeren",

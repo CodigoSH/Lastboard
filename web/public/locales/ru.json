@@ -212,6 +212,7 @@
   "detect.link_failed": "Не связано: {count}. Они изменились за это время или их нельзя связать.",
   "detect.hint_down": "«Нет ответа» не мешает добавить: это лишь значит, что Lastboard не смог открыть этот адрес.",
   "detect.nothing_new": "Нового для добавления нет",
+  "detect.quiet_connected": "{host} подключён.",
   "detect.unreachable": "Сейчас не отвечает",
   "detect.ignore": "Игнорировать",
   "detect.unignore": "Не игнорировать",

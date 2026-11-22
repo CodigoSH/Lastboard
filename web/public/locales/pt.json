@@ -212,6 +212,7 @@
   "detect.link_failed": "Não associados: {count}. Mudaram entretanto ou não podem ser associados.",
   "detect.hint_down": "«Sem resposta» não impede de adicionar: apenas indica que o Lastboard não conseguiu abrir esse endereço.",
   "detect.nothing_new": "Nada novo para adicionar",
+  "detect.quiet_connected": "Conectado a {host}.",
   "detect.unreachable": "Não responde agora",
   "detect.ignore": "Ignorar",
   "detect.unignore": "Deixar de ignorar",

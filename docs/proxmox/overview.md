@@ -136,7 +136,7 @@ One card per virtual machine or container (or a list, with the two buttons at th
 
 ### Adding machines to the board
 
-Rather than making one bookmark per machine by hand, ask Lastboard to propose them: the **bookmark** button in the Proxmox page's header (its tooltip says *Detect services*), or the window that opens by itself when you add a hypervisor that answers and has something to offer. If you add several at once it opens once, for the first that has something to add; the others are in the window's list of hosts. It needs permission to edit the board, and it is the same window the [Docker page](../docker/overview.md#adding-the-services-of-a-host-to-the-board) uses.
+Rather than making one bookmark per machine by hand, ask Lastboard to propose them: the **bookmark** button in the Proxmox page's header (its tooltip says *Detect services*), or the window that opens by itself when you add a hypervisor that answers and has something to offer. If you add several at once it opens once, for the first that has something to add; the others are in the window's list of hosts. When the hypervisor answers but everything it has already has a bookmark or is ignored, no window opens and a short notice says the hypervisor is connected and there is nothing new to add; the button still opens the window to review it. It needs permission to edit the board, and it is the same window the [Docker page](../docker/overview.md#adding-the-services-of-a-host-to-the-board) uses.
 
 ![The window that adds a hypervisor's machines to the board: three running machines ticked, a stopped one left unticked, and the four already on the board folded away](../assets/proxmox-add-machines.png)
 

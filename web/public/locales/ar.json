@@ -212,6 +212,7 @@
   "detect.link_failed": "لم يتم الربط: {count}. تغيّرت في الأثناء أو لا يمكن ربطها.",
   "detect.hint_down": "«لا توجد استجابة» لا يمنع الإضافة: يعني فقط أن Lastboard لم يستطع فتح ذلك العنوان.",
   "detect.nothing_new": "لا شيء جديد للإضافة",
+  "detect.quiet_connected": "تم الاتصال بـ {host}.",
   "detect.unreachable": "لا تستجيب الآن",
   "detect.ignore": "تجاهل",
   "detect.unignore": "إلغاء التجاهل",

@@ -212,6 +212,7 @@
   "detect.link_failed": "未关联：{count} 个。它们在此期间已被修改，或无法关联。",
   "detect.hint_down": "“无响应”不影响添加，只表示 Lastboard 无法打开该地址。",
   "detect.nothing_new": "没有可添加的新内容",
+  "detect.quiet_connected": "已连接到 {host}。",
   "detect.unreachable": "当前无响应",
   "detect.ignore": "忽略",
   "detect.unignore": "取消忽略",

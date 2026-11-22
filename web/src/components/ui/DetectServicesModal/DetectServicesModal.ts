@@ -141,11 +141,20 @@ class DetectServicesModal extends HTMLElement {
             // Nobody asked for it: it appears for the first of the new hosts that has something to add — a host whose services all
             // have a bookmark already, or are ignored, has nothing to say — and the others are one click away in its list of hosts.
             const ids = (opts.hostIds?.length ? opts.hostIds : [opts.hostId ?? this.view.hosts[0].id]).filter(id => this.view.hosts.some(h => h.id === id));
+            // The hosts that answered, in order: when none has anything to add the person is told so by the first of them,
+            // or it would look as if nothing happened.
+            const answered: string[] = [];
             const found = await firstWithNews(ids, async id => {
                 await this.loadHost(id, null);
-                return this.view.state === 'ready' && this.hasSomethingToAdd();
+                const ready = this.view.state === 'ready';
+                if (ready) answered.push(id);
+                return ready && this.hasSomethingToAdd();
             });
             if (found && !this.dialog?.open) this.dialog?.showModal();
+            if (!found && answered.length > 0) {
+                const name = this.view.hosts.find(h => h.id === answered[0])?.name ?? '';
+                (window as unknown as { notifier?: { show: (m: string) => void } }).notifier?.show(`${t('detect.quiet_connected', { host: name })} ${t('detect.nothing_new')}`);
+            }
             return;
         }
         const first = this.view.hosts.find(h => h.id === opts.hostId) ?? this.view.hosts[0];
