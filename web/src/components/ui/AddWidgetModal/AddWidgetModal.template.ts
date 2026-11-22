@@ -23,8 +23,10 @@ export const addWidgetTemplate = (css: string, widgets: WidgetDefinition[]): str
                     ${widgets.map(w => `
                         <div class="card" data-id="${w.id}">
                             <div class="icon-container">${w.icon}</div>
-                            <div class="name">${i18n.t(`widget.${w.id}.name`) || w.name}</div>
-                            <div class="desc">${i18n.t(`widget.${w.id}.description`) || w.description}</div>
+                            <div class="text">
+                                <div class="name">${i18n.t(`widget.${w.id}.name`) || w.name}</div>
+                                <div class="desc">${i18n.t(`widget.${w.id}.description`) || w.description}</div>
+                            </div>
                         </div>
                     `).join('')}
                 </div>
