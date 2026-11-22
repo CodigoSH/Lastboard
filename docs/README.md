@@ -83,7 +83,7 @@ Built in, not bolted on. Give a bookmark a URL and a status position and Lastboa
 - **Two modes.** *Tab mode* (the default) checks while somebody has Lastboard open — live dots,
   nothing recorded. **24/7 mode** runs a server-side scheduler that keeps probing whether or
   not anyone is looking, which is what makes history and alerts possible.
-- **Check interval** of 1, 5, 10 or 30 minutes.
+- **Check interval** of 30 seconds, or 1, 5, 10 or 30 minutes.
 - **History kept for 30 days**, pruned daily.
 - **A status page** listing every monitored service with its state, a strip of recent checks and
   its 24-hour uptime, searchable, opened from the top bar once 24/7 monitoring is on; a tab with every
@@ -104,6 +104,8 @@ Built in, not bolted on. Give a bookmark a URL and a status position and Lastboa
 - **Three ways to connect**: the local socket (native install or a mounted socket in Docker),
   **remote TCP or TLS**, or the **[Lastboard Agent](https://git.codigosh.com/CodigoSH/lastboard-agent)** —
   a tiny token-authenticated bridge, so you never have to expose the Docker daemon on the network.
+- **Podman too**: a host says which engine it runs, and a Podman host is read through the
+  Lastboard Agent or its local socket and appears beside the Docker ones, marked as Podman.
 - **Many hosts in one widget**: tick the containers you care about on each host and they all
   appear in one list, each row naming the host it runs on.
 - **Live state and resource use**, with the same status dot the Monitoring widget uses.

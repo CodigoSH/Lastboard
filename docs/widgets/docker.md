@@ -1,6 +1,6 @@
 # Docker Widget
 
-The Docker widget provides live monitoring and basic management of your Docker containers directly from Lastboard.
+The Docker widget — listed as **Docker / Podman** in the widget picker — provides live monitoring of your Docker and Podman containers directly from Lastboard.
 
 ## Description
 

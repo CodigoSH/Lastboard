@@ -53,7 +53,7 @@ Pick **Glances**, **Netdata** or **Custom JSON** as the **Source** and enter the
 
 ## Notes
 
-- The numbers of **This server** are measured once a second and pushes the readings to every open Lastboard tab. It skips the measurement entirely when nobody has Lastboard open. The **Refresh Rate** setting decides how often the widget redraws with what arrives.
+- The numbers of **This server** are measured once a second and pushed to every open Lastboard tab. It skips the measurement entirely when nobody has Lastboard open. The **Refresh Rate** setting decides how often the widget redraws with what arrives.
 - Nothing is recorded. This widget is the present moment only — for a history of your services over time, see [Monitoring & Uptime](../monitoring/overview.md).
 - Readings are read from the Linux kernel. On a server that is not running Linux there is nothing to read: CPU and RAM sit at 0%.
 - Temperature needs a thermal sensor the server can read. Where there is none — which includes many virtual machines — the gauge shows **-1** instead of a reading.

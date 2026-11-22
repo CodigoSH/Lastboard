@@ -93,7 +93,7 @@ The **API widget** is the escape hatch for everything without a dedicated widget
 Give a bookmark a URL and a status position and Lastboard watches it. No second tool to deploy.
 
 - **Two modes** — *tab mode* checks while somebody has Lastboard open (live dots, nothing stored); **24/7 mode** runs a server-side scheduler that keeps probing whether or not anyone is looking.
-- **Check interval** of 1, 5, 10 or 30 minutes, with **30 days of history**, pruned daily.
+- **Check interval** of 30 seconds, or 1, 5, 10 or 30 minutes, with **30 days of history**, pruned daily.
 - **A searchable status page** (in 24/7 mode) with every service's state, a strip of recent checks and its 24-hour, 7-day and 30-day uptime, and a tab with every outage — what was down, why, when and for how long.
 - **Per-service detail** over 24 hours, 7 days or 30 days: uptime percentages, current and average response time, a latency chart with a hover crosshair, a heartbeat strip, and an outage table with durations and recoveries.
 - **Alerts down and up** to as many **channels** as you like, in a list of their own: **ntfy**, **Gotify**, a **webhook** or **push notifications** to your phone and computers even with Lastboard closed (they go through your browser maker's push service, end-to-end encrypted, and only if you turn them on). Each channel has its own switch and its own *Send test*, says how its last alert went, and one that fails does not stop the others; a failure threshold (1, 2, 3 or 5 consecutive failures) keeps a blip from waking you. Each channel chooses what it carries, and the administrator can be told through any of them **when a new version is out**.

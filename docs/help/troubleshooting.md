@@ -141,8 +141,8 @@ red status dot on its tile instead.
 
 The board keeps a copy of its last layout in the browser, so it still draws while the badge is
 up — but changes made in that state cannot reach the server and will not stick. The badge
-clears itself as soon as a request succeeds again. There is no service worker, so an installed Lastboard needs to reach the server exactly
-as the browser tab does.
+clears itself as soon as a request succeeds again. The service worker is only there for push notifications and keeps no copy of the app, so
+an installed Lastboard needs to reach the server exactly as the browser tab does.
 
 ## After restoring a backup, the app looks broken or shows old data
 

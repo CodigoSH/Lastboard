@@ -28,8 +28,8 @@ podman run -d --name lastboard -p 8080:8080 \
 
 Then add a host of type **Local (socket)**. Two things are easy to get wrong here:
 
-- **Without `--security-opt label=disable`**, on a system where SELinux is enforcing (Fedora, RHEL and their relatives), the container is not allowed to open the socket, and the host shows *Could not connect to Docker host*.
-- **Leave `PUID` and `PGID` unset.** In rootless Podman the container's root is your own user on the host — the user that owns the socket — so it gives nothing away. With `PUID` set, Lastboard switches to an id that cannot read the socket, and the host shows *Could not connect to Docker host* again.
+- **Without `--security-opt label=disable`**, on a system where SELinux is enforcing (Fedora, RHEL and their relatives), the container is not allowed to open the socket, and the host shows *Lastboard is not allowed to open the socket*.
+- **Leave `PUID` and `PGID` unset.** In rootless Podman the container's root is your own user on the host — the user that owns the socket — so it gives nothing away. With `PUID` set, Lastboard switches to an id that cannot read the socket, and the host shows *Lastboard is not allowed to open the socket* again.
 
 ## Run the agent with it
 

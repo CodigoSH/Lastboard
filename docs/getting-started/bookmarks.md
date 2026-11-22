@@ -28,7 +28,7 @@ Use **Add (+)** to create a new bookmark.
 
 ![Add menu](../assets/m-addnew.png)
 
-A dialog opens with two tabs, **General** and **Customization**.
+A dialog opens with two tabs, **General** and **Personalize**.
 
 ![The bookmark form](../assets/m-bookmark.png)
 
@@ -44,9 +44,9 @@ A dialog opens with two tabs, **General** and **Customization**.
 | **Runs on** | Only when [Proxmox](../proxmox/overview.md) or [Docker](../docker/overview.md) answers. A switch chooses **None**, **Proxmox** or **Docker**, and under it a list of machines or containers. Linking the bookmark makes that page show it on its machine or container and warn you when it stops. With **None**, Lastboard still pairs a Proxmox machine with the bookmark when they have the same name; pick one by hand when the names differ. |
 | **Touch Devices** | Controls whether the bookmark appears on touch devices. See [Mobile Visibility and Ordering](#mobile-visibility-and-ordering) below. |
 
-## Customization Options
+## Personalize Options
 
-The **Customization** tab controls the tile's appearance:
+The **Personalize** tab controls the tile's appearance:
 
 - **Border Color**: The accent/border color of the tile.
 - **Border Width**: How thick the tile's border is — **Thin**, **Regular** or **Thick**.
