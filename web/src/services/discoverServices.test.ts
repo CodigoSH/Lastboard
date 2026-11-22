@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'bun:test';
 import {
-    candidateUrl, consoleUrl, discoverDocker, discoverProxmox, fitSection, guestIconNames, iconNamesFor, imageBase, isOwnContainer, pickIconName, planServices, prettyName,
+    candidateUrl, consoleUrl, discoverDocker, displayName, discoverProxmox, fitSection, guestIconNames, iconNamesFor, imageBase, isOwnContainer, pickIconName, planServices, prettyName,
     sectionTitleFor, serviceName, usablePorts, type DiscoverInput, type ServiceProposal,
 } from './discoverServices';
 import type { DockerContainer, DockerHost } from './dockerShared';
@@ -24,6 +24,25 @@ describe('names', () => {
         expect(serviceName(ctr({ Name: '/media-plex-1', Project: 'media' }))).toBe('plex');
         expect(serviceName(ctr({ Name: '/media_plex_2', Project: 'media' }))).toBe('plex');
         expect(serviceName(ctr({ Name: '/pihole-2' }))).toBe('pihole-2');
+    });
+    test('a stack that is one app is named by the stack, not by a role in it', () => {
+        expect(displayName(ctr({ Name: '/immich-server-1', Project: 'immich' }))).toEqual({ name: 'Immich', role: 'server' });
+        expect(displayName(ctr({ Name: '/nextcloud-app-1', Project: 'nextcloud' })).name).toBe('Nextcloud');
+        // A stack of several apps keeps each one's own name.
+        expect(displayName(ctr({ Name: '/media-plex-1', Project: 'media' }))).toEqual({ name: 'Plex', role: '' });
+        // A role word with no stack around it is left as it is.
+        expect(displayName(ctr({ Name: '/server' })).name).toBe('Server');
+    });
+    test('two roles of one stack are told apart, one alone is not', () => {
+        const web = ctr({ ID: 'a', Name: '/immich-web-1', Project: 'immich' });
+        const api = ctr({ ID: 'b', Name: '/immich-api-1', Project: 'immich' });
+        const both = discoverDocker([web, api], input()).proposals.map(p => p.name);
+        expect(both).toEqual(['Immich Web', 'Immich Api']);
+        expect(discoverDocker([web], input()).proposals[0].name).toBe('Immich');
+    });
+    test('a label still decides the name', () => {
+        const c = ctr({ Name: '/immich-server-1', Project: 'immich', HintName: 'Photos' });
+        expect(discoverDocker([c], input()).proposals[0].name).toBe('Photos');
     });
     test('a name is made readable', () => {
         expect(prettyName('home-assistant')).toBe('Home Assistant');

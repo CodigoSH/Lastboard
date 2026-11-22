@@ -134,6 +134,28 @@ export function serviceName(c: DockerContainer): string {
     return name.replace(/[-_]\d+$/, '');
 }
 
+/**
+ * Service names that say what a container does in a stack, not what the stack
+ * is: `immich-server` is the `server` service of the `immich` project, and a
+ * bookmark called "Server" tells nobody anything.
+ */
+const ROLE_NAMES = new Set([
+    'server', 'web', 'webserver', 'www', 'app', 'application', 'api', 'frontend', 'backend', 'ui', 'gui', 'site', 'main', 'core', 'service',
+]);
+
+/**
+ * What a service is called on a bookmark. A stack of several apps (`media`:
+ * `plex`, `sonarr`) names each by its service; a stack that is one app
+ * (`immich`: `server`) is named by the stack, because its service names are
+ * only roles. Returns the role too, so two roles of one stack can be told apart.
+ */
+export function displayName(c: DockerContainer): { name: string; role: string } {
+    const service = serviceName(c);
+    const project = (c.Project || '').trim();
+    if (project && ROLE_NAMES.has(service.toLowerCase())) return { name: prettyName(project), role: service };
+    return { name: prettyName(service), role: '' };
+}
+
 /** `home-assistant` -> `Home Assistant`. */
 export function prettyName(name: string): string {
     return name
@@ -231,6 +253,8 @@ export function discoverDocker(containers: DockerContainer[], input: DiscoverInp
     const proposals: ServiceProposal[] = [];
     let withoutAddress = 0;
     const hostId = input.host?.id ?? '';
+    /** The role a proposal's name took from its stack, for telling two of one stack apart. */
+    const roles = new Map<ServiceProposal, string>();
 
     for (const c of containers) {
         if (isOwnContainer(c)) continue;
@@ -249,12 +273,14 @@ export function discoverDocker(containers: DockerContainer[], input: DiscoverInp
         const linkedTo = tied || match?.label || '';
         const linkedIcon = tied ? input.linkedIcon?.(name) ?? '' : match?.icon ?? '';
         const note: ProposalNote = hostNetwork && candidates.length === 0 ? 'host_network' : running ? '' : 'stopped';
-        proposals.push({
+        const shown = displayName(c);
+        const labelled = (c.HintName || '').trim();
+        const proposal: ServiceProposal = {
             key: `${hostId}/${name}`,
             hostId,
             containerName: name,
             link: { docker: { host: hostId, name } },
-            name: (c.HintName || '').trim() || prettyName(serviceName(c)) || name,
+            name: labelled || shown.name || name,
             candidates,
             project: c.Project || '',
             chosenIcon: input.chosenIcon(name),
@@ -266,8 +292,14 @@ export function discoverDocker(containers: DockerContainer[], input: DiscoverInp
             match,
             note,
             selected: running && candidates.length > 0 && !linkedTo,
-        });
+        };
+        if (!labelled && shown.role) roles.set(proposal, shown.role);
+        proposals.push(proposal);
     }
+    // Two roles of one stack both took the stack's name ("Immich", "Immich"): say which is which.
+    const taken = new Map<string, number>();
+    for (const p of roles.keys()) taken.set(p.name, (taken.get(p.name) ?? 0) + 1);
+    for (const [p, role] of roles) if ((taken.get(p.name) ?? 0) > 1) p.name = `${p.name} ${prettyName(role)}`;
     return { proposals, withoutAddress };
 }
 
