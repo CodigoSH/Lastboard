@@ -121,7 +121,7 @@
   "docker.missing_url": "أدخل عنوان المضيف.",
   "docker.no_containers": "لم يتم العثور على حاويات",
   "docker.no_hosts_configured": "لم يتم تكوين مضيفي Docker",
-  "docker.state_paused": "متوقف مؤقτα",
+  "docker.state_paused": "متوقف مؤقتًا",
   "docker.state_restarting": "يعيد التشغيل",
   "docker.state_running": "يعمل",
   "docker.state_stopped": "متوقف",
