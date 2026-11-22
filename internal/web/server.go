@@ -537,14 +537,18 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			"object-src 'none'; "+
 			"frame-ancestors 'self'")
 
-	// A demo instance is public, but it must stay out of search results: every
-	// URL renders the same page from mock data, so search engines read the site
-	// as duplicate content and it competes with the real one. Crawling is left
-	// allowed on purpose — blocking it in robots.txt would hide this header,
-	// and a page that can't be fetched can't be told not to index.
-	if os.Getenv("DEMO_ONLY") == "true" {
-		w.Header().Set("X-Robots-Tag", "noindex, nofollow")
-	}
+	// Nothing here belongs in a search engine. A private dashboard has no page anyone should find by
+	// searching, and the one a crawler reaches without a session is the login (or, on an instance that
+	// has no account yet, the setup page): listing it tells whoever searches for the product's title
+	// where instances are. A public demo has one more reason, which is that every URL renders the same
+	// page from mock data and it would compete with the real site as duplicate content.
+	//
+	// It is a header and not a robots.txt rule on purpose. Disallowing crawling would hide this
+	// instruction from the crawler, and a page that cannot be fetched cannot be told not to be listed:
+	// the address would stay in the index as a blocked one. So crawling is left allowed and every answer,
+	// of whatever kind, says not to index it. It stops the search engines that obey; it does not hide an
+	// instance from scanners, and the protection that matters is the sign-in.
+	w.Header().Set("X-Robots-Tag", "noindex, nofollow")
 
 	// HSTS (HTTP Strict Transport Security)
 	// Only send over HTTPS to prevent MITM attacks

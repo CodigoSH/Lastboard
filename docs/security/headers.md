@@ -11,7 +11,9 @@ yourself out.
 | `X-Frame-Options` | `SAMEORIGIN` | always |
 | `Referrer-Policy` | `strict-origin-when-cross-origin` | always |
 | `Strict-Transport-Security` | `max-age=31536000; includeSubDomains; preload` | **HTTPS only** |
-| `X-Robots-Tag` | `noindex, nofollow` | only when `DEMO_ONLY=true` |
+| `X-Robots-Tag` | `noindex, nofollow` | always |
+
+**Search engines.** Every response carries `X-Robots-Tag: noindex, nofollow`, and the pages that can be opened without signing in — the sign-in page and the setup page — also say it in a `<meta name="robots">`, so a search engine that obeys does not list an instance. There is deliberately no `robots.txt` that forbids crawling: a crawler that cannot fetch a page cannot read that it must not list it, and the address would stay in the index as a blocked one. This keeps the engines that obey away; it does not hide an instance from scanners or from anyone who knows its address. What protects it is the sign-in, and an instance that does not need to be reachable from the internet is better left off it.
 
 Stored icons get a second, much tighter policy of their own —
 `default-src 'none'; style-src 'unsafe-inline'; sandbox` — so an SVG opened directly can do

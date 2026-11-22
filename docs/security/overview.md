@@ -266,10 +266,8 @@ See [Configuration](../getting-started/configuration.md#puid--pgid-running-unpri
 
 ## Public demo mode
 
-`DEMO_ONLY=true` turns the instance into a frontend-only demo: no authentication, no
-persistence, and every response carries `X-Robots-Tag: noindex, nofollow` so a public demo does
-not compete with the real site in search results. It is not a way to run a read-only instance
-for real data — there is no data.
+`DEMO_ONLY=true` turns the instance into a frontend-only demo: no authentication and no
+persistence. It is not a way to run a read-only instance for real data — there is no data.
 
 ## Update Delivery
 

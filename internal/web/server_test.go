@@ -526,3 +526,51 @@ func TestLoginPageDoesNotSendOnASessionTheAppRefuses(t *testing.T) {
 		t.Errorf("/setup with a stale session: -> %q, want /login", w.Header().Get("Location"))
 	}
 }
+
+// An instance is not something to find by searching. Whatever a crawler reaches — the sign-in page, the setup page of an
+// instance with no account yet, the redirect from the root, a file, an API answer — says not to list it, with and without
+// the demo switch. It is said in a header and not by forbidding crawling in robots.txt, because a crawler that may not
+// fetch a page cannot read that it must not list it; so there is no robots.txt rule to keep that way either.
+func TestNothingAnInstanceServesCanBeListedBySearchEngines(t *testing.T) {
+	for _, demo := range []bool{false, true} {
+		for _, tc := range []struct {
+			path     string
+			withUser bool
+		}{
+			{"/login", true}, {"/setup", false}, {"/", true}, {"/api/health", true}, {"/manifest.json", true},
+			{"/images/default-avatar.svg", true}, {"/robots.txt", true}, {"/no-such-page", true},
+		} {
+			name := tc.path
+			if demo {
+				name += " (demo)"
+			}
+			t.Run(name, func(t *testing.T) {
+				if demo {
+					t.Setenv("DEMO_ONLY", "true")
+				}
+				server := newTestServer(t, tc.withUser)
+				rec := httptest.NewRecorder()
+				// Through the server itself: the headers are put on by it, ahead of the router.
+				server.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, tc.path, nil))
+				if got := rec.Header().Get("X-Robots-Tag"); got != "noindex, nofollow" {
+					t.Errorf("GET %s (status %d): X-Robots-Tag = %q, want \"noindex, nofollow\"", tc.path, rec.Code, got)
+				}
+			})
+		}
+	}
+}
+
+// The two pages that open without a session also say it in the page, for a crawler that reads it behind something that
+// drops headers.
+func TestThePagesOpenedWithoutASessionSayNoindexInThePageToo(t *testing.T) {
+	for page, withUser := range map[string]bool{"/login": true, "/setup": false} {
+		t.Run(page, func(t *testing.T) {
+			server := newTestServer(t, withUser)
+			rec := httptest.NewRecorder()
+			server.Router.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, page, nil))
+			if !strings.Contains(rec.Body.String(), `<meta name="robots" content="noindex, nofollow">`) {
+				t.Errorf("%s has no robots meta tag", page)
+			}
+		})
+	}
+}
