@@ -712,6 +712,12 @@ dialog::backdrop {
     transition: all 0.2s;
 }
 
+/* The engine of a Docker / Podman host: two choices, centered, not full width. */
+.settings-content__engine .settings-content__segmented-control {
+    width: min(100%, 260px);
+    margin-inline: auto;
+}
+
 .settings-content__segment:focus {
     outline: none;
 }

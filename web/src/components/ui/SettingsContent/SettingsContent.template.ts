@@ -981,9 +981,11 @@ export const dockerTemplate = (
         <p class="settings-content__text-dim" id="docker-locked-note" style="font-size: 12px; margin: 0 0 16px; display: none;">${i18n.t('docker.admin_only')}</p>
 
         <div id="docker-connection">
-            <div class="settings-content__form-group">
-                <label class="settings-content__label">${i18n.t('docker.engine')}</label>
-                <app-select id="docker-engine" value="docker"></app-select>
+            <div class="settings-content__form-group settings-content__engine">
+                <div class="settings-content__segmented-control" id="docker-engine" role="group" aria-label="${esc(i18n.t('docker.engine'))}">
+                    <button type="button" class="settings-content__segment active" data-engine="docker" aria-pressed="true">Docker</button>
+                    <button type="button" class="settings-content__segment" data-engine="podman" aria-pressed="false">Podman</button>
+                </div>
             </div>
 
             <div class="settings-content__form-group">

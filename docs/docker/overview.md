@@ -83,7 +83,7 @@ Hosts belong to your account, as Proxmox hypervisors do: you set them up once in
 
 ![The Docker hosts of an account](../assets/p-docker.png)
 
-Each host has a name, an **Engine** — Docker or Podman — a **Type**, and an address. Pick the engine first and the type next; the fields below change to match, and so does the hint under them.
+Each host has a name, an engine — the **Docker** and **Podman** buttons under it — a **Type**, and an address. Pick the engine first and the type next; the fields below change to match, and so does the hint under them.
 
 The types begin with the agent, which is what a new host starts on:
 

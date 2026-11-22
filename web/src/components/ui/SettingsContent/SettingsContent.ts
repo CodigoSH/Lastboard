@@ -39,6 +39,10 @@ import { agentIsOld, fetchAgentVersion, fetchContainers, fetchEngine, hostErrorK
 import { isEnter } from '../../../services/imeKeys';
 import css from './SettingsContent.css' with { type: 'text' };
 
+/** The engine the host form's two-button choice is on. Anything but Podman is Docker. */
+const currentEngine = (group: HTMLElement | null): DockerEngine =>
+    group?.querySelector<HTMLElement>('[data-engine].active')?.dataset.engine === 'podman' ? 'podman' : 'docker';
+
 class SettingsContent extends HTMLElement {
     private prefs: UserPreferences;
     private users: User[] = [];
@@ -1168,13 +1172,17 @@ class SettingsContent extends HTMLElement {
         show('docker-locked-note', locked);
 
         // The engine comes first because what the rest asks for depends on it.
-        const engineSel = root.getElementById('docker-engine') as any;
-        if (engineSel) {
-            engineSel.options = [{ value: 'docker', label: 'Docker' }, { value: 'podman', label: 'Podman' }];
-            engineSel.value = h?.engine === 'podman' ? 'podman' : 'docker';
-        }
+        const engineSel = root.getElementById('docker-engine') as HTMLElement | null;
+        const setEngine = (value: DockerEngine) => {
+            engineSel?.querySelectorAll<HTMLElement>('[data-engine]').forEach(b => {
+                const on = b.dataset.engine === value;
+                b.classList.toggle('active', on);
+                b.setAttribute('aria-pressed', String(on));
+            });
+        };
+        setEngine(h?.engine === 'podman' ? 'podman' : 'docker');
         const typeSel = root.getElementById('docker-type') as any;
-        const engine = () => (engineSel?.value === 'podman' ? 'podman' : 'docker') as DockerEngine;
+        const engine = () => currentEngine(engineSel);
         const fillKinds = (wanted?: string) => {
             if (!typeSel) return;
             const kinds = connectionKinds(engine(), this.docker.admin);
@@ -1202,7 +1210,12 @@ class SettingsContent extends HTMLElement {
         };
         if (engineSel && !engineSel.dataset.bound) {
             engineSel.dataset.bound = '1';
-            engineSel.addEventListener('change', () => { fillKinds(typeSel?.value); sync(); });
+            engineSel.addEventListener('click', (e) => {
+                const btn = (e.target as HTMLElement).closest<HTMLElement>('[data-engine]');
+                if (!btn || btn.dataset.engine === engine()) return;
+                setEngine(btn.dataset.engine === 'podman' ? 'podman' : 'docker');
+                fillKinds(typeSel?.value); sync();
+            });
         }
         if (typeSel && !typeSel.dataset.bound) {
             typeSel.dataset.bound = '1';
@@ -1241,7 +1254,7 @@ class SettingsContent extends HTMLElement {
         const existing = index >= 0 ? this.docker.hosts[index] : undefined;
         const locked = !!existing && !existing.usable;
         const type = locked ? existing!.type : ((root.getElementById('docker-type') as any)?.value || 'agent');
-        const engine: DockerEngine = locked ? (existing!.engine ?? 'docker') : ((root.getElementById('docker-engine') as any)?.value === 'podman' ? 'podman' : 'docker');
+        const engine: DockerEngine = locked ? (existing!.engine ?? 'docker') : currentEngine(root.getElementById('docker-engine'));
         // A local host's address is the socket it reads; empty is the engine's usual one.
         const url = locked ? existing!.url : (type === 'local' ? val('docker-socket') : val('docker-url'));
 
