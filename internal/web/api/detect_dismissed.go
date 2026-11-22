@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"sort"
 	"strings"
+	"sync"
 
 	"git.codigosh.com/CodigoSH/Lastboard/internal/web/middleware"
 )
@@ -58,6 +59,11 @@ func dismissedOf(store *UserSettings, uid int) map[string]bool {
 	return out
 }
 
+// dismissedMu serialises every read-change-write of the list. It is stored whole
+// and each "Ignore" in the window is its own request, so two quick clicks read
+// the same list and the second save would drop the first one's key.
+var dismissedMu sync.Mutex
+
 func saveDismissed(store *UserSettings, uid int, set map[string]bool) error {
 	list := make([]string, 0, len(set))
 	for k := range set {
@@ -75,6 +81,8 @@ func saveDismissed(store *UserSettings, uid int, set map[string]bool) error {
 // longer among the ones kept: nothing can read them, and a full list would
 // refuse the next one.
 func pruneDismissed(store *UserSettings, uid int, kind string, keep map[string]bool) {
+	dismissedMu.Lock()
+	defer dismissedMu.Unlock()
 	set := dismissedOf(store, uid)
 	changed := false
 	for k := range set {
@@ -116,6 +124,8 @@ func (h *DetectHandler) Change(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "general.invalid_input", http.StatusBadRequest)
 		return
 	}
+	dismissedMu.Lock()
+	defer dismissedMu.Unlock()
 	set := dismissedOf(h.store, uid)
 	for _, k := range in.Remove {
 		delete(set, k)

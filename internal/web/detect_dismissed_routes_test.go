@@ -2,9 +2,11 @@ package web
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"strings"
+	"sync"
 	"testing"
 
 	"git.codigosh.com/CodigoSH/Lastboard/internal/core/access"
@@ -45,6 +47,38 @@ func TestWhatAnAccountDismissedIsItsOwnAndComesBack(t *testing.T) {
 	}
 	if k := keysOf(ana); strings.Join(k, ",") != "d:h1/tunnel,p:h2/pve|106" {
 		t.Errorf("after removing, ana dismissed %v", k)
+	}
+}
+
+// Each "Ignore" in the window is its own request and nothing waits for the one
+// before, so two quick clicks arrive together. Both read the stored list before
+// either wrote it would keep only the last.
+func TestIgnoringSeveralAtOnceKeepsThemAll(t *testing.T) {
+	srv := newTestServer(t, true)
+	ana := asMember(t, srv, "ana", access.Homelab())
+
+	const n = 20
+	var wg sync.WaitGroup
+	for i := 0; i < n; i++ {
+		wg.Add(1)
+		go func(i int) {
+			defer wg.Done()
+			if w := ana(http.MethodPost, "/api/detect/dismissed", fmt.Sprintf(`{"add":["d:h1/c%02d"]}`, i)); w.Code != http.StatusNoContent {
+				t.Errorf("ignoring c%02d = %d %s", i, w.Code, w.Body.String())
+			}
+		}(i)
+	}
+	wg.Wait()
+
+	w := ana(http.MethodGet, "/api/detect/dismissed", "")
+	var out struct {
+		Keys []string `json:"keys"`
+	}
+	if err := json.Unmarshal(w.Body.Bytes(), &out); err != nil {
+		t.Fatal(err)
+	}
+	if len(out.Keys) != n {
+		t.Errorf("%d of %d ignored services were kept", len(out.Keys), n)
 	}
 }
 
