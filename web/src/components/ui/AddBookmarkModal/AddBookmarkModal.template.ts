@@ -185,7 +185,7 @@ export const template = ({
                         <span class="seg" id="link-seg" role="group" aria-labelledby="link-label">
                             <button type="button" data-link="none" aria-pressed="true">${i18n.t('bookmark.container_none')}</button>
                             <button type="button" data-link="proxmox" aria-pressed="false" style="display: none;">Proxmox</button>
-                            <button type="button" data-link="docker" aria-pressed="false" style="display: none;">Docker</button>
+                            <button type="button" data-link="docker" aria-pressed="false" style="display: none;">Docker / Podman</button>
                         </span>
                         <!-- The house dropdown, not the browser's: a bare
                              <select> is the one control in this modal that
