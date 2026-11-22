@@ -1,6 +1,6 @@
 # Installation
 
-Get Lastboard up and running using your preferred method. We officially support Docker and native Linux installations.
+Get Lastboard up and running using your preferred method. We officially support Docker, Podman and native Linux installations.
 
 ![The Setup Wizard on a fresh install](../assets/setup.png)
 
@@ -9,6 +9,7 @@ The first time you open Lastboard it walks you through three steps: your languag
 ## Requirements
 
 - **Docker Method:** Docker and Docker Compose installed.
+- **Podman Method:** Podman installed; the Quadlet files in the [Podman guide](../podman/overview.md) need Podman 4.4 or later.
 - **Native Method:** Linux OS (amd64 or arm64).
 
 ## Method 1: Docker (Recommended)
@@ -97,6 +98,22 @@ on — so it cannot erase a database from a script.
 
 > If you saved the script to a file, `sudo bash install.sh --uninstall` (and `--purge`) does the same.
 
+
+## Method 3: Podman
+
+The image is the same. Run it with `podman run`, or as a service with a Quadlet file; `podman compose` reads the `docker-compose.yml` above as well. The [Podman guide](../podman/overview.md) has the commands, the Quadlet file and the two settings the socket needs (`--security-opt label=disable`, and no `PUID` or `PGID`).
+
+## Connecting Docker and Podman hosts
+
+However Lastboard is installed, a host is added in **Preferences → Docker / Podman**, and the Lastboard Agent reaches any of them:
+
+| Lastboard runs as | The machine's own Docker or Podman | Another machine |
+| :--- | :--- | :--- |
+| **Native** | A Local socket host, at the engine's socket. Lastboard's user must be allowed to open it, which a rootless Podman does not allow: use the agent. | The agent on that machine. |
+| **Docker** | Mount the Docker socket into the container, or run the agent and reach it as `host.docker.internal`. | The agent on that machine. |
+| **Podman** | Mount the Podman socket (see the guide), or run the agent and reach it as `host.containers.internal`. | The agent on that machine. |
+
+See [Docker and Podman](../docker/overview.md#docker-hosts) for each type of host and what its errors mean.
 
 ## First Run
 

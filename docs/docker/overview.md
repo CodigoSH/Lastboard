@@ -1,8 +1,8 @@
-# Docker
+# Docker and Podman
 
-Lastboard can read the Docker of your server and of the other machines you run, and show it beside the services it serves: every container of every host in one list, with its state and resource use and, for one container, how it is set up and what it prints. An account allowed to control Docker can also start, stop and restart them. [Podman](../podman/overview.md) answers the same API, so everything here works with it.
+Lastboard can read the Docker of your server and of the other machines you run, and show it beside the services it serves: every container of every host in one list, with its state and resource use and, for one container, how it is set up and what it prints. An account allowed to control Docker can also start, stop and restart them. Podman answers the same API, so everything here works with it too: you say which of the two a host runs when you add it, and the [Podman guide](../podman/overview.md) has the settings it needs.
 
-The tile that puts the list on your board is described in the [Docker widget](../widgets/docker.md) guide; this page is about connecting Docker, who can use what, and the Docker page.
+The tile that puts the list on your board is described in the [Docker widget](../widgets/docker.md) guide; this page is about connecting Docker or Podman, who can use what, and the Docker / Podman page.
 
 ## Prerequisites
 
@@ -10,10 +10,10 @@ To monitor Docker instances, Lastboard needs access to the Docker daemon.
 
 ## Connection Modes
 
-You can connect Lastboard to Docker environments in three ways:
+You can connect Lastboard to Docker environments in three ways. The same three work with Podman, with the settings on its [own page](../podman/overview.md):
 
 ### 1. Local Socket (Native Install)
-When running Lastboard natively on Linux, it can access `/var/run/docker.sock` directly (ensure the `lastboard` user has permission to read the socket, often by adding it to the `docker` group).
+When running Lastboard natively on Linux, it can access `/var/run/docker.sock` directly (ensure the `lastboard` user has permission to read the socket, often by adding it to the `docker` group). If the socket is somewhere else, give its path in the host's settings.
 
 ### 2. Local Socket (Docker Install)
 When running Lastboard as a Docker container, uncomment the socket volume mount in the `docker-compose.yml` file to grant it access.
@@ -83,16 +83,38 @@ Hosts belong to your account, as Proxmox hypervisors do: you set them up once in
 
 ![The Docker hosts of an account](../assets/p-docker.png)
 
-Each host has a name, a **Type**, and — for everything except the local socket — an address. Pick the type first; the fields below it change to match.
+Each host has a name, an **Engine** — Docker or Podman — a **Type**, and an address. Pick the engine first and the type next; the fields below change to match, and so does the hint under them.
 
-| Type | Address to enter | Default port |
+The types begin with the agent, which is what a new host starts on:
+
+| Type | What to enter | Engines |
 | :--- | :--- | :--- |
-| **Local socket** | nothing — the address field disappears | — |
-| **Lastboard Agent** | `192.168.1.100:2375`, plus the agent's token in its own field | `2375`, or whatever you set in the agent's `PORT` |
-| **Remote TCP** | `192.168.1.100:2375` | `2375` — an unencrypted Docker daemon |
-| **Remote TLS** | `192.168.1.100:2376` | `2376` — a TLS Docker daemon |
+| **Lastboard Agent** | `192.168.1.100:2375`, plus the agent's token in its own field. `2375` is the default port, or whatever you set in the agent's `PORT`. | Docker, Podman |
+| **Local socket** | The path of the socket, or nothing for the engine's usual one (`/var/run/docker.sock`). Administrator only. | Docker, Podman |
+| **Remote TCP** | `192.168.1.100:2375` — an unencrypted Docker daemon. | Docker |
+| **Remote TLS** | `192.168.1.100:2376` — a TLS Docker daemon. | Docker |
 
-Enter the host and port on their own — Lastboard adds the scheme the type needs. The one scheme kept is `https://` on an agent, which means *reach it over HTTPS* (see the reverse proxy section above). An address pasted with a scheme already on it, such as `tcp://10.0.0.5:2375` from `DOCKER_HOST`, is understood as written.
+Podman is not offered on a network port: its API has no authentication of its own, so it is reached through the agent or through its socket.
+
+Enter the host and port on their own — Lastboard adds the scheme the type needs. The one scheme kept is `https://` on an agent, which means *reach it over HTTPS* (see the reverse proxy section above). An address pasted with a scheme already on it, such as `tcp://10.0.0.5:2375` from `DOCKER_HOST`, is understood as written. The path of a socket must be absolute, with no `..` and no double slashes.
+
+**The engine you pick is a guide, and the host has the last word.** Once it answers, Lastboard asks it which engine it runs and, if that is not what you picked, corrects the host, and shows the engine it found in its row and on the page. An agent that is too old to say keeps what you chose.
+
+### An agent on the same machine as Lastboard
+
+When Lastboard itself runs in a container and the agent runs on the same machine, `127.0.0.1` is the Lastboard container, not the machine. Reach the machine by the name the engine gives it: `host.docker.internal` with Docker, which on Linux needs `extra_hosts: ["host.docker.internal:host-gateway"]` in the container's definition, and `host.containers.internal` with Podman. A native Lastboard, on the machine itself, can use `127.0.0.1`.
+
+### When a host does not answer
+
+The row says why, and the same words show on the Docker / Podman page:
+
+| It says | It means |
+| :--- | :--- |
+| *There is no socket at that path* | Nothing is at the path. Check it, and that the engine is running. |
+| *Lastboard is not allowed to open the socket* | The socket exists and its permissions keep Lastboard's user out. Give that user access, or use the agent. |
+| *The connection was refused* | Nothing listens there: the engine or the agent is stopped, or the port is wrong. |
+| *The host did not answer in time* | The address is wrong, or a firewall drops the connection. |
+| *Token rejected* | The agent answered and refused the token. |
 
 ![A Docker agent host with its token saved](../assets/w-p-docker-host.png)
 
@@ -101,7 +123,7 @@ There is no `?token=` to type: the token has its own field, which appears only f
 ### Who can use which kind of host
 
 - **The administrator** can use every type.
-- **A member** connects to Docker through a **Lastboard Agent**, with the agent's token. The local socket, Remote TCP and Remote TLS reach Docker by being the server, without any credential, so they are the administrator's: a member's account doesn't offer them. To let someone see the server's own containers, run an agent on it and give them its token.
+- **A member** connects to Docker or Podman through a **Lastboard Agent**, with the agent's token. The local socket, Remote TCP and Remote TLS reach Docker by being the server, without any credential, so they are the administrator's: a member's account doesn't offer them. To let someone see the server's own containers, run an agent on it and give them its token.
 - Whether a member has Docker at all, and whether it may start and stop containers, is one of the permissions the administrator sets for that account.
 
 ### Coming from an earlier version

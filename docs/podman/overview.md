@@ -1,6 +1,8 @@
 # Podman
 
-Podman answers the same API as Docker through a socket of its own, so Lastboard's [Docker widget](../widgets/docker.md) and Docker page, and the [Lastboard Agent](https://git.codigosh.com/CodigoSH/lastboard-agent), work with it unchanged. What follows is for rootless Podman, the way it is normally run.
+Podman answers the same API as Docker through a socket of its own, so Lastboard's [Docker widget](../widgets/docker.md) and Docker / Podman page, and the [Lastboard Agent](https://git.codigosh.com/CodigoSH/lastboard-agent), work with it. What follows is for rootless Podman, the way it is normally run.
+
+To add a Podman host, open **Preferences → Docker / Podman**, **+ Add New Host**, choose **Podman** as the engine, and then **Lastboard Agent** (the way that works from every kind of install) or **Local socket**. Podman is not offered on a network port.
 
 ## Turn the socket on
 
@@ -77,4 +79,15 @@ A user's services stop when that user logs out unless lingering is on for them: 
 
 ## A native install
 
-A native install reads Docker at `/var/run/docker.sock` and nowhere else. To watch Podman from it, run the agent as above on the same machine and add it as a **Lastboard Agent** host at `127.0.0.1:2375`.
+A native Lastboard runs as its own user, and a rootless Podman keeps its socket inside the session of the user who runs it, where that user cannot open it. So from a native install:
+
+- **Use the agent.** Run it as above on the same machine and add it as a **Lastboard Agent** host at `127.0.0.1:2375`.
+- **Or point a Local socket host at the socket** — type its path in the host's settings, such as `/run/podman/podman.sock` for Podman run as root. Lastboard's user has to be allowed to open that socket; if it is not, the host says *Lastboard is not allowed to open the socket*.
+
+## Lastboard in a container, with the agent beside it
+
+If Lastboard runs in a Podman container and the agent runs on the same machine, `127.0.0.1` is the Lastboard container itself. Add the agent at `host.containers.internal:2375`, the name Podman gives the machine from inside a container.
+
+## Docker next to Podman
+
+Both can be in the same list: each host says which it runs, and the Docker / Podman page shows them together, with Podman's hosts marked. The engine you choose when adding a host is checked against what the host reports, so a host added as Docker that turns out to be Podman is corrected.
