@@ -26,6 +26,69 @@ func TestDockerHostAddress(t *testing.T) {
 }
 
 // The rule in one place: a member reaches a Docker only with a credential.
+func TestJudgeHostSaysWhyAHostMayNotBeSaved(t *testing.T) {
+	sock := "/run/podman/podman.sock"
+	nas := dockerHost{Type: dockerTCP, URL: "10.0.0.5:2375"}
+	cases := []struct {
+		name  string
+		in    dockerHostInput
+		admin bool
+		old   dockerHost
+		known bool
+		want  string // "" = may be saved
+	}{
+		{"an agent, from a member", dockerHostInput{Type: "agent", URL: "10.0.0.5:9876"}, false, dockerHost{}, false, ""},
+		{"an unknown kind", dockerHostInput{Type: "ssh", URL: "x"}, true, dockerHost{}, false, "general.invalid_input"},
+		{"Podman on a network port", dockerHostInput{Type: "tcp", URL: "10.0.0.5:2375", Engine: "podman"}, true, dockerHost{}, false, "general.invalid_input"},
+		{"Docker on a network port", dockerHostInput{Type: "tcp", URL: "10.0.0.5:2375"}, true, dockerHost{}, false, ""},
+		{"no address", dockerHostInput{Type: "agent", URL: "  "}, true, dockerHost{}, false, "docker.missing_url"},
+		{"a local host needs no address", dockerHostInput{Type: "local"}, true, dockerHost{}, false, ""},
+		{"a member adding a TCP host", dockerHostInput{Type: "tcp", URL: "10.0.0.5:2375"}, false, dockerHost{}, false, "docker.admin_only"},
+		{"a member keeping its own as it was", dockerHostInput{Type: "tcp", URL: "10.0.0.5:2375"}, false, nas, true, ""},
+		{"a member pointing it elsewhere", dockerHostInput{Type: "tcp", URL: "10.0.0.6:2375"}, false, nas, true, "docker.admin_only"},
+		{"a member is told it may not, not that the path is wrong", dockerHostInput{Type: "local", URL: "relative.sock"}, false, dockerHost{}, false, "docker.admin_only"},
+		{"a bad socket path", dockerHostInput{Type: "local", URL: "relative.sock"}, true, dockerHost{}, false, "docker.invalid_socket"},
+		{"a good socket path", dockerHostInput{Type: "local", URL: sock, Engine: "podman"}, true, dockerHost{}, false, ""},
+	}
+	for _, c := range cases {
+		got := ""
+		if bad := judgeHost(c.in, c.admin, c.old, c.known); bad != nil {
+			got = bad.key
+		}
+		if got != c.want {
+			t.Errorf("%s: %q, want %q", c.name, got, c.want)
+		}
+	}
+}
+
+func TestHostFromInputKeepsOrDropsTheToken(t *testing.T) {
+	old := dockerHost{Type: dockerAgent, URL: "10.0.0.5:9876", Token: "kept"}
+	agent := dockerHostInput{Type: "agent", URL: "10.0.0.5:9876"}
+	cases := []struct {
+		name  string
+		in    func(dockerHostInput) dockerHostInput
+		known bool
+		want  string
+	}{
+		{"untouched keeps the stored one", func(i dockerHostInput) dockerHostInput { return i }, true, "kept"},
+		{"a new one replaces it", func(i dockerHostInput) dockerHostInput { i.Token = " new "; return i }, true, "new"},
+		{"an emptied box removes it", func(i dockerHostInput) dockerHostInput { i.ClearToken = true; return i }, true, ""},
+		{"a host it did not have starts with none", func(i dockerHostInput) dockerHostInput { return i }, false, ""},
+		{"a host that is no longer an agent drops it", func(i dockerHostInput) dockerHostInput { i.Type = "tcp"; i.Token = "x"; return i }, true, ""},
+	}
+	for _, c := range cases {
+		if got := hostFromInput(c.in(agent), "id", old, c.known).Token; got != c.want {
+			t.Errorf("%s: token %q, want %q", c.name, got, c.want)
+		}
+	}
+	if e := hostFromInput(dockerHostInput{Type: "agent", URL: "x:1", Engine: "podman"}, "id", dockerHost{}, false); e.Name != "Podman" || e.Engine != enginePodman {
+		t.Errorf("an unnamed Podman host: %+v", e)
+	}
+	if e := hostFromInput(dockerHostInput{Type: "agent", URL: "x:1"}, "id", dockerHost{}, false); e.Name != "Docker" || e.Engine != "" {
+		t.Errorf("an unnamed Docker host: %+v", e)
+	}
+}
+
 func TestOnlyTheAgentIsAMembersKind(t *testing.T) {
 	for kind, want := range map[string]bool{dockerLocal: true, dockerTCP: true, dockerTLS: true, dockerAgent: false} {
 		if needsAdmin(kind) != want {

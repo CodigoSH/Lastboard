@@ -263,6 +263,71 @@ func (h *DockerHandler) GetSettings(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, out)
 }
 
+// dockerHostInput is one host as the settings screen sends it.
+type dockerHostInput struct {
+	ID     string `json:"id"`
+	Name   string `json:"name"`
+	Type   string `json:"type"`
+	URL    string `json:"url"`
+	Engine string `json:"engine"`
+	Token  string `json:"token"`
+	// ClearToken is the emptied box that held the dots. Without it an empty
+	// token means "not touched", which is also what a page that has not
+	// reloaded sends.
+	ClearToken bool `json:"clear_token"`
+	Enabled    bool `json:"enabled"`
+}
+
+// judgeHost says why one host of a list may not be saved, or nil when it may.
+// old is what the account already had under the host's id, when known.
+func judgeHost(in dockerHostInput, admin bool, old dockerHost, known bool) *resolveError {
+	kind, address := strings.TrimSpace(in.Type), strings.TrimSpace(in.URL)
+	switch {
+	case !validDockerKind(kind):
+		return &resolveError{http.StatusBadRequest, "general.invalid_input"}
+	// Podman's API has no business on the network without a proxy that
+	// authenticates it: it is reached through the agent or its socket.
+	case engineOf(in.Engine) == enginePodman && (kind == dockerTCP || kind == dockerTLS):
+		return &resolveError{http.StatusBadRequest, "general.invalid_input"}
+	case kind != dockerLocal && bareHost(address) == "":
+		return &resolveError{http.StatusBadRequest, "docker.missing_url"}
+	// A member may keep a host of the administrator's kind it already had, as
+	// it was, but not add one or point one elsewhere.
+	case !admin && needsAdmin(kind) && !(known && old.Type == kind && old.URL == address):
+		return &resolveError{http.StatusForbidden, "docker.admin_only"}
+	// Who may is settled before what was typed is judged: a member is told it
+	// may not, not that its path is wrong.
+	case kind == dockerLocal && address != "" && !validSocketPath(address):
+		return &resolveError{http.StatusBadRequest, "docker.invalid_socket"}
+	}
+	return nil
+}
+
+// hostFromInput is the host to store for one that judgeHost let through.
+func hostFromInput(in dockerHostInput, id string, old dockerHost, known bool) dockerHost {
+	kind := strings.TrimSpace(in.Type)
+	e := dockerHost{ID: id, Name: strings.TrimSpace(in.Name), Type: kind, URL: strings.TrimSpace(in.URL), Enabled: in.Enabled}
+	if engineOf(in.Engine) == enginePodman {
+		e.Engine = enginePodman
+	}
+	switch token := strings.TrimSpace(in.Token); {
+	case kind != dockerAgent:
+		// Only an agent has a token; a host that stopped being one drops it.
+	case token != "":
+		e.Token = token
+	case in.ClearToken:
+	case known:
+		e.Token = old.Token
+	}
+	if e.Name == "" {
+		e.Name = "Docker"
+		if e.Engine == enginePodman {
+			e.Name = "Podman"
+		}
+	}
+	return e
+}
+
 // UpdateSettings stores this account's whole list.
 //
 // As with Proxmox the list arrives complete, so adding, renaming, reordering and
@@ -275,19 +340,7 @@ func (h *DockerHandler) UpdateSettings(w http.ResponseWriter, r *http.Request) {
 	r.Body = http.MaxBytesReader(w, r.Body, 64*1024)
 
 	var in struct {
-		Hosts []struct {
-			ID     string `json:"id"`
-			Name   string `json:"name"`
-			Type   string `json:"type"`
-			URL    string `json:"url"`
-			Engine string `json:"engine"`
-			Token  string `json:"token"`
-			// ClearToken is the emptied box that held the dots. Without it an
-			// empty token means "not touched", which is also what a page that has
-			// not reloaded sends.
-			ClearToken bool `json:"clear_token"`
-			Enabled    bool `json:"enabled"`
-		} `json:"hosts"`
+		Hosts []dockerHostInput `json:"hosts"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&in); err != nil {
 		http.Error(w, "general.invalid_input", http.StatusBadRequest)
@@ -308,24 +361,6 @@ func (h *DockerHandler) UpdateSettings(w http.ResponseWriter, r *http.Request) {
 	list := make([]dockerHost, 0, len(in.Hosts))
 	seen := map[string]bool{}
 	for _, raw := range in.Hosts {
-		kind := strings.TrimSpace(raw.Type)
-		if !validDockerKind(kind) {
-			http.Error(w, "general.invalid_input", http.StatusBadRequest)
-			return
-		}
-		engine := engineOf(raw.Engine)
-		// Podman's API has no business on the network without a proxy that
-		// authenticates it: it is reached through the agent or its socket.
-		if engine == enginePodman && (kind == dockerTCP || kind == dockerTLS) {
-			http.Error(w, "general.invalid_input", http.StatusBadRequest)
-			return
-		}
-		address := strings.TrimSpace(raw.URL)
-		if kind != dockerLocal && bareHost(address) == "" {
-			http.Error(w, "docker.missing_url", http.StatusBadRequest)
-			return
-		}
-
 		id := strings.TrimSpace(raw.ID)
 		old, known := previous[id]
 		if !known || id == "" || seen[id] {
@@ -336,38 +371,11 @@ func (h *DockerHandler) UpdateSettings(w http.ResponseWriter, r *http.Request) {
 		}
 		seen[id] = true
 
-		if !s.admin && needsAdmin(kind) && !(known && old.Type == kind && old.URL == address) {
-			http.Error(w, "docker.admin_only", http.StatusForbidden)
+		if bad := judgeHost(raw, s.admin, old, known); bad != nil {
+			http.Error(w, bad.key, bad.status)
 			return
 		}
-
-		// Who may is settled before what was typed is judged: a member is told it
-		// may not, not that its path is wrong.
-		if kind == dockerLocal && address != "" && !validSocketPath(address) {
-			http.Error(w, "docker.invalid_socket", http.StatusBadRequest)
-			return
-		}
-
-		e := dockerHost{ID: id, Name: strings.TrimSpace(raw.Name), Type: kind, URL: address, Enabled: raw.Enabled}
-		if engine == enginePodman {
-			e.Engine = enginePodman
-		}
-		switch {
-		case kind != dockerAgent:
-			// Only an agent has a token; a host that stopped being one drops it.
-		case strings.TrimSpace(raw.Token) != "":
-			e.Token = strings.TrimSpace(raw.Token)
-		case raw.ClearToken:
-		case known:
-			e.Token = old.Token
-		}
-		if e.Name == "" {
-			e.Name = "Docker"
-			if engine == enginePodman {
-				e.Name = "Podman"
-			}
-		}
-		list = append(list, e)
+		list = append(list, hostFromInput(raw, id, old, known))
 	}
 
 	if err := s.saveHosts(list); err != nil {
