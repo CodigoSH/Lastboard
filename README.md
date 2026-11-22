@@ -135,7 +135,7 @@ Give a bookmark a URL and a status position and Lastboard watches it. No second 
 - **Real dark/light mode** with dedicated color token sets per theme, not a CSS filter — plus a **System** option that follows the device and changes with it.
 - **Accent color**, a **background image** per user, and **your own panel name and logo** in the tab and top bar.
 - **Metric or imperial units**, applied across every widget that shows one.
-- **20 languages, hand-translated** — Arabic, Bengali, Chinese, Dutch, English, Persian, French, German, Greek, Hindi, Indonesian, Italian, Japanese, Korean, Polish, Portuguese, Russian, Spanish, Turkish, Urdu — with **full right-to-left layout** for Arabic, Persian and Urdu. The language is applied on the server for the first paint, so even the login page arrives in your language instead of flashing English.
+- **20 languages, hand-translated** — Arabic, Bengali, Chinese, Dutch, English, French, German, Greek, Hindi, Indonesian, Italian, Japanese, Korean, Persian, Polish, Portuguese, Russian, Spanish, Turkish, Urdu — with **full right-to-left layout** for Arabic, Persian and Urdu. The language is applied on the server for the first paint, so even the login page arrives in your language instead of flashing English.
 - **Installable as an app** on Android, iOS and the desktop.
 
 ### Operations

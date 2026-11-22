@@ -173,8 +173,8 @@ shows it beside the services it runs.
 - **A background image** per user, resized in the browser before it is stored.
 - **Your own panel name and logo** in the browser tab and the top bar.
 - **Measurement units**, metric or imperial, applied across every widget that shows one.
-- **20 languages**, hand-translated: Arabic, Bengali, Chinese, Dutch, English, Persian, French,
-  German, Greek, Hindi, Indonesian, Italian, Japanese, Korean, Polish, Portuguese, Russian,
+- **20 languages**, hand-translated: Arabic, Bengali, Chinese, Dutch, English, French,
+  German, Greek, Hindi, Indonesian, Italian, Japanese, Korean, Persian, Polish, Portuguese, Russian,
   Spanish, Turkish and Urdu — with **full right-to-left support** for Arabic, Persian and Urdu.
   The language is set on the server for the first paint, so the login page arrives already in
   your language rather than flashing English first.
