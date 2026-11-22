@@ -21,6 +21,8 @@ export interface DockerHost {
     name: string;
     type: 'local' | 'tcp' | 'tls' | 'agent';
     url?: string;
+    /** Docker unless the host says Podman. */
+    engine?: 'docker' | 'podman';
 }
 
 export interface DockerPort {
@@ -165,11 +167,17 @@ export const DEMO_CONTAINERS: DockerContainer[] = [
  * the difference is the whole point: one is fixed in Preferences → Docker,
  * the other in the network. Anything it does not name is "could not connect".
  */
+/** The reasons the server names for a host that cannot be reached; each has its own words. */
+export const HOST_ERROR_KEYS = [
+    'docker.unauthorized', 'docker.socket_missing', 'docker.socket_denied',
+    'docker.connection_refused', 'docker.connection_timeout',
+];
+
 export class DockerHostError extends Error {
     readonly key: string;
     constructor(serverKey: string) {
         super(serverKey || 'docker.connection_error');
-        this.key = serverKey === 'docker.unauthorized' ? 'docker.unauthorized' : 'docker.connection_error';
+        this.key = HOST_ERROR_KEYS.includes(serverKey) ? serverKey : 'docker.connection_error';
     }
 }
 

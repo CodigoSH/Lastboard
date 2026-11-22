@@ -233,7 +233,7 @@ export function overviewHtml(o: OverviewData, t: T, fmt: Fmt): string {
         const use = o.hostUse[h.host.id];
         const tone = h.error ? 'bad' : 'ok';
         return `<button type="button" class="card card--btn unit" data-hostcard="${e(h.host.id)}"><div class="unit__h"><span class="dot dot--${tone}"></span><span class="unit__n">${e(h.host.name)}</span>
-            <span class="unit__tail"><span class="chip">${e(t(TYPE_KEYS[h.host.type] ?? 'docker.host_type'))}</span></span></div>
+            <span class="unit__tail"><span class="chip">${h.host.engine === 'podman' ? 'Podman · ' : ''}${e(t(TYPE_KEYS[h.host.type] ?? 'docker.host_type'))}</span></span></div>
             <div class="unit__sub">${h.host.url ? tech(h.host.url) : ''}</div>
             ${h.error ? `<div class="unit__off">${e(t(h.error))}</div>` : h.loaded
                 ? `<div class="kpi__sub"><span>${e(fmt.num(up))}/${e(fmt.num(h.containers.length))} ${e(t('infra.filter_up').toLowerCase())}</span><span>${use && use.cpu !== null && use.mem !== null ? `CPU ${e(fmt.pct(use.cpu))} · RAM ${e(fmt.pct(use.mem))}` : ''}</span></div>` : ''}</button>`;

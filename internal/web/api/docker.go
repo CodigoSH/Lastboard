@@ -69,7 +69,7 @@ func (h *DockerHandler) AgentVersionFor(w http.ResponseWriter, r *http.Request) 
 	}
 	v, err := AgentVersion(e.address())
 	if err != nil {
-		http.Error(w, "docker.connection_error", http.StatusBadGateway)
+		http.Error(w, connectionKey(err), http.StatusBadGateway)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -83,7 +83,7 @@ func (h *DockerHandler) writeContainers(w http.ResponseWriter, hostURL string) {
 		return
 	}
 	if err != nil {
-		http.Error(w, "docker.connection_error", http.StatusBadGateway)
+		http.Error(w, connectionKey(err), http.StatusBadGateway)
 		return
 	}
 
@@ -171,7 +171,7 @@ func writeReadError(w http.ResponseWriter, err error) {
 	case errors.Is(err, errNoSuchContainer):
 		http.Error(w, "docker.not_found", http.StatusNotFound)
 	default:
-		http.Error(w, "docker.connection_error", http.StatusBadGateway)
+		http.Error(w, connectionKey(err), http.StatusBadGateway)
 	}
 }
 

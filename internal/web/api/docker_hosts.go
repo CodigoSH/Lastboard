@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"path/filepath"
 	"regexp"
 	"strings"
 	"time"
@@ -44,11 +45,41 @@ const (
 	dockerAgent = "agent" // the Lastboard Agent, reached with its token
 )
 
+// The engines a host can run. They speak the same API, so this changes what the
+// screen explains and offers, not how the host is reached.
+const (
+	engineDocker = "docker"
+	enginePodman = "podman"
+)
+
+// engineOf is the engine a stored or submitted value names. Anything else, and
+// a host saved before there was a choice, is Docker.
+func engineOf(v string) string {
+	if strings.EqualFold(strings.TrimSpace(v), enginePodman) {
+		return enginePodman
+	}
+	return engineDocker
+}
+
+// A socket path is what a local host reads instead of Docker's usual one. It has
+// to be absolute and plain: no ".." and no "//" to hide where it points, and no
+// longer than a Unix socket address can be.
+const maxSocketPath = 107
+
+func validSocketPath(p string) bool {
+	if p == "" || len(p) > maxSocketPath || !strings.HasPrefix(p, "/") || strings.ContainsRune(p, 0) {
+		return false
+	}
+	return filepath.Clean(p) == p
+}
+
 type dockerHost struct {
 	ID   string `json:"id"`
 	Name string `json:"name"`
 	Type string `json:"type"`
 	URL  string `json:"url"`
+	// Engine is docker or podman; empty is docker.
+	Engine string `json:"engine,omitempty"`
 	// Never leaves the server. See dockerSettings.
 	Token   string `json:"token,omitempty"`
 	Enabled bool   `json:"enabled"`
@@ -71,6 +102,10 @@ func bareHost(raw string) string {
 func (e dockerHost) address() string {
 	switch e.Type {
 	case dockerLocal:
+		// The socket the host was given, or Docker's own when it was given none.
+		if validSocketPath(e.URL) {
+			return "unix://" + e.URL
+		}
 		return "local"
 	case dockerAgent:
 		q := url.Values{}
@@ -194,6 +229,7 @@ type dockerSettingsHost struct {
 	Name    string `json:"name"`
 	Type    string `json:"type"`
 	URL     string `json:"url"`
+	Engine  string `json:"engine"`
 	Enabled bool   `json:"enabled"`
 	// HasToken says a token is stored without saying what it is.
 	HasToken bool `json:"has_token"`
@@ -213,7 +249,7 @@ func (h *DockerHandler) GetSettings(w http.ResponseWriter, r *http.Request) {
 			out.Enabled = true
 		}
 		out.Hosts = append(out.Hosts, dockerSettingsHost{
-			ID: e.ID, Name: e.Name, Type: e.Type, URL: e.URL, Enabled: e.Enabled,
+			ID: e.ID, Name: e.Name, Type: e.Type, URL: e.URL, Engine: engineOf(e.Engine), Enabled: e.Enabled,
 			HasToken: e.Token != "", Usable: usable,
 		})
 	}
@@ -233,11 +269,12 @@ func (h *DockerHandler) UpdateSettings(w http.ResponseWriter, r *http.Request) {
 
 	var in struct {
 		Hosts []struct {
-			ID    string `json:"id"`
-			Name  string `json:"name"`
-			Type  string `json:"type"`
-			URL   string `json:"url"`
-			Token string `json:"token"`
+			ID     string `json:"id"`
+			Name   string `json:"name"`
+			Type   string `json:"type"`
+			URL    string `json:"url"`
+			Engine string `json:"engine"`
+			Token  string `json:"token"`
 			// ClearToken is the emptied box that held the dots. Without it an
 			// empty token means "not touched", which is also what a page that has
 			// not reloaded sends.
@@ -267,9 +304,19 @@ func (h *DockerHandler) UpdateSettings(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "general.invalid_input", http.StatusBadRequest)
 			return
 		}
+		engine := engineOf(raw.Engine)
+		// Podman's API has no business on the network without a proxy that
+		// authenticates it: it is reached through the agent or its socket.
+		if engine == enginePodman && (kind == dockerTCP || kind == dockerTLS) {
+			http.Error(w, "general.invalid_input", http.StatusBadRequest)
+			return
+		}
 		address := strings.TrimSpace(raw.URL)
 		if kind == dockerLocal {
-			address = ""
+			if address != "" && !validSocketPath(address) {
+				http.Error(w, "docker.invalid_socket", http.StatusBadRequest)
+				return
+			}
 		} else if bareHost(address) == "" {
 			http.Error(w, "docker.missing_url", http.StatusBadRequest)
 			return
@@ -291,6 +338,9 @@ func (h *DockerHandler) UpdateSettings(w http.ResponseWriter, r *http.Request) {
 		}
 
 		e := dockerHost{ID: id, Name: strings.TrimSpace(raw.Name), Type: kind, URL: address, Enabled: raw.Enabled}
+		if engine == enginePodman {
+			e.Engine = enginePodman
+		}
 		switch {
 		case kind != dockerAgent:
 			// Only an agent has a token; a host that stopped being one drops it.
@@ -302,6 +352,9 @@ func (h *DockerHandler) UpdateSettings(w http.ResponseWriter, r *http.Request) {
 		}
 		if e.Name == "" {
 			e.Name = "Docker"
+			if engine == enginePodman {
+				e.Name = "Podman"
+			}
 		}
 		list = append(list, e)
 	}

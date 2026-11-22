@@ -34,7 +34,7 @@ import {
     type BoolKey, type Grants, type LevelKey, type ProfileName,
 } from '../../../services/accountAccess';
 import { userProfilesTemplate, userPermsTemplate, userSummaryTemplate } from './userDialog.template';
-import { fetchDockerSettings, saveDockerSettings, type AccountDockerHost, type DockerHostEdit } from '../../../services/dockerHosts';
+import { connectionKinds, DEFAULT_SOCKET, fetchDockerSettings, saveDockerSettings, startingKind, type AccountDockerHost, type DockerEngine, type DockerHostEdit, type DockerHostType } from '../../../services/dockerHosts';
 import { agentIsOld, fetchAgentVersion, fetchContainers, hostErrorKey } from '../../../services/dockerShared';
 import { isEnter } from '../../../services/imeKeys';
 import css from './SettingsContent.css' with { type: 'text' };
@@ -1167,20 +1167,43 @@ class SettingsContent extends HTMLElement {
         show('docker-connection', !locked);
         show('docker-locked-note', locked);
 
-        const kinds = this.docker.admin ? ['local', 'agent', 'tcp', 'tls'] : ['agent'];
+        // The engine comes first because what the rest asks for depends on it.
+        const engineSel = root.getElementById('docker-engine') as any;
+        if (engineSel) {
+            engineSel.options = [{ value: 'docker', label: 'Docker' }, { value: 'podman', label: 'Podman' }];
+            engineSel.value = h?.engine === 'podman' ? 'podman' : 'docker';
+        }
         const typeSel = root.getElementById('docker-type') as any;
-        if (typeSel) {
+        const engine = () => (engineSel?.value === 'podman' ? 'podman' : 'docker') as DockerEngine;
+        const fillKinds = (wanted?: string) => {
+            if (!typeSel) return;
+            const kinds = connectionKinds(engine(), this.docker.admin);
             typeSel.options = kinds.map(k => ({
                 value: k,
                 label: i18n.t(k === 'agent' ? 'docker.host_type_agent' : `docker.host_type_${k}`),
             }));
-            typeSel.value = h && kinds.includes(h.type) ? h.type : kinds[0];
-        }
+            typeSel.value = startingKind(engine(), this.docker.admin, wanted as DockerHostType | undefined);
+        };
+        // A new host starts on the agent; an edited one on the kind it has.
+        fillKinds(h ? h.type : undefined);
+        const socket = root.getElementById('docker-socket') as HTMLInputElement | null;
+        if (socket) socket.value = h && h.type === 'local' ? h.url : '';
         const sync = () => {
             const kind = typeSel?.value || 'agent';
             show('docker-url-row', kind !== 'local');
+            show('docker-socket-row', kind === 'local');
             show('docker-token-row', kind === 'agent');
+            if (socket) socket.placeholder = DEFAULT_SOCKET[engine()];
+            const hint = root.getElementById('docker-hint');
+            if (hint) {
+                hint.textContent = i18n.t(`docker.hint_${kind === 'local' ? 'local' : 'agent'}_${engine()}`);
+                hint.style.display = kind === 'tcp' || kind === 'tls' ? 'none' : '';
+            }
         };
+        if (engineSel && !engineSel.dataset.bound) {
+            engineSel.dataset.bound = '1';
+            engineSel.addEventListener('change', () => { fillKinds(typeSel?.value); sync(); });
+        }
         if (typeSel && !typeSel.dataset.bound) {
             typeSel.dataset.bound = '1';
             typeSel.addEventListener('change', sync);
@@ -1218,7 +1241,9 @@ class SettingsContent extends HTMLElement {
         const existing = index >= 0 ? this.docker.hosts[index] : undefined;
         const locked = !!existing && !existing.usable;
         const type = locked ? existing!.type : ((root.getElementById('docker-type') as any)?.value || 'agent');
-        const url = locked ? existing!.url : (type === 'local' ? '' : val('docker-url'));
+        const engine: DockerEngine = locked ? (existing!.engine ?? 'docker') : ((root.getElementById('docker-engine') as any)?.value === 'podman' ? 'podman' : 'docker');
+        // A local host's address is the socket it reads; empty is the engine's usual one.
+        const url = locked ? existing!.url : (type === 'local' ? val('docker-socket') : val('docker-url'));
 
         if (type !== 'local' && !url) {
             if (window.notifier) window.notifier.show(i18n.t('docker.missing_url'), 'error');
@@ -1228,7 +1253,7 @@ class SettingsContent extends HTMLElement {
         const edited: DockerHostEdit = {
             id: existing?.id || '',
             name: val('docker-name'),
-            type, url,
+            type, url, engine,
             enabled: !!(root.getElementById('docker-enabled') as HTMLInputElement | null)?.checked,
             has_token: !!existing?.has_token && type === 'agent',
             usable: true,

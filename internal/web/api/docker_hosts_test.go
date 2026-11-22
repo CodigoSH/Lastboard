@@ -142,3 +142,19 @@ func TestMigrateDockerHostsMovesThemToTheAccount(t *testing.T) {
 		t.Errorf("a second run changed the account: %+v", again)
 	}
 }
+
+func TestALocalHostReadsItsOwnSocketWhenGivenOne(t *testing.T) {
+	cases := []struct {
+		host dockerHost
+		want string
+	}{
+		{dockerHost{Type: dockerLocal}, "local"},
+		{dockerHost{Type: dockerLocal, URL: "/run/podman/podman.sock"}, "unix:///run/podman/podman.sock"},
+		{dockerHost{Type: dockerLocal, URL: "../etc/x"}, "local"}, // a path that is not plain is not followed
+	}
+	for _, c := range cases {
+		if got := c.host.address(); got != c.want {
+			t.Errorf("%+v: address() = %q, want %q", c.host, got, c.want)
+		}
+	}
+}

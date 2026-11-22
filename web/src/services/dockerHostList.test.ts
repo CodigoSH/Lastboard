@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test';
-import { dockerSettingsPayload, hostIdsToStore, hostsForWidget, newUsableHostIds, type AccountDockerHost } from './dockerHostList';
+import { connectionKinds, dockerSettingsPayload, hostIdsToStore, startingKind, hostsForWidget, newUsableHostIds, type AccountDockerHost } from './dockerHostList';
 
 const host = (over: Partial<AccountDockerHost> = {}): AccountDockerHost => ({
     id: 'a', name: 'A', type: 'agent', url: 'nas:9091', enabled: true, has_token: true, usable: true, ...over,
@@ -50,10 +50,38 @@ describe('dockerSettingsPayload', () => {
             expect(out.clear_token).toBeUndefined();
         }
     });
-    test('only an agent has a token, and a local socket has no address', () => {
-        const out = dockerSettingsPayload([{ ...host({ type: 'local', url: 'x' }), tokenBox: 'zzz' }]).hosts[0];
+    test('only an agent has a token', () => {
+        const out = dockerSettingsPayload([{ ...host({ type: 'local', url: '/run/podman/podman.sock' }), tokenBox: 'zzz' }]).hosts[0];
         expect(out.token).toBeUndefined();
-        expect(out.url).toBe('');
+    });
+    test('a local host sends the socket it reads, and the engine travels with every host', () => {
+        const [local, old] = dockerSettingsPayload([
+            host({ type: 'local', url: '/run/podman/podman.sock', engine: 'podman' }),
+            host({ id: 'b' }),
+        ]).hosts;
+        expect(local).toMatchObject({ url: '/run/podman/podman.sock', engine: 'podman' });
+        expect(old.engine).toBe('docker'); // a host from before the choice is Docker
+    });
+});
+
+describe('connectionKinds', () => {
+    test('the agent comes first, for either engine', () => {
+        expect(connectionKinds('docker', true)[0]).toBe('agent');
+        expect(connectionKinds('podman', true)[0]).toBe('agent');
+    });
+    test('Podman is never offered on a network port', () => {
+        expect(connectionKinds('podman', true)).toEqual(['agent', 'local']);
+        expect(connectionKinds('docker', true)).toEqual(['agent', 'local', 'tcp', 'tls']);
+    });
+    test('a member has only the agent', () => {
+        expect(connectionKinds('docker', false)).toEqual(['agent']);
+        expect(connectionKinds('podman', false)).toEqual(['agent']);
+    });
+    test('a form starts on the agent, keeps a kind the engine offers, and drops one it does not', () => {
+        expect(startingKind('docker', true)).toBe('agent');
+        expect(startingKind('docker', true, 'tcp')).toBe('tcp');
+        expect(startingKind('podman', true, 'tcp')).toBe('agent');
+        expect(startingKind('docker', false, 'local')).toBe('agent');
     });
 });
 

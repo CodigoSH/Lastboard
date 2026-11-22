@@ -883,8 +883,8 @@ export type DockerRowStatus = {
     containers?: number; version?: string | null; key?: string;
 };
 
-const dockerTypeLabel = (type: string) =>
-    i18n.t(type === 'agent' ? 'docker.host_tag_agent' : `docker.host_type_${type}`);
+const dockerTypeLabel = (type: string, engine?: string) =>
+    (engine === 'podman' ? 'Podman · ' : '') + i18n.t(type === 'agent' ? 'docker.host_tag_agent' : `docker.host_type_${type}`);
 
 const dockerRow = (h: AccountDockerHost, i: number, status: DockerRowStatus | undefined) => {
     const state = !h.usable ? 'bad'
@@ -897,7 +897,7 @@ const dockerRow = (h: AccountDockerHost, i: number, status: DockerRowStatus | un
                 ? i18n.t('settings.docker_connected', { containers: String(status.containers ?? 0) })
                 : status?.state === 'error' ? i18n.t(status.key || 'docker.connection_error')
                     : status?.state === 'testing' ? i18n.t('settings.docker_testing')
-                        : `${dockerTypeLabel(h.type)}${h.url ? ` · ${h.url}` : ''}`;
+                        : `${dockerTypeLabel(h.type, h.engine)}${h.url ? ` · ${h.url}` : ''}`;
 
     // Which release the agent runs, where the person sees it: beside the name, amber when it is older than the page needs.
     const old = !!status?.version && agentIsOld(status.version);
@@ -982,6 +982,11 @@ export const dockerTemplate = (
 
         <div id="docker-connection">
             <div class="settings-content__form-group">
+                <label class="settings-content__label">${i18n.t('docker.engine')}</label>
+                <app-select id="docker-engine" value="docker"></app-select>
+            </div>
+
+            <div class="settings-content__form-group">
                 <label class="settings-content__label">${i18n.t('docker.host_type')}</label>
                 <app-select id="docker-type" value="agent"></app-select>
             </div>
@@ -990,6 +995,13 @@ export const dockerTemplate = (
                 <label class="settings-content__label">${i18n.t('docker.host_url')}</label>
                 <input type="text" id="docker-url" class="settings-content__input" spellcheck="false" placeholder="192.168.1.100:9091">
             </div>
+
+            <div class="settings-content__form-group" id="docker-socket-row">
+                <label class="settings-content__label">${i18n.t('docker.socket_path')}</label>
+                <input type="text" id="docker-socket" class="settings-content__input" spellcheck="false" autocomplete="off">
+            </div>
+
+            <p class="settings-content__text-dim" id="docker-hint" style="font-size: 12px; margin: -6px 0 16px;"></p>
 
             <p class="settings-content__text-dim" id="docker-agent-note" style="font-size: 12px; margin: -6px 0 16px; display: none;"></p>
 

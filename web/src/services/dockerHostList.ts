@@ -9,12 +9,40 @@ import type { DockerHost } from './dockerShared';
 
 export type DockerHostType = DockerHost['type'];
 
+/** Docker and Podman answer the same API; what differs is what the screen has to explain. */
+export type DockerEngine = 'docker' | 'podman';
+
+/**
+ * The ways to reach a host that make sense for an engine, the best first.
+ * A member only ever has the agent. Podman has no TCP or TLS: its API is not
+ * to be put on a network port, so it is reached through the agent or its socket.
+ */
+export function connectionKinds(engine: DockerEngine, admin: boolean): DockerHostType[] {
+    if (!admin) return ['agent'];
+    return engine === 'podman' ? ['agent', 'local'] : ['agent', 'local', 'tcp', 'tls'];
+}
+
+/** The kind a form starts on: the one asked for if this engine offers it, otherwise the first. */
+export function startingKind(engine: DockerEngine, admin: boolean, wanted?: DockerHostType): DockerHostType {
+    const kinds = connectionKinds(engine, admin);
+    return wanted && kinds.includes(wanted) ? wanted : kinds[0];
+}
+
+/** Where each engine keeps the socket a local host reads when none is given. */
+export const DEFAULT_SOCKET: Record<DockerEngine, string> = {
+    docker: '/var/run/docker.sock',
+    podman: '/run/podman/podman.sock',
+};
+
 /** A host as /api/docker/settings lists it. The token is never part of it. */
 export interface AccountDockerHost {
     id: string;
     name: string;
     type: DockerHostType;
+    /** The address; for a local host, the path of its socket, or nothing for Docker's own. */
     url: string;
+    /** What runs there. A host from before the choice, or one that did not say, is Docker. */
+    engine?: DockerEngine;
     enabled: boolean;
     has_token: boolean;
     /** False for a host this account may not reach; it can only be renamed, switched off or removed. */
@@ -39,7 +67,7 @@ export function hostsForWidget(all: AccountDockerHost[], hostIds?: string[]): Do
     const chosen = hostIds && hostIds.length ? new Set(hostIds) : null;
     return all
         .filter(h => h.enabled && h.usable && (!chosen || chosen.has(h.id)))
-        .map(h => ({ id: h.id, name: h.name, type: h.type, url: h.url }));
+        .map(h => ({ id: h.id, name: h.name, type: h.type, url: h.url, engine: h.engine }));
 }
 
 /**
@@ -75,7 +103,7 @@ export function dockerSettingsPayload(hosts: DockerHostEdit[]) {
     return {
         hosts: hosts.map(h => {
             const out: Record<string, unknown> = {
-                id: h.id, name: h.name, type: h.type, url: h.type === 'local' ? '' : h.url, enabled: h.enabled,
+                id: h.id, name: h.name, type: h.type, url: h.url, engine: h.engine ?? 'docker', enabled: h.enabled,
             };
             if (h.type !== 'agent' || h.tokenBox === undefined) return out;
             const change = secretChange(h.tokenBox, h.has_token);
