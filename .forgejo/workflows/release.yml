@@ -176,18 +176,16 @@ jobs:
           fi
           echo "The stable channel sees: ${latest:-no stable release yet}"
 
-  # Retention: only after the release is successfully published (needs: release)
-  # do we dispatch the pruner. Gating on success guarantees we never delete the
-  # cycle's betas for a release that failed to ship, and by now the releases API
-  # already lists this version (no race — the previous tag-push trigger was the bug).
-  trigger-prune:
-    name: Trigger retention prune
-    needs: release
-    runs-on: ubuntu-latest
-    # See the note on the job above: the label lands on a 2021 Debian image by
-    # default, so it is pinned.
-    container: node:24-trixie
-    steps:
+      # Retention and the website are asked for from here, as the last steps of the release and
+      # not as jobs of their own. Each is four seconds of curl, and a job of its own is a slot of
+      # the runner, which has one: it went to the back of a queue of everybody else's runs and the
+      # release read as running for as long as that took. A step runs only if every step before it
+      # passed, which is all the `needs: release` they replace was for.
+      #
+      # Retention: only after the release is successfully published do we dispatch the pruner.
+      # Gating on success guarantees we never delete the cycle's betas for a release that failed to
+      # ship, and by now the releases API already lists this version (no race — the previous
+      # tag-push trigger was the bug).
       - name: Dispatch prune-releases (live) after successful publish
         env:
           CI_TOKEN: ${{ secrets.CI_TOKEN }}
@@ -200,20 +198,11 @@ jobs:
           echo "Prune dispatch HTTP $CODE"
           [ "$CODE" = "204" ] || { echo "Prune dispatch failed (HTTP $CODE)"; exit 1; }
 
-  # The site reads the latest release from the Forgejo API at build time, and a
-  # push-triggered build happens minutes before this release exists (and while
-  # it is still a draft), so it would advertise the previous version until some
-  # unrelated push rebuilt it. Asking here, gated on a published release, is the
-  # only trigger that sees this version. Dispatched rather than done here, so
-  # how the site is rebuilt lives in one place: site-rebuild.yml.
-  trigger-site-rebuild:
-    name: Rebuild the website
-    needs: release
-    runs-on: ubuntu-latest
-    # See the note on the first job: the label lands on a 2021 Debian image by
-    # default, so it is pinned.
-    container: node:24-trixie
-    steps:
+      # The site reads the latest release from the Forgejo API at build time, and a push-triggered
+      # build happens minutes before this release exists (and while it is still a draft), so it
+      # would advertise the previous version until some unrelated push rebuilt it. Asking here,
+      # gated on a published release, is the only trigger that sees this version. Dispatched rather
+      # than done here, so how the site is rebuilt lives in one place: site-rebuild.yml.
       - name: Dispatch the website rebuild
         env:
           CI_TOKEN: ${{ secrets.CI_TOKEN }}
