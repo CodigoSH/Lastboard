@@ -1,5 +1,16 @@
 # syntax=docker/dockerfile:1
 
+# Where the binaries come from is a build argument:
+#
+#   BINARIES=source    (the default) compiles them here, from the source in the
+#                      build context. `docker build .` from a checkout.
+#   BINARIES=prebuilt  takes them, already built, from image-bin/ in the build
+#                      context. The release does this: the image then carries
+#                      the very binary that is inside the release's tarball,
+#                      checked by its checksums.txt, and not a second build of
+#                      the same commit.
+ARG BINARIES=source
+
 # ==========================================
 # Stage 1: Frontend Build (Bun)
 # ==========================================
@@ -18,9 +29,9 @@ COPY . .
 RUN bun web/build.ts
 
 # ==========================================
-# Stage 2: Backend Build (Go)
+# Stage 2: Backend Build (Go), from the source
 # ==========================================
-FROM --platform=$BUILDPLATFORM golang:1.27.4-alpine AS backend-builder
+FROM --platform=$BUILDPLATFORM golang:1.27.4-alpine AS bins-source
 WORKDIR /app
 
 # Install build dependencies
@@ -41,15 +52,31 @@ ARG TARGETOS
 ARG TARGETARCH
 ARG VERSION=dev
 
-# Build main binary (timetzdata embeds timezone DB in the binary)
+# Build main binary (timetzdata embeds timezone DB in the binary: the runtime
+# image has no /usr/share/zoneinfo). The release builds it the same way.
 RUN CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH \
     go build -trimpath -tags timetzdata \
     -ldflags="-s -w -X git.codigosh.com/CodigoSH/Lastboard/internal/version.Current=${VERSION}" \
-    -o /app/lastboard ./cmd/lastboard
+    -o /out/lastboard ./cmd/lastboard
 
 # Build healthcheck binary for target platform
 RUN CGO_ENABLED=0 GOOS=$TARGETOS GOARCH=$TARGETARCH \
-    go build -trimpath -ldflags="-s -w" -o /app/healthcheck ./cmd/healthcheck
+    go build -trimpath -ldflags="-s -w" -o /out/healthcheck ./cmd/healthcheck && \
+    cp /etc/ssl/certs/ca-certificates.crt /out/ca-certificates.crt
+
+# ==========================================
+# Stage 2, the other way: binaries built by the release
+# ==========================================
+# On the build platform too, so nothing runs under emulation. image-bin/ holds,
+# for each architecture, the server taken out of the release's tarball and the
+# health check.
+FROM --platform=$BUILDPLATFORM alpine:3.24 AS bins-prebuilt
+ARG TARGETARCH
+COPY image-bin/lastboard-linux-${TARGETARCH} /out/lastboard
+COPY image-bin/healthcheck-linux-${TARGETARCH} /out/healthcheck
+RUN cp /etc/ssl/certs/ca-certificates.crt /out/ca-certificates.crt
+
+FROM bins-${BINARIES} AS bins
 
 # ==========================================
 # Stage 3: Runtime (Alpine, no RUN = no QEMU)
@@ -60,12 +87,12 @@ FROM alpine:3.24
 
 WORKDIR /app
 
-# CA certificates from builder (text files, architecture-independent)
-COPY --from=backend-builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
+# CA certificates (text files, architecture-independent)
+COPY --from=bins /out/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
 
 # Cross-compiled binaries
-COPY --from=backend-builder /app/lastboard /app/lastboard
-COPY --from=backend-builder /app/healthcheck /app/healthcheck
+COPY --from=bins /out/lastboard /app/lastboard
+COPY --from=bins /out/healthcheck /app/healthcheck
 
 # Networking Configuration
 EXPOSE 8080

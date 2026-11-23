@@ -39,12 +39,16 @@ jobs:
         # The names are a contract: the web updater and install.sh ask for
         # lastboard-linux-<arch>.tar.gz with the binary at the archive's root,
         # and checksums.txt beside it.
+        #
+        # -tags timetzdata embeds the time zone database, as the container image
+        # always did: the image has no /usr/share/zoneinfo and now carries this
+        # very binary. On a machine that has the database, Go reads that one.
         run: |
           VERSION=${GITHUB_REF_NAME}
           mkdir -p dist
           for arch in amd64 arm64; do
             mkdir -p "build/$arch"
-            CGO_ENABLED=0 GOOS=linux GOARCH=$arch go build -trimpath \
+            CGO_ENABLED=0 GOOS=linux GOARCH=$arch go build -trimpath -tags timetzdata \
               -ldflags "-s -w -extldflags '-static' -X git.codigosh.com/CodigoSH/Lastboard/internal/version.Current=$VERSION" \
               -o "build/$arch/lastboard" ./cmd/lastboard
             tar -czf "dist/lastboard-linux-$arch.tar.gz" -C "build/$arch" lastboard
@@ -73,6 +77,120 @@ jobs:
           fi
           go run ./cmd/sign dist/checksums.txt
           echo "Signature:"; cat dist/checksums.txt.sig
+
+      # ---- the container image, from the binaries above -------------------
+      #
+      # The image used to be a workflow of its own that compiled the same commit
+      # again inside the Dockerfile, for each architecture: two more builds per
+      # release and a second slot of the runner, for a binary that was not the
+      # one in the tarballs. Now it is these binaries, copied: what is pulled is
+      # what the updater downloads, checked by the same checksums.txt.
+      #
+      # Before the release is created, so that an image that cannot be built
+      # stops the release instead of leaving a release with no image beside it.
+      - name: Binaries for the image
+        run: |
+          mkdir -p image-bin
+          for arch in amd64 arm64; do
+            cp "build/$arch/lastboard" "image-bin/lastboard-linux-$arch"
+            CGO_ENABLED=0 GOOS=linux GOARCH=$arch go build -trimpath -ldflags "-s -w" \
+              -o "image-bin/healthcheck-linux-$arch" ./cmd/healthcheck
+            # The file inside the published tarball, and not only the same name.
+            tar -xzOf "dist/lastboard-linux-$arch.tar.gz" lastboard | cmp - "image-bin/lastboard-linux-$arch"
+          done
+          ls -la image-bin
+
+      # The Docker socket is mounted into the job container whatever image it
+      # runs on (act/runner/run_context.go, platformImage and GetBindsAndMounts,
+      # forgejo-runner v13.2.0).
+      - name: Install Docker CLI and Buildx
+        run: |
+          # Retry transient gateway errors (e.g. 504) on external downloads.
+          CURL="curl -fsSL --retry 5 --retry-all-errors --retry-delay 3 --connect-timeout 30"
+
+          # Docker CLI static binary (pinned, no apt/systemd deps)
+          $CURL "https://download.docker.com/linux/static/stable/x86_64/docker-29.9.2.tgz" \
+            | tar xz --strip-components=1 -C /usr/local/bin docker/docker
+
+          # Buildx plugin (pinned)
+          mkdir -p /usr/lib/docker/cli-plugins
+          $CURL "https://github.com/docker/buildx/releases/download/v0.38.1/buildx-v0.38.1.linux-amd64" \
+            -o /usr/lib/docker/cli-plugins/docker-buildx
+          chmod +x /usr/lib/docker/cli-plugins/docker-buildx
+
+      - name: Set lowercase image name
+        id: vars
+        run: echo "image=$(echo "${GITHUB_REPOSITORY}" | tr '[:upper:]' '[:lower:]')" >> $GITHUB_OUTPUT
+
+      - name: Decide which moving tags this version may take
+        id: moving
+        run: |
+          # A moving tag goes only to the newest version of its kind. A tag pushed
+          # again for an old release (a history rewrite does that) must not take
+          # `latest` back to it: on 24-oct-2026 a re-pushed v1.0.6 did, and
+          # `:latest` served a June image for days.
+          this="${GITHUB_REF_NAME#v}"
+          names=$(git ls-remote --tags --refs origin 'v*' | sed 's#.*refs/tags/v##')
+          # No match is an answer (a repository with no beta yet), not an error: the
+          # runner's shell stops on a failed command inside a pipeline.
+          [ -n "$names" ] || { echo "no version tags found on the remote: refusing to guess"; exit 1; }
+          newest() { { printf '%s\n' "$names" | grep -E "$1" || true; } | sort -V | tail -n 1; }
+          stable=$(newest '^[0-9]+\.[0-9]+\.[0-9]+$')
+          beta=$(newest '^[0-9]+\.[0-9]+\.[0-9]+-[Bb]eta')
+          rc=$(newest '^[0-9]+\.[0-9]+\.[0-9]+-(RC|rc)')
+          [ "$this" = "$stable" ] && echo "latest=true" >> "$GITHUB_OUTPUT" || echo "latest=false" >> "$GITHUB_OUTPUT"
+          [ "$this" = "$beta" ] && echo "beta=true" >> "$GITHUB_OUTPUT" || echo "beta=false" >> "$GITHUB_OUTPUT"
+          [ "$this" = "$rc" ] && echo "rc=true" >> "$GITHUB_OUTPUT" || echo "rc=false" >> "$GITHUB_OUTPUT"
+          echo "v$this — newest stable v$stable, beta v$beta, rc v$rc"
+
+      - name: Extract metadata (tags, labels)
+        id: meta
+        uses: docker/metadata-action@v6
+        with:
+          images: git.codigosh.com/${{ steps.vars.outputs.image }}
+          # `latest` is decided by the step above and nowhere else. The action's
+          # default flavour is `latest=auto`, which adds the tag to whatever it
+          # judges to be the newest release — and it judges by parsing the
+          # version. A tag like v1.7.0-Beta.09 is not valid semver (a numeric
+          # prerelease identifier may not carry a leading zero), so the parse
+          # failed and it moved `latest` onto that beta.
+          flavor: |
+            latest=false
+          tags: |
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=raw,value=latest,enable=${{ steps.moving.outputs.latest == 'true' }}
+            type=raw,value=beta,enable=${{ steps.moving.outputs.beta == 'true' }}
+            type=raw,value=rc,enable=${{ steps.moving.outputs.rc == 'true' }}
+            type=ref,event=tag
+
+      - name: Login to registry
+        env:
+          CI_TOKEN: ${{ secrets.CI_TOKEN }}
+        run: echo "${CI_TOKEN}" | docker login git.codigosh.com -u ${{ github.actor }} --password-stdin
+
+      - name: Set up Docker Buildx
+        run: |
+          docker buildx create --name multiarch --driver docker-container --use
+          docker buildx inspect --bootstrap
+
+      - name: Build and push multi-arch image
+        run: |
+          TAGS=""
+          while IFS= read -r tag; do
+            [ -z "$tag" ] && continue
+            TAGS="$TAGS --tag $tag"
+          done <<< "${{ steps.meta.outputs.tags }}"
+
+          # BINARIES=prebuilt: the image takes image-bin/ instead of compiling.
+          # Nothing runs on the target platform, so neither architecture is
+          # emulated. See the Dockerfile.
+          docker buildx build \
+            --platform linux/amd64,linux/arm64 \
+            --build-arg BINARIES=prebuilt \
+            $TAGS \
+            --push \
+            .
 
       - name: Create or update the release
         # Every call is checked. Uploads used to go through `curl -s`, which
