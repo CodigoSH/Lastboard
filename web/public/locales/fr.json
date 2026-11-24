@@ -480,6 +480,7 @@
   "settings.unit_metric": "Métrique (°C, km/h)",
   "settings.unit_system": "Unités de mesure",
   "settings.up_to_date": "Vous êtes à jour",
+  "settings.proxy_unread": "Les requêtes arrivent par un proxy inverse ou un tunnel, mais Lastboard est configuré comme si rien ne se trouvait devant : tous les visiteurs ont donc l’adresse de ce serveur, dans les sessions et dans les limites de connexion. S’il y en a un devant, réglez {setting} sur true et redémarrez Lastboard.",
   "settings.up_to_date_docker_msg": "Vous êtes strictement à jour.",
   "settings.update_available": "Nouvelle mise à jour !",
   "settings.update_check_failed": "Serveur de versions injoignable.",

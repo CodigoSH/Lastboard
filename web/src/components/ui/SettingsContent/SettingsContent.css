@@ -1091,6 +1091,30 @@ button {
     padding: 28px 20px 24px;
 }
 
+/* A notice for the administrator under the product card: the warning's colour on the card's edge and
+   wash, the sign beside the words. */
+.settings-content__notice {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    border-color: rgba(var(--warning-rgb), 0.35);
+    background: rgba(var(--warning-rgb), 0.08);
+}
+
+.settings-content__notice svg {
+    flex: none;
+    width: 20px;
+    height: 20px;
+    fill: var(--warning-color);
+}
+
+.settings-content__notice p {
+    margin: 0;
+    font-size: 13px;
+    line-height: 1.5;
+    color: var(--text-main);
+}
+
 .settings-content__about-logo {
     width: 72px;
     height: auto;

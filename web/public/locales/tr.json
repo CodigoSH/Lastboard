@@ -480,6 +480,7 @@
   "settings.unit_metric": "Metrik (°C, km/sa)",
   "settings.unit_system": "Ölçü Birimleri",
   "settings.up_to_date": "Güncel sürümdesiniz",
+  "settings.proxy_unread": "İstekler bir ters proxy ya da tünel üzerinden geliyor, ancak Lastboard önünde hiçbir şey yokmuş gibi ayarlı; bu yüzden tüm ziyaretçiler o sunucunun adresiyle görünüyor: oturumlarda ve giriş sınırlarında. Önünde bir tane varsa {setting} değerini true yapın ve Lastboard'i yeniden başlatın.",
   "settings.up_to_date_docker_msg": "Güncel sürümü kullanıyorsunuz.",
   "settings.update_available": "Yeni güncelleme!",
   "settings.update_check_failed": "Sürüm sunucusuna ulaşılamıyor.",

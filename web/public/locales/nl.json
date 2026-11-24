@@ -480,6 +480,7 @@
   "settings.unit_metric": "Metrisch (°C, km/u)",
   "settings.unit_system": "Meeteenheden",
   "settings.up_to_date": "Je hebt de nieuwste versie",
+  "settings.proxy_unread": "Verzoeken komen binnen via een reverse proxy of een tunnel, maar Lastboard is ingesteld alsof er niets voor staat, dus elke bezoeker heeft het adres van die server: in de sessies en in de aanmeldlimieten. Staat er wel een voor, zet {setting} dan op true en start Lastboard opnieuw.",
   "settings.up_to_date_docker_msg": "Je hebt de nieuwste versie.",
   "settings.update_available": "Nieuwe update!",
   "settings.update_check_failed": "Releaseserver niet bereikbaar.",

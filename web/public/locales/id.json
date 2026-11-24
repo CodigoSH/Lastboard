@@ -480,6 +480,7 @@
   "settings.unit_metric": "Metrik (°C, km/jam)",
   "settings.unit_system": "Unit Pengukuran",
   "settings.up_to_date": "Anda memakai versi terbaru",
+  "settings.proxy_unread": "Permintaan datang melalui reverse proxy atau tunnel, tetapi Lastboard diatur seolah tidak ada apa pun di depannya, sehingga semua pengunjung memakai alamat server itu: di sesi dan di batas masuk. Jika memang ada, atur {setting} ke true lalu mulai ulang Lastboard.",
   "settings.up_to_date_docker_msg": "Anda memakai versi terbaru.",
   "settings.update_available": "Pembaruan baru!",
   "settings.update_check_failed": "Server rilis tidak dapat dijangkau.",

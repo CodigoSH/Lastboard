@@ -480,6 +480,7 @@
   "settings.unit_metric": "मीट्रिक (°C, km/h)",
   "settings.unit_system": "माप की इकाइयाँ",
   "settings.up_to_date": "आप अप-टू-डेट हैं",
+  "settings.proxy_unread": "अनुरोध किसी रिवर्स प्रॉक्सी या टनल से होकर आ रहे हैं, पर Lastboard में सेट है कि आगे कुछ नहीं है, इसलिए हर आगंतुक उसी सर्वर के पते के साथ दिखता है: सत्रों में और साइन इन की सीमाओं में। अगर आगे कुछ है, तो {setting} को true करें और Lastboard फिर से चालू करें।",
   "settings.up_to_date_docker_msg": "आप पूरी तरह से अपडेट हैं।",
   "settings.update_available": "नया अपडेट!",
   "settings.update_check_failed": "रिलीज़ सर्वर तक नहीं पहुँचा जा सका।",

@@ -56,6 +56,9 @@ type Server struct {
 	// backgroundOn is set once the loops that run for the life of the process have started. What reaches out to the
 	// release server on a person's behalf waits for it, so a server built for a test never does.
 	backgroundOn atomic.Bool
+	// forwardedUnread says a proxy's headers have arrived while TRUST_PROXY is
+	// off, so About can say the setting is probably wrong.
+	forwardedUnread atomic.Bool
 }
 
 func NewServer(db *sql.DB) *Server {
@@ -446,6 +449,7 @@ func (s *Server) routes() {
 	// System API
 	systemHandler := api.NewSystemHandler(s.DB)
 	s.Router.Handle("GET /api/system/backup", protect(need(access.Admin, systemHandler.DownloadBackup)))
+	s.Router.Handle("GET /api/system/proxy", protect(need(access.Admin, s.handleProxyNotice)))
 	s.Router.Handle("POST /api/system/backup", protect(need(access.Admin, systemHandler.DownloadProtectedBackup)))
 	s.Router.Handle("POST /api/system/restore", protect(need(access.Admin, systemHandler.RestoreBackup)))
 	s.Router.Handle("POST /api/system/reset", protect(need(access.Admin, systemHandler.FactoryReset)))
@@ -523,6 +527,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	_, _ = rand.Read(nonceBytes)
 	nonce := base64.StdEncoding.EncodeToString(nonceBytes)
 	r = r.WithContext(context.WithValue(r.Context(), nonceCtxKey{}, nonce))
+	s.noticeForwarded(r)
 
 	// Security Headers
 	w.Header().Set("X-Content-Type-Options", "nosniff")

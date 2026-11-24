@@ -480,6 +480,7 @@
   "settings.unit_metric": "Метрическая (°C, км/ч)",
   "settings.unit_system": "Единицы измерения",
   "settings.up_to_date": "Всё обновлено",
+  "settings.proxy_unread": "Запросы приходят через обратный прокси или туннель, но в Lastboard указано, что перед ним ничего нет, поэтому у всех посетителей адрес этого сервера: в списке сеансов и в ограничениях входа. Если он есть, установите {setting} в true и перезапустите Lastboard.",
   "settings.up_to_date_docker_msg": "У вас последняя версия.",
   "settings.update_available": "Новое обновление!",
   "settings.update_check_failed": "Сервер выпусков недоступен.",

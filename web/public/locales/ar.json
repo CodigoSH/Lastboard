@@ -480,6 +480,7 @@
   "settings.unit_metric": "متري (°C, كم/س)",
   "settings.unit_system": "وحدات القياس",
   "settings.up_to_date": "لديك أحدث إصدار",
+  "settings.proxy_unread": "تصل الطلبات عبر وكيل عكسي أو نفق، لكن Lastboard مضبوط على أنه لا يوجد شيء أمامه، لذا يظهر كل الزوار بعنوان ذلك الخادم: في الجلسات وفي حدود تسجيل الدخول. إن كان هناك واحد أمامه، فاضبط {setting} على true وأعد تشغيل Lastboard.",
   "settings.up_to_date_docker_msg": "لديك أحدث إصدار.",
   "settings.update_available": "تحديث جديد!",
   "settings.update_check_failed": "تعذّر الوصول إلى خادم الإصدارات.",

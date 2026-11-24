@@ -6,6 +6,15 @@ services:
       - "8080:8080"
     environment:
       - TZ=America/New_York
+      # "true" when people reach it through a reverse proxy or a tunnel (Nginx,
+      # Nginx Proxy Manager, Caddy, Traefik, Pangolin, Cloudflare Tunnel...).
+      # Left "false" behind one, every visitor looks like that server: one
+      # address in the list of sessions, one sign-in limit shared by everybody.
+      # Set "true" with nothing in front, and a caller chooses their address.
+      - TRUST_PROXY=false
+      # How many of them a request passes through: 1, unless two are chained
+      # (Cloudflare in front of Nginx Proxy Manager, say).
+      - TRUST_PROXY_HOPS=1
       # Run unprivileged (recommended outside Proxmox/LXC): set these to your
       # host user's id/group. The app chowns ./data and drops to them at startup.
       # Leave commented (default 0 = root) if you hit bind-mount permission issues.

@@ -480,6 +480,7 @@
   "settings.unit_metric": "미터법 (°C, km/h)",
   "settings.unit_system": "측정 단위",
   "settings.up_to_date": "최신 상태입니다",
+  "settings.proxy_unread": "요청이 리버스 프록시나 터널을 거쳐 들어오고 있지만 Lastboard는 앞에 아무것도 없도록 설정되어 있어, 모든 방문자가 그 서버의 주소로 보입니다(세션 목록과 로그인 제한). 앞에 있다면 {setting}을(를) true로 설정하고 Lastboard를 다시 시작하세요.",
   "settings.up_to_date_docker_msg": "최신 상태입니다.",
   "settings.update_available": "새 업데이트!",
   "settings.update_check_failed": "릴리스 서버에 연결할 수 없습니다.",

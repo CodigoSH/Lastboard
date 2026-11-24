@@ -480,6 +480,7 @@
   "settings.unit_metric": "メートル法 (°C, km/h)",
   "settings.unit_system": "測定単位",
   "settings.up_to_date": "最新の状態です",
+  "settings.proxy_unread": "リクエストはリバースプロキシまたはトンネルを経由して届いていますが、Lastboard は前段に何もない設定になっているため、すべての訪問者がそのサーバーのアドレスで扱われています（セッション一覧とログインの制限）。前段にある場合は {setting} を true にして Lastboard を再起動してください。",
   "settings.up_to_date_docker_msg": "最新の状態です。",
   "settings.update_available": "新しい更新！",
   "settings.update_check_failed": "リリースサーバーに接続できません。",

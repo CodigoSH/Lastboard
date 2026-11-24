@@ -480,6 +480,7 @@
   "settings.unit_metric": "Metric (°C, km/h)",
   "settings.unit_system": "Measurement Units",
   "settings.up_to_date": "You're up to date",
+  "settings.proxy_unread": "Requests are arriving through a reverse proxy or a tunnel, but Lastboard was told nothing is in front, so every visitor has that server's address: in the list of sessions and in the sign-in limits. If one is in front, set {setting} to true and restart Lastboard.",
   "settings.up_to_date_docker_msg": "Already on the latest version.",
   "settings.update_available": "New update!",
   "settings.update_check_failed": "Cannot reach the release server.",

@@ -480,6 +480,7 @@
   "settings.unit_metric": "میٹرک (°C, km/h)",
   "settings.unit_system": "پیمائش کی اکائیاں",
   "settings.up_to_date": "آپ اپ ٹو ڈیٹ ہیں",
+  "settings.proxy_unread": "درخواستیں کسی ریورس پراکسی یا ٹنل کے ذریعے آ رہی ہیں، لیکن Lastboard میں یہ طے ہے کہ آگے کچھ نہیں، اس لیے ہر ملاقاتی اسی سرور کے پتے کے ساتھ دکھائی دیتا ہے: سیشن میں اور لاگ ان کی حدود میں۔ اگر آگے کچھ ہے تو {setting} کو true کریں اور Lastboard دوبارہ شروع کریں۔",
   "settings.up_to_date_docker_msg": "آپ مکمل طور پر اپ ٹو ڈیٹ ہیں۔",
   "settings.update_available": "نیا اپ ڈیٹ!",
   "settings.update_check_failed": "ریلیز سرور تک رسائی ممکن نہیں۔",

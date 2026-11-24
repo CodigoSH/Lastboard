@@ -480,6 +480,7 @@
   "settings.unit_metric": "متریک (°C, km/h)",
   "settings.unit_system": "واحدهای اندازه‌گیری",
   "settings.up_to_date": "نسخهٔ شما به‌روز است",
+  "settings.proxy_unread": "درخواست‌ها از راه یک پراکسی معکوس یا تونل می‌رسند، اما Lastboard طوری تنظیم شده که چیزی جلویش نیست، پس همهٔ بازدیدکنندگان با نشانی همان سرور دیده می‌شوند: در نشست‌ها و در محدودیت‌های ورود. اگر چیزی جلویش هست، {setting} را true کنید و Lastboard را دوباره راه‌اندازی کنید.",
   "settings.up_to_date_docker_msg": "شما از آخرین نسخه استفاده می‌کنید.",
   "settings.update_available": "به‌روزرسانی جدید!",
   "settings.update_check_failed": "دسترسی به سرور انتشار ممکن نیست.",

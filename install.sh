@@ -149,6 +149,8 @@ PORT="8080"
 IS_UPDATE=false
 INSTALLED_VERSION=""
 TRUST_PROXY=false
+# How many proxies a request passes through: asked only when there is one.
+TRUST_PROXY_HOPS=1
 
 # --- Existing Installation Checks ---
 
@@ -156,10 +158,14 @@ if [ -f "$SERVICE_FILE" ]; then
     # Start detection
     DETECTED_PORT=$(grep 'Environment="PORT=' "$SERVICE_FILE" | cut -d'=' -f3 | tr -d '"')
     DETECTED_PROXY=$(grep 'Environment="TRUST_PROXY=' "$SERVICE_FILE" | cut -d'=' -f3 | tr -d '"')
+    DETECTED_HOPS=$(grep 'Environment="TRUST_PROXY_HOPS=' "$SERVICE_FILE" | cut -d'=' -f3 | tr -d '"')
 
     if [ -n "$DETECTED_PORT" ]; then
         PORT="$DETECTED_PORT"
         TRUST_PROXY="${DETECTED_PROXY:-false}"
+        if [[ "$DETECTED_HOPS" =~ ^[1-9]$ ]]; then
+            TRUST_PROXY_HOPS="$DETECTED_HOPS"
+        fi
         IS_UPDATE=true
         # "Lastboard v1.9.3" -> "v1.9.3". Empty when the binary is missing or will
         # not run, which is the very case --reinstall exists for.
@@ -189,12 +195,32 @@ if [ -c /dev/tty ]; then
         RELEASE_CHANNEL="beta"
     fi
 
-    echo -n "  Behind a reverse proxy? (nginx, Traefik, Caddy, Cloudflare...) (yes/no) [no]: "
+    # Proxies and tunnels both, by name: somebody behind Pangolin or a
+    # Cloudflare Tunnel reads "reverse proxy", decides theirs is something else,
+    # answers no, and every session and every sign-in limit then sees the
+    # tunnel's address instead of the visitor's. On an update the default is
+    # what the installation already has: Enter used to mean "no" and quietly
+    # turned the setting off on every update of a proxied install.
+    echo -e "${GRAY}    Opened through another server first? A reverse proxy (Nginx, Nginx Proxy Manager,${NC}"
+    echo -e "${GRAY}    Caddy, Traefik) or a tunnel (Pangolin, Cloudflare Tunnel). Answer yes and each visitor${NC}"
+    echo -e "${GRAY}    is seen at their own address; answer no and every visitor looks like that server.${NC}"
+    PROXY_DEFAULT=$([ "$TRUST_PROXY" = true ] && echo yes || echo no)
+    echo -n "  Behind a reverse proxy or a tunnel? (yes/no) [$PROXY_DEFAULT]: "
     read -r INPUT_PROXY < /dev/tty
-    if [[ "$INPUT_PROXY" == "yes" || "$INPUT_PROXY" == "y" ]]; then
-        TRUST_PROXY=true
-    else
-        TRUST_PROXY=false
+    case "$INPUT_PROXY" in
+        yes|y|Yes|Y) TRUST_PROXY=true ;;
+        no|n|No|N) TRUST_PROXY=false ;;
+        *) ;;
+    esac
+    if [ "$TRUST_PROXY" = true ]; then
+        echo -e "${GRAY}    One unless two are chained, such as Cloudflare in front of Nginx Proxy Manager.${NC}"
+        echo -n "  How many does a request pass through? [$TRUST_PROXY_HOPS]: "
+        read -r INPUT_HOPS < /dev/tty
+        if [[ "$INPUT_HOPS" =~ ^[1-9]$ ]]; then
+            TRUST_PROXY_HOPS="$INPUT_HOPS"
+        elif [ -n "$INPUT_HOPS" ]; then
+            echo -e "${GRAY}    Not a number from 1 to 9; keeping $TRUST_PROXY_HOPS.${NC}"
+        fi
     fi
 fi
 echo "" # Spacer
@@ -438,6 +464,7 @@ RestartSec=5
 Environment="PORT=$PORT"
 Environment="DB_FILE=$DATA_DIR/lastboard.db"
 Environment="TRUST_PROXY=$TRUST_PROXY"
+Environment="TRUST_PROXY_HOPS=$TRUST_PROXY_HOPS"
 
 # Security Hardening
 ProtectSystem=full

@@ -480,6 +480,7 @@
   "settings.unit_metric": "公制 (°C, km/h)",
   "settings.unit_system": "测量单位",
   "settings.up_to_date": "你已是最新",
+  "settings.proxy_unread": "请求正通过反向代理或隧道到达，但 Lastboard 配置为前面没有任何代理，因此所有访客都显示为该服务器的地址：会话列表和登录限制中都是如此。如果前面确实有代理，请将 {setting} 设为 true 并重启 Lastboard。",
   "settings.up_to_date_docker_msg": "你已是最新版本。",
   "settings.update_available": "新更新！",
   "settings.update_check_failed": "无法连接发布服务器。",

@@ -480,6 +480,7 @@
   "settings.unit_metric": "Métrico (°C, km/h)",
   "settings.unit_system": "Sistema de unidades",
   "settings.up_to_date": "Estás al día",
+  "settings.proxy_unread": "Las peticiones llegan a través de un proxy inverso o un túnel, pero Lastboard tiene configurado que no hay nada delante, así que todos los visitantes aparecen con la dirección de ese servidor: en las sesiones y en los límites de inicio de sesión. Si hay uno delante, pon {setting} a true y reinicia Lastboard.",
   "settings.up_to_date_docker_msg": "Ya tienes la última versión.",
   "settings.update_available": "¡Nueva actualización!",
   "settings.update_check_failed": "No se puede conectar con el servidor de versiones.",

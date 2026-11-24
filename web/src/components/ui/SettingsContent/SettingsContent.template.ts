@@ -1261,7 +1261,7 @@ export const updateZoneTemplate = (isAdmin: boolean, updateInfo: any, isChecking
     `;
 };
 
-export const aboutTemplate = (version: string, updateInfo: any, role: string, betaUpdates: boolean, isCheckingUpdates: boolean) => {
+export const aboutTemplate = (version: string, updateInfo: any, role: string, betaUpdates: boolean, isCheckingUpdates: boolean, proxyUnread = false) => {
     const isAdmin = role?.toLowerCase() === 'admin' || role?.toLowerCase() === 'administrator';
     return `
     <div>
@@ -1275,6 +1275,16 @@ export const aboutTemplate = (version: string, updateInfo: any, role: string, be
                     ${updateZoneTemplate(isAdmin, updateInfo, isCheckingUpdates)}
                 </div>
             </div>
+
+            ${isAdmin && proxyUnread ? `
+            <!-- Said here, where the person who can change the setting looks, and only once the server has
+                 seen a proxy's headers arrive: every visitor otherwise has that proxy's address, in the
+                 sessions and in the sign-in limits, and nothing else on any screen would say so. -->
+            <div class="bento-card settings-content__notice" role="note">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg>
+                <p>${esc(i18n.t('settings.proxy_unread', { setting: 'TRUST_PROXY' }))}</p>
+            </div>
+            ` : ''}
 
             ${isAdmin ? `
             <!-- The beta switch used to float over the corner of the card above,

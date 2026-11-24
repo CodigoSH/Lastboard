@@ -460,6 +460,7 @@ class SettingsContent extends HTMLElement {
         }
         if (section === 'about') {
             // No longer checking automatically here. Using background + manual button.
+            this.fetchProxyNotice();
         }
         this.render();
     }
@@ -816,6 +817,26 @@ class SettingsContent extends HTMLElement {
      * optional card is drawn, and an error toast about it would be noise on a
      * settings screen the user opened to do something else.
      */
+    /**
+     * Whether the server has seen a proxy in front that TRUST_PROXY does not declare. Asked only for the
+     * administrator, who is the one shown it, and silent on failure like the other optional cards.
+     */
+    private proxyUnread = false;
+
+    async fetchProxyNotice() {
+        if (!this.isAdministrator()) return;
+        try {
+            const r = await apiService.get<{ unread: boolean }>('/api/system/proxy');
+            const unread = r?.unread === true;
+            if (unread !== this.proxyUnread) {
+                this.proxyUnread = unread;
+                this.render();
+            }
+        } catch {
+            this.proxyUnread = false;
+        }
+    }
+
     async fetchPendingIcons() {
         try {
             const r = await apiService.get<{ pending: number; local: number }>('/api/icons/pending');
@@ -1576,6 +1597,7 @@ class SettingsContent extends HTMLElement {
             }
             if (newValue === 'about') {
                 this.checkForUpdates();
+                this.fetchProxyNotice();
             }
             this.render();
         }
@@ -2002,7 +2024,7 @@ class SettingsContent extends HTMLElement {
                 return usersTemplate(this.users);
 
             case 'about':
-                return aboutTemplate(this.version, this.updateInfo, user.role || 'user', user.preferences?.beta_updates || false, this.isCheckingUpdates);
+                return aboutTemplate(this.version, this.updateInfo, user.role || 'user', user.preferences?.beta_updates || false, this.isCheckingUpdates, this.proxyUnread);
 
             default:
                 return `<div class="bento-card"><h3>${section}</h3><p class="settings-content__text-dim">${i18n.t('settings.default_module_desc')}</p></div>`;
