@@ -60,13 +60,17 @@ const OS_NAMES: Record<Exclude<OsId, 'unknown'>, string> = {
     windows: 'Windows', macos: 'macOS', linux: 'Linux', android: 'Android', ios: 'iOS', chromeos: 'ChromeOS',
 };
 
-/** "Firefox on Linux"; the names are products, so only the joining words are translated. */
+/**
+ * "Firefox · Linux". The names are products and stay as they are in every language, and a dot joins
+ * them rather than a word, which would put a name first in a sentence in some languages and last in
+ * others for nothing it adds.
+ */
 export const deviceName = (userAgent: string): string => {
     const { browser, os } = userAgentLabel(userAgent);
     if (browser === 'unknown' && os === 'unknown') return i18n.t('sessions.unknown_device');
     const b = browser === 'unknown' ? i18n.t('sessions.unknown_browser') : BROWSER_NAMES[browser];
     if (os === 'unknown') return b;
-    return i18n.t('sessions.device', { browser: b, os: OS_NAMES[os] });
+    return `${b} · ${OS_NAMES[os]}`;
 };
 
 const DIALOG_STYLE = 'background: var(--paper-bg); backdrop-filter: var(--modal-blur); -webkit-backdrop-filter: var(--modal-blur); color: var(--text-main); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px;';

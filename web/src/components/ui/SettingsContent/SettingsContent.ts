@@ -629,7 +629,8 @@ class SettingsContent extends HTMLElement {
         const { eventBus, EVENTS } = await import('../../../services/EventBus');
         eventBus.emit(EVENTS.SHOW_CONFIRMATION, {
             title: i18n.t('sessions.close'),
-            message: i18n.t('sessions.close_one_confirm', { device: deviceName(row.user_agent), address: row.ip || '—' }),
+            // The name, and the address when there is one to tell two of the same browser apart.
+            message: i18n.t('sessions.close_one_confirm', { device: row.ip ? `${deviceName(row.user_agent)} (${row.ip})` : deviceName(row.user_agent) }),
             onConfirm: () => this.closeSession(id),
         });
     }
