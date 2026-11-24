@@ -2,6 +2,7 @@ import {
     PERM_GROUPS, PROFILE_IDS, effective, isBlocked, profileOf, summary,
     type BoolKey, type Grants, type LevelKey, type PermDef, type ProfileName,
 } from '../../../services/accountAccess';
+import { infoTip } from '../../../services/infoTip';
 
 /**
  * The account dialog: one window, in order — the account, the profile, the
@@ -43,9 +44,8 @@ export const userDialogTemplate = (t: T, pwToggle: string) => `
                     </div>
                 </div>
                 <div class="settings-content__form-group user-dialog__wide">
-                    <label class="settings-content__label" for="user-label">${t('users.label')}</label>
+                    <div class="field-head"><label class="settings-content__label" for="user-label">${t('users.label')}</label>${infoTip(t('users.label_hint'))}</div>
                     <input type="text" id="user-label" class="settings-content__input" maxlength="${MAX_LABEL}" placeholder="${t('users.label_placeholder')}" autocomplete="off">
-                    <p class="settings-content__text-dim user-dialog__hint">${t('users.label_hint')}</p>
                 </div>
             </div>
         </section>
@@ -93,8 +93,7 @@ const boolRow = (t: T, g: Grants, p: PermDef) => {
     return `
         <div class="user-dialog__perm${blocked ? ' is-blocked' : ''}">
             <div class="user-dialog__perm-info">
-                <span class="user-dialog__perm-name">${t(`users.perm.${key}`)}</span>
-                <span class="user-dialog__perm-desc">${t(`users.perm.${key}_desc`)}</span>
+                <span class="user-dialog__perm-name">${t(`users.perm.${key}`)}${infoTip(t(`users.perm.${key}_desc`))}</span>
             </div>
             <label class="toggle-switch">
                 <input type="checkbox" data-change="user-perm" data-perm="${key}" ${effective(g, key) ? 'checked' : ''} ${blocked ? 'disabled' : ''}>
@@ -108,8 +107,7 @@ const levelRow = (t: T, g: Grants, p: PermDef) => {
     return `
         <div class="user-dialog__perm">
             <div class="user-dialog__perm-info">
-                <span class="user-dialog__perm-name">${t(`users.perm.${key}`)}</span>
-                <span class="user-dialog__perm-desc">${t(`users.perm.${key}_desc`)}</span>
+                <span class="user-dialog__perm-name">${t(`users.perm.${key}`)}${infoTip(t(`users.perm.${key}_desc`))}</span>
             </div>
             <div class="settings-content__segmented-control user-dialog__levels" role="radiogroup" aria-label="${t(`users.perm.${key}`)}">
                 ${[0, 1, 2].map(l => `

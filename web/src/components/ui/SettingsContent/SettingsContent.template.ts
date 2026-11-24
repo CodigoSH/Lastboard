@@ -12,6 +12,7 @@ import type { AccountDockerHost } from '../../../services/dockerHostList';
 import { roleOrLabel } from '../../../services/accountAccess';
 import { userDialogTemplate, MAX_LABEL } from './userDialog.template';
 import { formatSecret, CODE_MAX_LENGTH } from '../../../services/twoFactor';
+import { infoTip } from '../../../services/infoTip';
 import { userAgentLabel, type BrowserId, type OsId } from '../../../services/userAgentLabel';
 
 const ICON_EDIT = `<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>`;
@@ -276,21 +277,19 @@ export const accountTemplate = (user: User, sessions: SessionsView = { status: '
             
             <div class="settings-content__form-container" style="margin-top: 32px;">
                 <div class="settings-content__form-group">
-                    <label class="settings-content__label">${i18n.t('auth.username')}</label>
+                    <div class="field-head"><label class="settings-content__label">${i18n.t('auth.username')}</label>${infoTip(i18n.t('settings.username_relogin_hint'))}</div>
                     <div class="settings-content__input-row">
                         <input type="text" id="username-input" class="settings-content__input" value="${user.username || ''}" placeholder="${i18n.t('auth.username')}">
                         <app-button variant="primary" data-action="update-username">${i18n.t('settings.save_username')}</app-button>
                     </div>
-                    <p class="settings-content__text-dim" style="font-size: 10px; margin: 4px 0 0 0;">${i18n.t('settings.username_relogin_hint')}</p>
                 </div>
                 ${user.is_admin ? `
                 <div class="settings-content__form-group">
-                    <label class="settings-content__label" for="own-label-input">${i18n.t('users.label')}</label>
+                    <div class="field-head"><label class="settings-content__label" for="own-label-input">${i18n.t('users.label')}</label>${infoTip(i18n.t('users.label_own_hint'))}</div>
                     <div class="settings-content__input-row">
                         <input type="text" id="own-label-input" class="settings-content__input" maxlength="${MAX_LABEL}" value="${esc(user.label || '')}" placeholder="${i18n.t('users.label_placeholder')}" autocomplete="off">
                         <app-button variant="primary" data-action="save-own-label">${i18n.t('users.save_label')}</app-button>
                     </div>
-                    <p class="settings-content__text-dim" style="font-size: 10px; margin: 4px 0 0 0;">${i18n.t('users.label_own_hint')}</p>
                 </div>` : ''}
             </div>
         </div>
@@ -617,8 +616,7 @@ export const monitoringTemplate = (monitoring: {
             <div class="settings-content__action-group">
                 <div class="settings-content__action-row">
                     <div class="settings-content__action-info">
-                        <h3>${i18n.t('settings.monitoring_mode')}</h3>
-                        <p>${i18n.t('settings.monitoring_mode_desc')}</p>
+                        <h3>${i18n.t('settings.monitoring_mode')}${infoTip(i18n.t('settings.monitoring_mode_desc'))}</h3>
                     </div>
                     <label class="toggle-switch">
                         <input type="checkbox" id="monitoring-toggle" data-change="monitoring-toggle" ${on24 ? 'checked' : ''}>
@@ -639,8 +637,7 @@ export const monitoringTemplate = (monitoring: {
             <div class="settings-content__action-group settings-content__action-group--actions">
                 <div class="settings-content__action-row">
                     <div class="settings-content__action-info">
-                        <h3>${i18n.t('monitor.clear_all')}</h3>
-                        <p>${i18n.t('settings.monitoring_clear_desc')}</p>
+                        <h3>${i18n.t('monitor.clear_all')}${infoTip(i18n.t('settings.monitoring_clear_desc'))}</h3>
                     </div>
                     <app-button data-action="clear-monitor-data" style="border-color: var(--danger-color); color: var(--danger-color); background: transparent;">${i18n.t('monitor.clear_data')}</app-button>
                 </div>
@@ -702,8 +699,7 @@ export const notificationsTemplate = (v: NotificationsView) => {
             <div class="settings-content__action-group">
                 <div class="settings-content__action-row">
                     <div class="settings-content__action-info">
-                        <h3>${i18n.t('settings.fail_threshold')}</h3>
-                        <p>${i18n.t('settings.fail_threshold_desc')}</p>
+                        <h3>${i18n.t('settings.fail_threshold')}${infoTip(i18n.t('settings.fail_threshold_desc'))}</h3>
                     </div>
                     <app-select id="fail-threshold" value="${v.failThreshold}"></app-select>
                 </div>
@@ -824,9 +820,8 @@ export const proxmoxTemplate = (
         <input type="hidden" id="proxmox-edit-index" value="-1">
 
         <div class="settings-content__form-group">
-            <label class="settings-content__label">${i18n.t('docker.host_name')}</label>
+            <div class="field-head"><label class="settings-content__label">${i18n.t('docker.host_name')}</label>${infoTip(i18n.t('settings.proxmox_name_desc'))}</div>
             <input type="text" id="proxmox-name" class="settings-content__input" spellcheck="false" placeholder="${esc(i18n.t('widget.proxmox.name'))}">
-            <p class="settings-content__text-dim" style="font-size: 11px; margin: 5px 0 0 0;">${i18n.t('settings.proxmox_name_desc')}</p>
         </div>
 
         <div class="settings-content__form-group">
@@ -840,16 +835,14 @@ export const proxmoxTemplate = (
         </div>
 
         <div class="settings-content__form-group">
-            <label class="settings-content__label">${i18n.t('settings.proxmox_secret')}</label>
+            <div class="field-head"><label class="settings-content__label">${i18n.t('settings.proxmox_secret')}</label>${infoTip(i18n.t('settings.proxmox_secret_desc'))}</div>
             <input type="password" id="proxmox-secret" class="settings-content__input" value="" spellcheck="false" autocomplete="new-password" placeholder="00000000-0000-0000-0000-000000000000">
-            <p class="settings-content__text-dim" style="font-size: 11px; margin: 5px 0 0 0;">${i18n.t('settings.proxmox_secret_desc')}</p>
         </div>
 
         <div class="settings-content__action-group">
             <div class="settings-content__action-row">
                 <div class="settings-content__action-info">
-                    <h3>${i18n.t('settings.proxmox_enabled')}</h3>
-                    <p>${i18n.t('settings.proxmox_enabled_desc')}</p>
+                    <h3>${i18n.t('settings.proxmox_enabled')}${infoTip(i18n.t('settings.proxmox_enabled_desc'))}</h3>
                 </div>
                 <label class="toggle-switch">
                     <input type="checkbox" id="proxmox-enabled">
@@ -858,8 +851,7 @@ export const proxmoxTemplate = (
             </div>
             <div class="settings-content__action-row">
                 <div class="settings-content__action-info">
-                    <h3>${i18n.t('settings.proxmox_insecure')}</h3>
-                    <p>${i18n.t('settings.proxmox_insecure_desc')}</p>
+                    <h3>${i18n.t('settings.proxmox_insecure')}${infoTip(i18n.t('settings.proxmox_insecure_desc'))}</h3>
                 </div>
                 <label class="toggle-switch">
                     <input type="checkbox" id="proxmox-insecure">
@@ -1013,17 +1005,15 @@ export const dockerTemplate = (
             <p class="settings-content__text-dim" id="docker-agent-note" style="font-size: 12px; margin: -6px 0 16px; display: none;"></p>
 
             <div class="settings-content__form-group" id="docker-token-row">
-                <label class="settings-content__label">${i18n.t('docker.host_token')}</label>
+                <div class="field-head"><label class="settings-content__label">${i18n.t('docker.host_token')}</label>${infoTip(i18n.t('settings.docker_token_desc'))}</div>
                 <input type="password" id="docker-token" class="settings-content__input" value="" spellcheck="false" autocomplete="new-password" placeholder="${esc(i18n.t('docker.host_token_placeholder'))}" data-secret>
-                <p class="settings-content__text-dim" style="font-size: 11px; margin: 5px 0 0 0;">${i18n.t('settings.docker_token_desc')}</p>
             </div>
         </div>
 
         <div class="settings-content__action-group">
             <div class="settings-content__action-row">
                 <div class="settings-content__action-info">
-                    <h3>${i18n.t('settings.docker_enabled')}</h3>
-                    <p>${i18n.t('settings.docker_enabled_desc')}</p>
+                    <h3>${i18n.t('settings.docker_enabled')}${infoTip(i18n.t('settings.docker_enabled_desc'))}</h3>
                 </div>
                 <label class="toggle-switch">
                     <input type="checkbox" id="docker-enabled">
@@ -1138,8 +1128,7 @@ export const dataTemplate = (pendingIcons = 0, localIcons = 0, storingIcons = fa
                 </div>
                 <div class="settings-content__action-row">
                     <div class="settings-content__action-info">
-                        <h3>${i18n.t('settings.import_dashboards')}</h3>
-                        <p>${i18n.t('settings.import_dashboards_desc')}</p>
+                        <h3>${i18n.t('settings.import_dashboards')}${infoTip(i18n.t('settings.import_dashboards_desc'))}</h3>
                     </div>
                     <app-select id="import-format" value="native"></app-select>
                 </div>
@@ -1296,8 +1285,7 @@ export const aboutTemplate = (version: string, updateInfo: any, role: string, be
             <div class="bento-card">
                 <div class="settings-content__action-row">
                     <div class="settings-content__action-info">
-                        <h3 id="beta-text">${i18n.t('settings.beta_tester')}</h3>
-                        <p>${i18n.t('settings.beta_updates_desc')}</p>
+                        <h3 id="beta-text">${i18n.t('settings.beta_tester')}${infoTip(i18n.t('settings.beta_updates_desc'))}</h3>
                     </div>
                     <label class="toggle-switch">
                         <input type="checkbox" id="beta-updates-toggle-badge" data-change="beta-toggle" ${betaUpdates ? 'checked' : ''}>

@@ -1815,3 +1815,63 @@ dialog .settings-content__action-info p { max-width: none; }
 .sessions-summary { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
 .sessions-summary p { margin: 0; }
 .sessions-summary app-button { flex: none; inline-size: 150px; }
+
+/* The "i" beside a field or a setting: what it means, on hover with a mouse, on a tap on a phone or a
+   tablet, on focus from the keyboard (services/infoTip.ts opens it). A closed tip is not drawn at all,
+   so one near an edge never widens the drawer; an open one that would run past the window opens the
+   other way. */
+.tip {
+    position: relative;
+    display: inline-grid;
+    place-items: center;
+    width: 18px;
+    height: 18px;
+    margin-inline-start: 6px;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: none;
+    color: var(--text-dim);
+    font: inherit;
+    line-height: 0;
+    vertical-align: -3px;
+    cursor: help;
+    flex: none;
+    /* The sheet's button rule truncates with overflow hidden; the sentence hangs outside the "i". */
+    overflow: visible;
+    min-width: 0;
+    text-overflow: clip;
+}
+.tip:hover,
+.tip.open { color: var(--accent); }
+.tip:focus-visible { outline: none; box-shadow: 0 0 0 2px rgba(var(--accent-rgb), 0.45); color: var(--accent); }
+.tip-text {
+    display: none;
+    position: absolute;
+    bottom: calc(100% + 6px);
+    inset-inline-start: -8px;
+    z-index: 30;
+    width: max-content;
+    max-width: min(18rem, calc(100vw - 32px));
+    padding: 8px 10px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--surface-solid);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+    color: var(--text-main);
+    font-family: var(--font-sans);
+    font-size: 12px;
+    font-weight: 400;
+    letter-spacing: normal;
+    line-height: 1.45;
+    text-align: start;
+    text-transform: none;
+    white-space: normal;
+}
+.tip.open .tip-text { display: block; }
+.tip.to-end .tip-text { inset-inline-start: auto; inset-inline-end: -8px; }
+
+/* A field's label with its "i": one line, the label keeps its own look. */
+.field-head { display: flex; align-items: center; }
+.field-head > .settings-content__label { margin-bottom: 0; }
+.field-head { margin-bottom: 8px; }

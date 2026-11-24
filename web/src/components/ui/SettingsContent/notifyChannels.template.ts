@@ -1,4 +1,5 @@
 import { escapeHtml as esc } from '../../../services/escape';
+import { infoTip } from '../../../services/infoTip';
 import { addableTypes, alertsOn, channelHost, failureText, type ChannelType, type NotifyChannel } from '../../../services/notifyChannelList';
 
 /**
@@ -142,9 +143,8 @@ export function channelModalHtml(t: T): string {
         <p class="settings-content__text-dim" id="channel-push-note" style="font-size: 12px; margin: 0 0 16px; display: none;">${esc(t('notify.push_hint'))}</p>
 
         <div class="settings-content__form-group" id="channel-url-row">
-            <label class="settings-content__label">${esc(t('settings.notify_url'))}</label>
+            <div class="field-head"><label class="settings-content__label">${esc(t('settings.notify_url'))}</label>${infoTip(t('settings.notify_url_desc'))}</div>
             <input type="text" id="channel-url" class="settings-content__input" spellcheck="false" placeholder="https://…">
-            <p class="settings-content__text-dim" style="font-size: 11px; margin: 5px 0 0 0;">${esc(t('settings.notify_url_desc'))}</p>
         </div>
 
         <div class="settings-content__form-group" id="channel-token-row">
@@ -156,8 +156,7 @@ export function channelModalHtml(t: T): string {
         <div class="settings-content__action-group">
             <div class="settings-content__action-row">
                 <div class="settings-content__action-info">
-                    <h3>${esc(t('notify.enabled'))}</h3>
-                    <p>${esc(t('notify.enabled_desc'))}</p>
+                    <h3>${esc(t('notify.enabled'))}${infoTip(t('notify.enabled_desc'))}</h3>
                 </div>
                 <label class="toggle-switch">
                     <input type="checkbox" id="channel-enabled">
@@ -166,8 +165,7 @@ export function channelModalHtml(t: T): string {
             </div>
             <div class="settings-content__action-row">
                 <div class="settings-content__action-info">
-                    <h3>${esc(t('notify.kind_alerts'))}</h3>
-                    <p>${esc(t('notify.kind_alerts_desc'))}</p>
+                    <h3>${esc(t('notify.kind_alerts'))}${infoTip(t('notify.kind_alerts_desc'))}</h3>
                 </div>
                 <label class="toggle-switch">
                     <input type="checkbox" id="channel-alerts">
@@ -176,8 +174,7 @@ export function channelModalHtml(t: T): string {
             </div>
             <div class="settings-content__action-row" id="channel-updates-row">
                 <div class="settings-content__action-info">
-                    <h3>${esc(t('notify.kind_updates'))}</h3>
-                    <p>${esc(t('notify.kind_updates_desc'))}</p>
+                    <h3>${esc(t('notify.kind_updates'))}${infoTip(t('notify.kind_updates_desc'))}</h3>
                 </div>
                 <label class="toggle-switch">
                     <input type="checkbox" id="channel-updates">

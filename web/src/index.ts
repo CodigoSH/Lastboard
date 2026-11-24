@@ -3,6 +3,7 @@ import { dashboardStore } from './store/dashboardStore';
 import { ThemeService, asThemeChoice } from './services/ThemeService';
 import { i18n } from './services/i18n';
 import { resyncPush } from './services/pushClient';
+import { installInfoTips } from './services/infoTip';
 import { deviceName } from './components/ui/SettingsContent/SettingsContent.template';
 
 // Import components to register them
@@ -194,6 +195,9 @@ import { eventBus, EVENTS } from './services/EventBus';
 import { navFromSearch, boardAddress } from './services/startupView';
 import { Surfaces, nextPopstate } from './services/surfaces';
 import { PageNav } from './services/pageNav';
+
+// The "i" beside a field or a setting, wherever it is drawn: once, for the whole document.
+installInfoTips();
 
 // Centralized Event Listeners
 eventBus.on(EVENTS.SHOW_CONFIRMATION, async (e: CustomEvent) => {
