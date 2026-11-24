@@ -196,11 +196,14 @@ dialog::backdrop {
     width: fit-content;
 }
 
-/* What closes a form. Aligned with the fields above it, not with the card. */
+/* What closes a form. House rule: every action ends on the right edge of its card — a form's Save as
+   well as a row's button — so a page's buttons line up on one side instead of two. */
 .settings-content__form-actions {
     margin-top: 24px;
-    max-width: var(--field);
     display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 12px;
 }
 
 .settings-content__form-actions app-button {
