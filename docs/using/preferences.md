@@ -137,5 +137,13 @@ It also says where your icons come from — how many of your bookmarks this serv
 
 - **Version** — the running version, with an at-a-glance up-to-date indicator.
 - **Check for Updates** — manually check for a newer release. See **[Updating](../getting-started/updating.md)** for how updates are applied.
+- **Needs you** — for the administrator only, a card that says **All in order** or lists what the server has measured needs a hand, worst first; **See all** opens the full list. Each entry says what is wrong, why it matters and the one thing to do. There are no suggestions in it, only problems the server sees:
+  - **The disk is almost full** — with a quarter of it or less free it turns amber, with a tenth or less red. The database, and the copy made before each update, need room.
+  - **Alert channels failing** — the last alert to a channel did not get through, with the reason; **Open Notifications** takes you there.
+  - **Telemetry cannot connect** — the proxy in front changes the address the server is reached at, so the live data of the [telemetry widget](../widgets/telemetry.md) is refused. See [The telemetry widget shows only dashes](../help/troubleshooting.md#the-telemetry-widget-shows-only-dashes).
+  - **A proxy is in front and was not declared** — requests arrive with the headers a proxy adds while `TRUST_PROXY` is off, so every visitor gets the proxy's address. See [Configuration → TRUST_PROXY](../getting-started/configuration.md#trust_proxy).
+  - **Reached without HTTPS** — someone opened Lastboard over plain `http://` from another machine: session cookies are not marked secure, and passkeys need HTTPS.
+  - **A new version is out**, with a link to the update.
+- **Server details** — a discreet button in the corner of the version card (administrator only) that opens a window with the machine (CPU, memory, temperature, disk, uptime), the installation (version, database size and schema, Lastboard's own memory, platform) and the configuration (proxy in front and its hops, sign-in proxy, HTTPS). **Copy for support** copies the lines a bug report needs — version, platform, schema, proxy and HTTPS — with no addresses or names in them. Where the browser offers no clipboard (plain `http://` from another machine), the text is shown selected instead, ready to copy by hand.
 - **Beta channel** — opt in to beta releases, which arrive earlier and may be unstable.
 - **Source Code**, **Support** and **Donate** — links to the repository, to the support page where questions and bug reports go, and to the project's Open Collective.

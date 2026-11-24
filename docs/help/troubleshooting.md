@@ -20,8 +20,9 @@ A setting spelled in a way Lastboard cannot read falls back to its default, so
 all. Lastboard says so at startup: look for `configuration ignored` in the log,
 which names the setting, the value found and what will be used instead.
 
-- Set `TRUST_PROXY=true` **only** when Lastboard sits behind a proxy (Nginx, Traefik, Caddy, Cloudflare, Pangolin…).
+- Set `TRUST_PROXY=true` **only** when Lastboard sits behind a reverse proxy or a tunnel (Nginx, Nginx Proxy Manager, Traefik, Caddy, Pangolin, Cloudflare Tunnel…).
 - Never enable it when Lastboard is exposed directly to the internet — it would let clients spoof their IP.
+- Lastboard notices a proxy it was not told about: when requests come from this machine or the local network carrying the headers a proxy adds, **Settings → About** lists **A proxy is in front and was not declared** for the administrator, and the log says so once.
 
 See [Configuration → TRUST_PROXY](../getting-started/configuration.md#trust_proxy).
 
@@ -79,6 +80,15 @@ Live widgets and status updates use long-lived connections (WebSocket/SSE). Some
 
 - Ensure your proxy **passes WebSocket upgrades** and doesn't impose a short read/idle timeout on the Lastboard route.
 - For Nginx, forward the `Upgrade`/`Connection` headers and raise `proxy_read_timeout`.
+
+## The telemetry widget shows only dashes
+
+The [telemetry widget](../widgets/telemetry.md) gets the numbers of this server over a WebSocket. A dash in **every** ring, with **no connection to the server for live data** when you hover it, means that socket was not opened. It is not the virtual machine or the LXC container: CPU and RAM are read there like anywhere else. A dash in the temperature ring alone is different — the machine has no sensor Lastboard can read, which is normal in a virtual machine or a container.
+
+Two causes, both in the proxy in front:
+
+- **The proxy changes the address.** The socket is accepted only when the page's address matches the one the request reaches Lastboard at. A proxy that rewrites it (to `127.0.0.1:8080`, say) gets the socket refused with `403`, and **Settings → About** lists **Telemetry cannot connect**. Set `TRUST_PROXY=true` so Lastboard also reads `X-Forwarded-Host`; if it is already on, make the proxy keep the original `Host`, or send `X-Forwarded-Host`.
+- **The proxy does not pass WebSockets.** See the section above.
 
 ## An API or monitored service shows "Unreachable" / down, but it works in my browser
 

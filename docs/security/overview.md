@@ -273,7 +273,7 @@ persistence. It is not a way to run a read-only instance for real data — there
 
 The web installer and in-app update mechanism communicate directly with our self-hosted Forgejo instance (`git.codigosh.com`). There are no intermediaries or third-party services involved in the update path.
 
-- **No Tracking:** No IP addresses, user identifiers, or telemetry are collected at any point.
+- **No Tracking:** An update check carries no account, user identifier or telemetry — it asks the release list and nothing more. The forge sees the request the way any web server does, and nothing about your Lastboard is sent with it.
 - **No Modification:** Release metadata and binaries are fetched directly from the official `CodigoSH/Lastboard` repository. Nothing is modified in transit.
 - **Checksum Verification:** Every binary is verified against the line of the `checksums.txt` published with each release that **names that archive**, so one platform's archive cannot pass for another's. Mismatches abort the installation immediately. A download over the size limit is refused rather than cut short, each update works in a directory of its own, and only one runs at a time.
 - **Signature Verification:** When release signing is enabled, `checksums.txt` is signed with an Ed25519 key whose public half is embedded in the binary. A missing or invalid signature aborts the update — a tampered mirror cannot strip the signature to fall back to a weaker check. See [Release Signing](release-signing.md).

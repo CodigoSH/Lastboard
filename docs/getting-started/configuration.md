@@ -45,13 +45,21 @@ On startup the binary will `chown` the data directory to that user and then perm
 
 ## TRUST_PROXY
 
-By default, Lastboard ignores the `X-Forwarded-For` header to prevent IP spoofing attacks. If you run Lastboard behind a reverse proxy (such as Nginx, Traefik, Caddy, Cloudflare, or Pangolin), you **must** enable this flag.
+By default, Lastboard ignores the `X-Forwarded-For` header to prevent IP spoofing attacks. If people reach Lastboard through a reverse proxy **or a tunnel** (such as Nginx, Nginx Proxy Manager, Traefik, Caddy, Pangolin or Cloudflare Tunnel), you **must** enable this flag. A tunnel counts as a proxy: what connects to Lastboard is its connector, not the visitor.
 
 ```bash
 TRUST_PROXY=true
 ```
 
-> **Warning:** Without this flag enabled behind a proxy, all users will share the same IP for rate limiting and login lockout purposes, which may cause false 429 errors. **Do not enable this flag** if Lastboard is exposed directly to the internet.
+> **Warning:** Without this flag enabled behind a proxy, all users will share the same IP for rate limiting and login lockout purposes, which may cause false 429 errors, and every session in **My Profile → Active sessions** shows the proxy's address. **Do not enable this flag** if Lastboard is exposed directly to the internet.
+
+The native installer asks about it in plain words — *Behind a reverse proxy or a tunnel?* — and then how many a request passes through; running it again to update keeps what you answered before.
+
+**Lastboard notices a proxy nobody declared.** With the flag off, a request from this machine or the local network that carries `X-Forwarded-For`, `X-Real-Ip` or `Forwarded` is what a proxy sends, so the log says so once and **Settings → About** lists **A proxy is in front and was not declared** for the administrator. It changes nothing by itself. The same header from the internet is ignored: anybody can type it.
+
+With the flag on, Lastboard also reads `X-Forwarded-Host`, so a proxy that rewrites the address it forwards to does not get the telemetry widget's live connection refused. See [The telemetry widget shows only dashes](../help/troubleshooting.md#the-telemetry-widget-shows-only-dashes).
+
+A tunnel that passes raw TCP rather than HTTP adds no header at all, so there is no address to read: every visitor gets the connector's.
 
 ### More than one proxy
 

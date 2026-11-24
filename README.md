@@ -181,7 +181,9 @@ services:
       - "8080:8080"
     environment:
       - TZ=America/New_York
-      # - TRUST_PROXY=true   # Uncomment if running behind a reverse proxy
+      # "true" when people reach it through a reverse proxy or a tunnel
+      # (Nginx, Nginx Proxy Manager, Caddy, Traefik, Pangolin, Cloudflare Tunnel...).
+      - TRUST_PROXY=false
     volumes:
       - ./data:/var/lib/lastboard
     restart: unless-stopped
@@ -194,7 +196,7 @@ services:
 
 **Using Docker CLI:**
 ```bash
-# Note: Add `-e TRUST_PROXY=true \` before the image name if running behind a reverse proxy.
+# Note: Add `-e TRUST_PROXY=true \` before the image name behind a reverse proxy or a tunnel (Pangolin, Cloudflare Tunnel...).
 docker run -d \
   --name lastboard \
   -p 8080:8080 \

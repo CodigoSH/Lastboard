@@ -56,5 +56,6 @@ Pick **Glances**, **Netdata** or **Custom JSON** as the **Source** and enter the
 - The numbers of **This server** are measured once a second and pushed to every open Lastboard tab. It skips the measurement entirely when nobody has Lastboard open. The **Refresh Rate** setting decides how often the widget redraws with what arrives.
 - Nothing is recorded. This widget is the present moment only — for a history of your services over time, see [Monitoring & Uptime](../monitoring/overview.md).
 - Readings are read from the Linux kernel. On a server that is not running Linux there is nothing to read: CPU and RAM sit at 0%.
-- Temperature needs a thermal sensor the server can read. Where there is none — which includes many virtual machines — the gauge shows **-1** instead of a reading.
+- Temperature needs a thermal sensor the server can read. Where there is none — which includes most virtual machines and LXC containers — the ring is gray with a dash, and hovering it says **No temperature sensor**. CPU and RAM are read all the same.
+- The numbers of **This server** arrive over a WebSocket. When the browser cannot open it, every ring shows a dash, and hovering says there is **no connection to the server for live data**. Behind a proxy that is nearly always the proxy: see [The telemetry widget shows only dashes](../help/troubleshooting.md#the-telemetry-widget-shows-only-dashes).
 - The temperature unit follows **Measurement Units** in your preferences: °C or °F.

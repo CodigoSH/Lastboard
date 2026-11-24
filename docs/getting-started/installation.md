@@ -32,7 +32,15 @@ services:
       - "8080:8080"
     environment:
       - TZ=America/New_York
-      # - TRUST_PROXY=true   # Uncomment if running behind a reverse proxy
+      # "true" when people reach it through a reverse proxy or a tunnel (Nginx,
+      # Nginx Proxy Manager, Caddy, Traefik, Pangolin, Cloudflare Tunnel...).
+      # Left "false" behind one, every visitor looks like that server: one
+      # address in the list of sessions, one sign-in limit shared by everybody.
+      # Set "true" with nothing in front, and a caller chooses their address.
+      - TRUST_PROXY=false
+      # How many of them a request passes through: 1, unless two are chained
+      # (Cloudflare in front of Nginx Proxy Manager, say).
+      - TRUST_PROXY_HOPS=1
     volumes:
       - ./data:/var/lib/lastboard
     restart: unless-stopped
@@ -59,7 +67,7 @@ curl -fsSL https://git.codigosh.com/CodigoSH/Lastboard/raw/branch/main/install.s
 
 ### Running it again
 
-The same command updates an existing installation. It reads the port and proxy setting from
+The same command updates an existing installation. It reads the port and proxy settings from
 your service, tells you which version you have, and installs the latest only if it is
 different:
 
@@ -156,7 +164,9 @@ server the same way the browser tab does.
 
 ## Reverse Proxy Setup
 
-If you plan to use a reverse proxy, you must set the `TRUST_PROXY=true` environment variable.
+If people reach Lastboard through a reverse proxy **or a tunnel** — Nginx, Nginx Proxy Manager, Caddy, Traefik, Pangolin, Cloudflare Tunnel — set `TRUST_PROXY=true`, and `TRUST_PROXY_HOPS` if a request passes through more than one. A tunnel counts: what reaches Lastboard is its connector, not the visitor. Without it every visitor gets the proxy's address, in the list of sessions and in the sign-in limits, and **Settings → About** says so to the administrator. The native installer asks this question; see [Configuration → TRUST_PROXY](configuration.md#trust_proxy).
+
+The proxy also has to pass **WebSocket** upgrades: the telemetry widget and the live status updates use one.
 
 ### Nginx Example
 ```nginx
