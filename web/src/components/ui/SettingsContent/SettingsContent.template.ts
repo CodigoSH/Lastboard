@@ -259,7 +259,7 @@ export const twoFactorCardTemplate = (v: TwoFactorView) => `
 `;
 
 export const accountTemplate = (user: User, sessions: SessionsView = { status: 'idle', items: [] }, twoFactor: TwoFactorView = twoFactorIdle, passkeys: PasskeysView = passkeysIdle) => `
-    <div class="bento-grid" style="grid-template-columns: 1fr;">
+    <div class="bento-grid">
         <div class="bento-card">
             <h3 class="settings-content__title">${i18n.t('settings.profile')}</h3>
             <div class="settings-content__profile-header">
@@ -335,7 +335,7 @@ export const accountTemplate = (user: User, sessions: SessionsView = { status: '
 // background) lives in one card. Language and units moved to Personalization,
 // which is where the rest of the per-panel preferences are.
 export const themeTemplate = (prefs: Prefs, colorMap: Record<string, string>, colors: string[]) => `
-    <div class="bento-grid" style="grid-template-columns: 1fr;">
+    <div class="bento-grid">
         <div class="bento-card">
              <h3 class="settings-content__title">${i18n.t('settings.appearance')}</h3>
              <label class="settings-content__label">${i18n.t('settings.studio_accent')}</label>
@@ -473,11 +473,11 @@ export const personalizationTemplate = (prefs: Prefs) => `
 `;
 
 export const usersTemplate = (users: any[]) => `
-    <div class="bento-grid" style="grid-template-columns: 1fr;">
+    <div class="bento-grid">
         <div class="bento-card">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+            <div style="display: flex; flex-wrap: wrap; gap: 12px; justify-content: space-between; align-items: center; margin-bottom: 24px;">
                 <h3 class="settings-content__title" style="margin: 0;">${i18n.t('settings.users')}</h3>
-                <app-button variant="primary" data-action="open-add-user" style="width: auto; padding: 0 16px;">+ ${i18n.t('action.add_user')}</app-button>
+                <app-button variant="primary" data-action="open-add-user" style="width: auto;">+ ${i18n.t('action.add_user')}</app-button>
             </div>
 
             <div class="settings-content__user-list">
@@ -599,7 +599,7 @@ export const monitoringTemplate = (monitoring: {
     // that claim over the real configuration.
     if (!loaded) {
         return `
-    <div class="bento-grid" style="grid-template-columns: 1fr;">
+    <div class="bento-grid">
         <div class="bento-card">
             <h3 class="settings-content__title">${i18n.t('settings.monitoring')}</h3>
             <p class="settings-content__text-dim" style="font-size:13px;margin:0;">
@@ -611,7 +611,7 @@ export const monitoringTemplate = (monitoring: {
     }
     const on24 = monitoring.mode === 'background';
     return `
-    <div class="bento-grid" style="grid-template-columns: 1fr;">
+    <div class="bento-grid">
         <div class="bento-card">
             <h3 class="settings-content__title">${i18n.t('settings.monitoring')}</h3>
             <div class="settings-content__action-group">
@@ -673,7 +673,7 @@ export interface NotificationsView {
 export const notificationsTemplate = (v: NotificationsView) => {
     if (!v.loaded) {
         return `
-    <div class="bento-grid" style="grid-template-columns: 1fr;">
+    <div class="bento-grid">
         <div class="bento-card">
             <h3 class="settings-content__title">${i18n.t('settings.notifications')}</h3>
             <p class="settings-content__text-dim" style="font-size:13px;margin:0;">
@@ -689,7 +689,7 @@ export const notificationsTemplate = (v: NotificationsView) => {
         when: (s: number) => i18n.formatSpan(s * 1000) ?? i18n.formatDateTime(unixToDate(s), { timeStyle: 'short' }),
     };
     return `
-    <div class="bento-grid" style="grid-template-columns: 1fr;">
+    <div class="bento-grid">
         ${channelsCardHtml({ channels: v.channels, max: v.max, monitoringOn: v.monitoringOn }, t, ctx)}
 
         ${hasPush(v.channels) ? `<div class="bento-card">
@@ -784,7 +784,7 @@ export const proxmoxTemplate = (
 ) => {
     if (!loaded) {
         return `
-    <div class="bento-grid" style="grid-template-columns: 1fr;">
+    <div class="bento-grid">
         <div class="bento-card">
             <h3 class="settings-content__title">${i18n.t('widget.proxmox.name')}</h3>
             <p class="settings-content__text-dim" style="font-size:13px;margin:0;">
@@ -798,11 +798,11 @@ export const proxmoxTemplate = (
     const hosts = px.hosts || [];
 
     return `
-    <div class="bento-grid" style="grid-template-columns: 1fr;">
+    <div class="bento-grid">
         <div class="bento-card">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; gap:12px;">
+            <div style="display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; margin-bottom:20px; gap:12px;">
                 <h3 class="settings-content__title" style="margin:0;">${i18n.t('widget.proxmox.name')}</h3>
-                <app-button variant="primary" data-action="add-proxmox-host" style="width:auto; padding:0 16px;">+ ${i18n.t('settings.proxmox_add')}</app-button>
+                <app-button variant="primary" data-action="add-proxmox-host" style="width:auto;">+ ${i18n.t('settings.proxmox_add')}</app-button>
             </div>
             <p class="settings-content__text-dim" style="font-size: 13px; margin: -12px 0 16px;">${i18n.t('settings.proxmox_desc')}</p>
 
@@ -938,7 +938,7 @@ export const dockerTemplate = (
 ) => {
     if (!loaded) {
         return `
-    <div class="bento-grid" style="grid-template-columns: 1fr;">
+    <div class="bento-grid">
         <div class="bento-card">
             <h3 class="settings-content__title">${i18n.t('widget.docker.name')}</h3>
             <p class="settings-content__text-dim" style="font-size:13px;margin:0;">
@@ -952,11 +952,11 @@ export const dockerTemplate = (
     const hosts = dk.hosts || [];
 
     return `
-    <div class="bento-grid" style="grid-template-columns: 1fr;">
+    <div class="bento-grid">
         <div class="bento-card">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; gap:12px;">
+            <div style="display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; margin-bottom:20px; gap:12px;">
                 <h3 class="settings-content__title" style="margin:0;">${i18n.t('widget.docker.name')}</h3>
-                <app-button variant="primary" data-action="add-docker-host" style="width:auto; padding:0 16px;">+ ${i18n.t('docker.add_new_host')}</app-button>
+                <app-button variant="primary" data-action="add-docker-host" style="width:auto;">+ ${i18n.t('docker.add_new_host')}</app-button>
             </div>
             <p class="settings-content__text-dim" style="font-size: 13px; margin: -12px 0 16px;">${i18n.t('settings.docker_hosts_desc')}</p>
             ${dk.admin ? '' : `<p class="settings-content__text-dim" style="font-size: 13px; margin: 0 0 16px;">${i18n.t('settings.docker_member_note')}</p>`}
@@ -1091,7 +1091,7 @@ export interface DataSections {
 
 export const dataTemplate = (pendingIcons = 0, localIcons = 0, storingIcons = false,
     show: DataSections = { backup: true, icons: true, transfer: true }) => `
-    <div class="bento-grid" style="grid-template-columns: 1fr;">
+    <div class="bento-grid">
 
         ${show.icons ? iconsCard(pendingIcons, localIcons, storingIcons) : ''}
 
@@ -1156,7 +1156,7 @@ export const dataTemplate = (pendingIcons = 0, localIcons = 0, storingIcons = fa
 `;
 
 export const advancedTemplate = () => `
-    <div class="bento-grid" style="grid-template-columns: 1fr;">
+    <div class="bento-grid">
         <!-- Danger Zone -->
         <div class="settings-content__danger-zone">
              <div>
@@ -1275,7 +1275,7 @@ export const aboutTemplate = (version: string, updateInfo: any, role: string, be
     const isAdmin = role?.toLowerCase() === 'admin' || role?.toLowerCase() === 'administrator';
     return `
     <div>
-        <div class="bento-grid" style="grid-template-columns: 1fr;">
+        <div class="bento-grid">
             <div class="bento-card settings-content__about-card">
                 ${isAdmin ? `<div class="about-hero-tools">${serverButtonHtml(aboutT)}</div>` : ''}
                 <img src="/images/logo.png" alt="Lastboard" class="settings-content__about-logo">

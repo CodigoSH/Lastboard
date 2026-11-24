@@ -96,9 +96,9 @@ export function channelsCardHtml(v: CardView, t: T, ctx: RowContext): string {
     const canAddAny = addableTypes(v.channels, v.max).length > 0;
     return `
         <div class="bento-card">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; gap:12px;">
+            <div style="display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; margin-bottom:20px; gap:12px;">
                 <h3 class="settings-content__title" style="margin:0;">${esc(t('settings.notifications'))}</h3>
-                ${canAddAny ? `<app-button variant="primary" data-action="add-channel" style="width:auto; padding:0 16px;">+ ${esc(t('notify.add'))}</app-button>` : ''}
+                ${canAddAny ? `<app-button variant="primary" data-action="add-channel" style="width:auto;">+ ${esc(t('notify.add'))}</app-button>` : ''}
             </div>
             <p class="settings-content__text-dim" style="font-size: 13px; margin: -12px 0 16px;">${esc(t('notify.desc'))}</p>
             ${!v.monitoringOn ? `
