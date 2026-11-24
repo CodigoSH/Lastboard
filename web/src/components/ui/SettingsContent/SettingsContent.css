@@ -1091,28 +1091,90 @@ button {
     padding: 28px 20px 24px;
 }
 
-/* A notice for the administrator under the product card: the warning's colour on the card's edge and
-   wash, the sign beside the words. */
-.settings-content__notice {
-    display: flex;
-    align-items: flex-start;
-    gap: 10px;
-    border-color: rgba(var(--warning-rgb), 0.35);
-    background: rgba(var(--warning-rgb), 0.08);
-}
+/* What needs the administrator: one card under the product. Amber when anything is wrong, the accent when all
+   there is to say is information, green and quiet when there is nothing; the count in the tone, the worst three
+   by name beside it, and the way to all of them at the foot. */
+.about-attn { display: flex; flex-direction: column; gap: 10px; }
+.about-attn--warn, .about-attn--info { cursor: pointer; transition: border-color 0.15s; }
+.about-attn--warn { border-color: rgba(var(--warning-rgb), 0.45); background: linear-gradient(rgba(var(--warning-rgb), 0.07), rgba(var(--warning-rgb), 0.07)), var(--surface); }
+.about-attn--warn:hover { border-color: rgba(var(--warning-rgb), 0.8); }
+.about-attn--info:hover { border-color: rgba(var(--accent-rgb), 0.4); }
+.about-attn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.about-attn__top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.about-attn__label { font: 600 10.5px/1.4 var(--font-mono); letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-dim); }
+.about-attn--warn .about-attn__top svg, .about-attn--warn .about-attn__count { color: var(--warning-color); }
+.about-attn--info .about-attn__top svg, .about-attn--info .about-attn__count { color: var(--accent); }
+.about-attn--ok .about-attn__top svg { color: var(--success-color); }
+.about-attn__main { display: flex; align-items: flex-start; gap: 18px; }
+.about-attn__count { font-size: 30px; font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums; }
+.about-attn__list { display: grid; gap: 2px; min-width: 0; font-size: 13px; font-weight: 600; line-height: 1.6; }
+.about-attn__item { overflow-wrap: anywhere; }
+.about-attn__more { font-weight: 500; color: var(--text-dim); }
+.about-attn__foot { display: flex; justify-content: flex-end; }
+.about-attn__see { display: inline-flex; align-items: center; gap: 2px; font: 600 11px/1.3 var(--font-mono); letter-spacing: 0.04em; color: var(--accent); }
+.about-attn__see svg { transform: scaleX(var(--rtl-flip, 1)); }
+.about-attn__ok { margin: 0; font-size: 18px; font-weight: 700; color: var(--success-color); }
+.about-attn__sub { margin: 0; font: 500 11px/1.4 var(--font-mono); color: var(--text-dim); }
 
-.settings-content__notice svg {
-    flex: none;
-    width: 20px;
-    height: 20px;
-    fill: var(--warning-color);
-}
+/* A state as a dot: the tone of an item, or whether a setting is on. Off is grey, not red: off is a choice. */
+.about-dot { display: inline-block; width: 7px; height: 7px; margin-inline-end: 8px; border-radius: 50%; vertical-align: 1px; background: var(--text-dim); opacity: 0.45; }
+.about-dot--bad { background: var(--danger-color); opacity: 1; }
+.about-dot--warn { background: var(--warning-color); opacity: 1; }
+.about-dot--info { background: var(--accent); opacity: 1; }
+.about-dot--ok { background: var(--success-color); opacity: 1; }
 
-.settings-content__notice p {
-    margin: 0;
-    font-size: 13px;
-    line-height: 1.5;
-    color: var(--text-main);
+/* The discreet way to the server's details: a small pill in the product card's corner. */
+.settings-content__about-card { position: relative; }
+.about-hero-tools { position: absolute; inset-block-start: 14px; inset-inline-end: 14px; }
+.about-server-btn {
+    display: inline-flex; align-items: center; gap: 6px; padding: 5px 10px;
+    border: 1px solid var(--border); border-radius: 999px; background: none; color: var(--text-dim);
+    font: 500 11px/1.3 var(--font-mono); letter-spacing: 0.04em; cursor: pointer; transition: color 0.15s, border-color 0.15s;
+}
+.about-server-btn:hover { color: var(--text-main); border-color: rgba(var(--accent-rgb), 0.4); }
+
+/* The attention dialog: one line per item, its mark in its tone, the fix under the reason. */
+.about-needs { display: grid; gap: 8px; margin-block-start: 16px; max-height: min(65vh, 560px); overflow-y: auto; }
+.about-need { display: flex; align-items: flex-start; gap: 12px; padding: 12px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); }
+.about-need--bad { border-color: rgba(var(--danger-rgb), 0.45); }
+.about-need--warn { border-color: rgba(var(--warning-rgb), 0.45); }
+.about-need__mark { display: grid; place-items: center; flex: none; width: 24px; height: 24px; border: 1px solid var(--border); border-radius: 6px; color: var(--text-dim); }
+.about-need--bad .about-need__mark { color: var(--danger-color); border-color: rgba(var(--danger-rgb), 0.4); background: rgba(var(--danger-rgb), 0.08); }
+.about-need--warn .about-need__mark { color: var(--warning-color); border-color: rgba(var(--warning-rgb), 0.4); background: rgba(var(--warning-rgb), 0.08); }
+.about-need--info .about-need__mark { color: var(--accent); }
+.about-need__text { display: grid; gap: 3px; min-width: 0; font-size: 12.5px; color: var(--text-dim); overflow-wrap: anywhere; }
+.about-need__text b { font-size: 13px; font-weight: 600; color: var(--text-main); }
+.about-need__fix { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-block-start: 4px; }
+.about-need__fix code { padding: 1px 6px; border: 1px solid var(--border); border-radius: 5px; background: var(--surface-dim); font: 500 11px/1.5 var(--font-mono); color: var(--text-main); }
+.about-need__link { display: inline-flex; align-items: center; gap: 2px; font: 600 11px/1.3 var(--font-mono); letter-spacing: 0.04em; color: var(--accent); text-decoration: none; }
+.about-need__link:hover { text-decoration: underline; text-underline-offset: 3px; }
+
+/* The details dialog: a group's name over a card of label and value lines, a bar under a value that has one. */
+.about-details { max-height: min(70vh, 640px); overflow-y: auto; }
+.about-group { margin: 16px 0 6px; font: 600 10.5px/1.4 var(--font-mono); letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-dim); }
+.about-kvs { border: 1px solid var(--border); border-radius: 10px; background: var(--surface); }
+.about-kv { display: grid; grid-template-columns: 11rem minmax(0, 1fr); align-items: center; column-gap: 16px; padding: 10px 14px; border-top: 1px solid var(--border); font-size: 13px; }
+.about-kv:first-child { border-top: 0; }
+.about-kv__k { color: var(--text-dim); }
+.about-kv__v { min-width: 0; font-weight: 600; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.about-kv__v small { margin-inline-start: 6px; font-weight: 400; color: var(--text-dim); }
+.about-meter { grid-column: 2; width: 100%; height: 6px; margin-top: 6px; border: 0; border-radius: 3px; appearance: none; background: rgba(127, 127, 127, 0.18); }
+.about-meter::-webkit-meter-bar { height: 6px; border: 0; border-radius: 3px; background: rgba(127, 127, 127, 0.18); }
+.about-meter::-webkit-meter-optimum-value { border-radius: 3px; background: var(--accent); }
+.about-meter::-webkit-meter-suboptimum-value { border-radius: 3px; background: var(--warning-color); }
+.about-meter::-webkit-meter-even-less-good-value { border-radius: 3px; background: var(--danger-color); }
+.about-meter::-moz-meter-bar { border-radius: 3px; background: var(--accent); }
+.about-meter:-moz-meter-sub-optimum::-moz-meter-bar { background: var(--warning-color); }
+.about-meter:-moz-meter-sub-sub-optimum::-moz-meter-bar { background: var(--danger-color); }
+.about-support { width: 100%; box-sizing: border-box; margin-top: 12px; padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface-dim); color: var(--text-main); font: 500 12px/1.5 var(--font-mono); resize: none; }
+.about-details__foot { display: flex; justify-content: flex-end; margin-top: 16px; }
+.about-details__foot app-button { width: fit-content; min-width: 160px; }
+.about-details__foot app-button svg { margin-inline-end: 6px; vertical-align: -3px; }
+
+@media (max-width: 640px) {
+    .about-hero-tools { position: static; display: flex; justify-content: center; margin-bottom: 10px; }
+    .about-kv { grid-template-columns: minmax(0, 1fr); row-gap: 2px; }
+    .about-meter { grid-column: 1; }
 }
 
 .settings-content__about-logo {

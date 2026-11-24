@@ -209,6 +209,26 @@ func recordChannelResult(store *UserSettings, uid int, id string, sendErr error)
 	}
 }
 
+// FailingChannel is a channel of an account whose last alert did not get through.
+type FailingChannel struct {
+	Name   string `json:"name"`
+	Reason string `json:"reason"`
+}
+
+// FailingChannels lists an account's channels that are on and whose last delivery failed, in the order
+// the account keeps them. A channel never used, or switched off, is not failing.
+func FailingChannels(db *sql.DB, uid int) []FailingChannel {
+	store := NewUserSettings(db)
+	results := channelResults(store, uid)
+	out := []FailingChannel{}
+	for _, ch := range channelsOf(store, uid) {
+		if r, ok := results[ch.ID]; ok && ch.Enabled && !r.OK {
+			out = append(out, FailingChannel{Name: ch.Name, Reason: r.Error})
+		}
+	}
+	return out
+}
+
 // failureReason names why a delivery failed in a word the screen has a text for.
 func failureReason(err error) string {
 	var netErr net.Error

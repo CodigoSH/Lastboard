@@ -63,6 +63,25 @@ func TestNoNoticeWhenTheProxyIsDeclared(t *testing.T) {
 	}
 }
 
+// attentionOf reads the administrator's list and returns the item with this key, if any.
+func attentionOf(t *testing.T, as func(method, path, body string) *httptest.ResponseRecorder, key string) (attentionItem, bool) {
+	t.Helper()
+	w := as(http.MethodGet, "/api/system/attention", "")
+	if w.Code != http.StatusOK {
+		t.Fatalf("GET /api/system/attention = %d", w.Code)
+	}
+	var out struct{ Items []attentionItem }
+	if err := json.Unmarshal(w.Body.Bytes(), &out); err != nil {
+		t.Fatal(err)
+	}
+	for _, it := range out.Items {
+		if it.Key == key {
+			return it, true
+		}
+	}
+	return attentionItem{}, false
+}
+
 // What was noticed reaches the administrator, not before, and nobody else.
 func TestTheAdministratorIsToldOfAnUndeclaredProxy(t *testing.T) {
 	t.Setenv("TRUST_PROXY", "false")
@@ -70,30 +89,19 @@ func TestTheAdministratorIsToldOfAnUndeclaredProxy(t *testing.T) {
 	admin := adminOf(t, srv)
 	viewer := asMember(t, srv, "wallscreen", access.Viewer())
 
-	unread := func() bool {
-		t.Helper()
-		w := admin(http.MethodGet, "/api/system/proxy", "")
-		if w.Code != http.StatusOK {
-			t.Fatalf("GET /api/system/proxy = %d", w.Code)
-		}
-		var out struct{ Unread bool }
-		if err := json.Unmarshal(w.Body.Bytes(), &out); err != nil {
-			t.Fatal(err)
-		}
-		return out.Unread
-	}
-
-	if unread() {
+	if _, said := attentionOf(t, admin, "proxy"); said {
 		t.Fatal("told of a proxy before any proxy header arrived")
 	}
 	r := httptest.NewRequest(http.MethodGet, "/api/system/status", nil)
 	r.RemoteAddr = "127.0.0.1:50000"
 	r.Header.Set("X-Forwarded-For", "203.0.113.9")
 	srv.ServeHTTP(httptest.NewRecorder(), r)
-	if !unread() {
+	if _, said := attentionOf(t, admin, "proxy"); !said {
 		t.Error("after a proxy header from this machine, the administrator is not told")
 	}
-	if w := viewer(http.MethodGet, "/api/system/proxy", ""); w.Code != http.StatusForbidden {
-		t.Errorf("a member reading the proxy notice: %d, want 403", w.Code)
+	for _, path := range []string{"/api/system/attention", "/api/system/details"} {
+		if w := viewer(http.MethodGet, path, ""); w.Code != http.StatusForbidden {
+			t.Errorf("a member reading %s: %d, want 403", path, w.Code)
+		}
 	}
 }

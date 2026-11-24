@@ -1,7 +1,6 @@
 package web
 
 import (
-	"encoding/json"
 	"log/slog"
 	"net"
 	"net/http"
@@ -43,11 +42,4 @@ func forwardedByNeighbour(r *http.Request) bool {
 	}
 	ip := net.ParseIP(host)
 	return ip != nil && (ip.IsLoopback() || ip.IsPrivate())
-}
-
-// handleProxyNotice tells the administrator whether an undeclared proxy has
-// been seen.
-func (s *Server) handleProxyNotice(w http.ResponseWriter, _ *http.Request) {
-	w.Header().Set("Content-Type", "application/json")
-	_ = json.NewEncoder(w).Encode(map[string]bool{"unread": s.forwardedUnread.Load()})
 }

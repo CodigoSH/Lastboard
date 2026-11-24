@@ -1,4 +1,5 @@
 import { sessionIsOnline, sessionsInOrder } from '../../../services/sessionsOrder';
+import { attentionCardHtml, attentionDialogHtml, serverButtonHtml, serverDialogHtml, type AttentionItem, type Fmt as AboutFmt, type ServerDetails, type T as AboutT } from './aboutPanel.template';
 import { agentIsOld } from '../../../services/dockerShared';
 import { i18n } from '../../../services/i18n';
 import { escapeHtml as esc, safeImageSrc } from '../../../services/escape';
@@ -1261,12 +1262,22 @@ export const updateZoneTemplate = (isAdmin: boolean, updateInfo: any, isChecking
     `;
 };
 
-export const aboutTemplate = (version: string, updateInfo: any, role: string, betaUpdates: boolean, isCheckingUpdates: boolean, proxyUnread = false) => {
+/** The words and formats the About pieces take, from the translation singleton. */
+export const aboutT: AboutT = (key, params) => i18n.t(key, params);
+export const aboutFmt: AboutFmt = {
+    num: n => i18n.formatNumber(n),
+    date: seconds => i18n.formatDateTime(seconds * 1000, { dateStyle: 'medium' }),
+    duration: seconds => i18n.formatDuration(seconds),
+};
+
+export const aboutTemplate = (version: string, updateInfo: any, role: string, betaUpdates: boolean, isCheckingUpdates: boolean,
+    attention: AttentionItem[] = [], details: ServerDetails | null = null) => {
     const isAdmin = role?.toLowerCase() === 'admin' || role?.toLowerCase() === 'administrator';
     return `
     <div>
         <div class="bento-grid" style="grid-template-columns: 1fr;">
             <div class="bento-card settings-content__about-card">
+                ${isAdmin ? `<div class="about-hero-tools">${serverButtonHtml(aboutT)}</div>` : ''}
                 <img src="/images/logo.png" alt="Lastboard" class="settings-content__about-logo">
                 <h2 class="settings-content__about-name">${i18n.t('app.title')}</h2>
                 <p id="current-version-label" class="settings-content__about-version">${version || '…'}</p>
@@ -1276,15 +1287,7 @@ export const aboutTemplate = (version: string, updateInfo: any, role: string, be
                 </div>
             </div>
 
-            ${isAdmin && proxyUnread ? `
-            <!-- Said here, where the person who can change the setting looks, and only once the server has
-                 seen a proxy's headers arrive: every visitor otherwise has that proxy's address, in the
-                 sessions and in the sign-in limits, and nothing else on any screen would say so. -->
-            <div class="bento-card settings-content__notice" role="note">
-                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/></svg>
-                <p>${esc(i18n.t('settings.proxy_unread', { setting: 'TRUST_PROXY' }))}</p>
-            </div>
-            ` : ''}
+            ${isAdmin ? `<div id="attention-host">${attentionCardHtml(attention, aboutT, aboutFmt)}</div>` : ''}
 
             ${isAdmin ? `
             <!-- The beta switch used to float over the corner of the card above,
@@ -1320,5 +1323,6 @@ export const aboutTemplate = (version: string, updateInfo: any, role: string, be
              </div>
          </div>
      </div>
+     ${isAdmin ? attentionDialogHtml(attention, aboutT, aboutFmt) + serverDialogHtml(details, aboutT, aboutFmt) : ''}
         `;
 };

@@ -9,7 +9,8 @@ import { ThemeService, asThemeChoice } from '../../../services/ThemeService';
 import { apiService } from '../../../services/apiService';
 import { importService } from '../../../services/importService';
 import { ImportTooLargeError } from '../../../services/importPlan';
-import { accountTemplate, deviceName, sessionsListTemplate, type SessionsView, type TwoFactorView, twoFactorIdle, type PasskeysView, passkeysIdle, themeTemplate, personalizationTemplate, usersTemplate, advancedTemplate, dataTemplate, monitoringTemplate, notificationsTemplate, proxmoxTemplate, dockerTemplate, aboutTemplate, updateZoneTemplate, type PxSettingsHost, type PxHostStatus, type DockerRowStatus } from './SettingsContent.template';
+import { attentionCardHtml, attentionListHtml, serverDialogHtml, supportText, type AttentionItem, type ServerDetails } from './aboutPanel.template';
+import { aboutFmt, aboutT, accountTemplate, deviceName, sessionsListTemplate, type SessionsView, type TwoFactorView, twoFactorIdle, type PasskeysView, passkeysIdle, themeTemplate, personalizationTemplate, usersTemplate, advancedTemplate, dataTemplate, monitoringTemplate, notificationsTemplate, proxmoxTemplate, dockerTemplate, aboutTemplate, updateZoneTemplate, type PxSettingsHost, type PxHostStatus, type DockerRowStatus } from './SettingsContent.template';
 import { loadProxmox } from '../../../services/proxmoxApi';
 import { sameHostUrl } from '../../../services/proxmoxMatch';
 import { User, UserPreferences } from '../../../types';
@@ -184,6 +185,29 @@ class SettingsContent extends HTMLElement {
                 case 'update-username':
                     this.updateUsername((root.getElementById('username-input') as HTMLInputElement).value);
                     break;
+                case 'open-attention':
+                    (root.getElementById('attention-modal') as HTMLDialogElement | null)?.showModal();
+                    break;
+                case 'open-server':
+                    (root.getElementById('server-modal') as HTMLDialogElement | null)?.showModal();
+                    this.fetchAbout();
+                    break;
+                case 'copy-support':
+                    this.copySupport(el);
+                    break;
+                case 'attention-open-update':
+                    e.preventDefault();
+                    (root.getElementById('attention-modal') as HTMLDialogElement | null)?.close();
+                    // The update is started from its own zone under the version, with its own confirmation.
+                    root.getElementById('update-zone-wrapper')?.scrollIntoView({ block: 'center', behavior: 'smooth' });
+                    break;
+                case 'attention-open-section': {
+                    e.preventDefault();
+                    (root.getElementById('attention-modal') as HTMLDialogElement | null)?.close();
+                    const drawer = document.getElementById('right-drawer') as (HTMLElement & { selectSection: (s: string) => void }) | null;
+                    drawer?.selectSection(el.dataset.section || 'notifications');
+                    break;
+                }
                 case 'open-sessions':
                     (root.getElementById('sessions-modal') as HTMLDialogElement | null)?.showModal();
                     this.fetchSessions();
@@ -460,7 +484,7 @@ class SettingsContent extends HTMLElement {
         }
         if (section === 'about') {
             // No longer checking automatically here. Using background + manual button.
-            this.fetchProxyNotice();
+            this.fetchAbout();
         }
         this.render();
     }
@@ -811,32 +835,80 @@ class SettingsContent extends HTMLElement {
     }
 
     /**
+     * What needs the administrator, and the server's details for the dialog behind About's discreet
+     * button. Asked only for the administrator, who is the one shown them, and silent on failure like the
+     * other optional cards: About still shows the product and its update.
+     */
+    private attention: AttentionItem[] = [];
+    private details: ServerDetails | null = null;
+
+    async fetchAbout() {
+        if (!this.isAdministrator()) return;
+        const [attention, details] = await Promise.all([
+            apiService.get<{ items: AttentionItem[] }>('/api/system/attention').then(r => r?.items ?? []).catch(() => [] as AttentionItem[]),
+            apiService.get<ServerDetails>('/api/system/details').catch(() => null),
+        ]);
+        this.attention = attention;
+        this.details = details;
+        if (this.getAttribute('section') === 'about') this.paintAbout();
+    }
+
+    /**
+     * Puts what was just read into About in place: the card, the attention dialog's list and count, and the
+     * details dialog's content. Not a whole render, which would replace an open dialog with a closed one and
+     * replay the section's entrance. Before the section exists there is nothing to paint, and the render that
+     * draws it reads the same fields.
+     */
+    private paintAbout() {
+        const root = this.shadowRoot;
+        const host = root?.getElementById('attention-host');
+        if (!root || !host) return;
+        const items = this.attentionNow();
+        host.innerHTML = attentionCardHtml(items, aboutT, aboutFmt);
+        const body = root.getElementById('attention-body');
+        if (body) body.innerHTML = attentionListHtml(items, aboutT, aboutFmt);
+        const count = root.getElementById('attention-modal-count');
+        if (count) count.textContent = aboutFmt.num(items.length);
+        const server = root.getElementById('server-modal');
+        if (server) {
+            const fresh = document.createElement('template');
+            fresh.innerHTML = serverDialogHtml(this.details, aboutT, aboutFmt).trim();
+            const dialog = fresh.content.firstElementChild;
+            if (dialog) server.replaceChildren(...Array.from(dialog.childNodes));
+        }
+    }
+
+    /** The server's list, and a newer version when the update check has found one. */
+    private attentionNow(): AttentionItem[] {
+        const info = this.updateInfo;
+        return info?.available && info.latest_version
+            ? [...this.attention, { key: 'update', tone: 'info', params: { version: String(info.latest_version) } }]
+            : this.attention;
+    }
+
+    /** Copies what a support request needs; where the clipboard is not allowed (plain HTTP), shows it selected. */
+    private async copySupport(button: HTMLElement) {
+        if (!this.details) return;
+        try {
+            await navigator.clipboard.writeText(supportText(this.details));
+            const label = button.querySelector('span');
+            if (label) label.textContent = i18n.t('server_info.copied');
+        } catch {
+            const area = this.shadowRoot?.getElementById('support-text') as HTMLTextAreaElement | null;
+            if (!area) return;
+            area.hidden = false;
+            area.focus();
+            area.select();
+        }
+    }
+
+    /**
      * Reads how many of my bookmarks still fetch their icon from elsewhere.
      *
      * A failure here is silent on purpose: this only decides whether an
      * optional card is drawn, and an error toast about it would be noise on a
      * settings screen the user opened to do something else.
      */
-    /**
-     * Whether the server has seen a proxy in front that TRUST_PROXY does not declare. Asked only for the
-     * administrator, who is the one shown it, and silent on failure like the other optional cards.
-     */
-    private proxyUnread = false;
-
-    async fetchProxyNotice() {
-        if (!this.isAdministrator()) return;
-        try {
-            const r = await apiService.get<{ unread: boolean }>('/api/system/proxy');
-            const unread = r?.unread === true;
-            if (unread !== this.proxyUnread) {
-                this.proxyUnread = unread;
-                this.render();
-            }
-        } catch {
-            this.proxyUnread = false;
-        }
-    }
-
     async fetchPendingIcons() {
         try {
             const r = await apiService.get<{ pending: number; local: number }>('/api/icons/pending');
@@ -1597,7 +1669,7 @@ class SettingsContent extends HTMLElement {
             }
             if (newValue === 'about') {
                 this.checkForUpdates();
-                this.fetchProxyNotice();
+                this.fetchAbout();
             }
             this.render();
         }
@@ -2024,7 +2096,7 @@ class SettingsContent extends HTMLElement {
                 return usersTemplate(this.users);
 
             case 'about':
-                return aboutTemplate(this.version, this.updateInfo, user.role || 'user', user.preferences?.beta_updates || false, this.isCheckingUpdates, this.proxyUnread);
+                return aboutTemplate(this.version, this.updateInfo, user.role || 'user', user.preferences?.beta_updates || false, this.isCheckingUpdates, this.attentionNow(), this.details);
 
             default:
                 return `<div class="bento-card"><h3>${section}</h3><p class="settings-content__text-dim">${i18n.t('settings.default_module_desc')}</p></div>`;
@@ -2390,6 +2462,8 @@ class SettingsContent extends HTMLElement {
         if (versionLabel && this.version) {
             versionLabel.textContent = this.version;
         }
+        // A newer version found is one more thing on the administrator's list.
+        this.paintAbout();
     }
 }
 

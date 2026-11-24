@@ -6,6 +6,7 @@ import { DEFAULT_TELEMETRY_INTERVAL, telemetryInterval } from './telemetryInterv
 import { EMPTY_VIEW, RemoteView, nextRemoteView, remoteErrorKey, remoteSignature, serverLink, telemetrySource } from './remoteTelemetry';
 import { fetchRemoteStats } from '../../services/remoteStats';
 import { whenVisible } from '../../services/whenVisible';
+import { socketService } from '../../services/socketService';
 
 // ── Thresholds ─────────────────────────────────────────────────────────────────
 
@@ -27,6 +28,9 @@ class TelemetryWidget extends HTMLElement {
     private _unsubscribe: (() => void) | undefined;
     private _unsubscribeI18n: (() => void) | undefined;
     private _unsubscribeUser: (() => void) | undefined;
+    private _unsubscribeSocket: (() => void) | undefined;
+    // Whether this machine's own stream is reaching the page; 'failing' is said on the widget.
+    private _socketStatus: 'idle' | 'ok' | 'failing' = 'idle';
 
     private _itemId: number = 0;
     private _interval: number = DEFAULT_TELEMETRY_INTERVAL;
@@ -76,6 +80,11 @@ class TelemetryWidget extends HTMLElement {
         this.render();
 
         if (this._unsubscribe) return;
+
+        this._unsubscribeSocket = socketService.subscribeStatus(status => {
+            this._socketStatus = status;
+            if (!this._remote) this.showSocketState();
+        });
 
         this._unsubscribeUser = userStore.subscribe(user => {
             const newUnit = user?.preferences?.unit_system || 'metric';
@@ -132,6 +141,8 @@ class TelemetryWidget extends HTMLElement {
         this._unsubscribe?.();
         this._unsubscribeI18n?.();
         this._unsubscribeUser?.();
+        this._unsubscribeSocket?.();
+        this._unsubscribeSocket = undefined;
         this._unsubscribe = undefined;
     }
 
@@ -211,6 +222,28 @@ class TelemetryWidget extends HTMLElement {
         this.toggleAttribute('data-offline', view.offline);
     }
 
+    /**
+     * This machine's stream that keeps failing to connect: the gauges stay at "—" and say why when pointed at,
+     * rather than looking like a widget still loading. Usually a proxy in front that changes the address
+     * (About says what to set) or one that does not pass WebSockets through.
+     */
+    private showSocketState() {
+        const root = this.shadowRoot;
+        if (!root) return;
+        const failing = this._socketStatus === 'failing';
+        this.toggleAttribute('data-offline', failing);
+        root.querySelectorAll<HTMLElement>('.gauge-wrap').forEach(wrap => {
+            if (failing) {
+                const val = wrap.querySelector('.value-text');
+                if (val) val.textContent = '—';
+                wrap.dataset.state = 'none';
+                wrap.title = i18n.t('widget.telemetry.no_connection');
+            } else if (wrap.title === i18n.t('widget.telemetry.no_connection')) {
+                wrap.title = '';
+            }
+        });
+    }
+
     // ── Update ──────────────────────────────────────────────────────────────
 
     update(data: any) {
@@ -254,7 +287,16 @@ class TelemetryWidget extends HTMLElement {
             if (this._metrics.includes('cpu')) apply('cpu', `${cpu}%`, percentState(cpu), cpu);
             if (this._metrics.includes('ram')) apply('ram', `${ram}%`, percentState(ram), ram);
             
-            if (this._metrics.includes('temp')) {
+            // No sensor (a virtual machine has none, a container rarely sees one): a dash, and why when pointed at,
+            // never "-1 °C".
+            if (this._metrics.includes('temp') && temp < 0) {
+                const wrap = root.querySelector('.gauge-wrap[data-key="temp"]') as HTMLElement | null;
+                const valEl = wrap?.querySelector('.value-text');
+                const circleEl = wrap?.querySelector('.circle') as SVGPathElement | null;
+                if (valEl) valEl.textContent = '—';
+                if (circleEl) circleEl.style.strokeDasharray = '0, 100';
+                if (wrap) { wrap.dataset.state = 'none'; wrap.title = i18n.t('widget.telemetry.remote.no_sensor'); }
+            } else if (this._metrics.includes('temp')) {
                 let displayTemp = temp;
                 let unitStr = '°C';
                 if (this._unit === 'imperial') {
@@ -388,7 +430,10 @@ class TelemetryWidget extends HTMLElement {
         this.lastUpdate = 0;
 
         this.toggleAttribute('data-link', !!this._link);
-        if (!this._remote) this.removeAttribute('data-offline');
+        if (!this._remote) {
+            this.removeAttribute('data-offline');
+            this.showSocketState();
+        }
         if (this._remote) {
             this.showRemote(this._view);
             return;

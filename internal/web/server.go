@@ -59,6 +59,11 @@ type Server struct {
 	// forwardedUnread says a proxy's headers have arrived while TRUST_PROXY is
 	// off, so About can say the setting is probably wrong.
 	forwardedUnread atomic.Bool
+	// insecureSeen says somebody reached this server over plain HTTP from
+	// another machine.
+	insecureSeen atomic.Bool
+	// startedAt is when this process started, for the uptime About shows.
+	startedAt time.Time
 }
 
 func NewServer(db *sql.DB) *Server {
@@ -74,6 +79,7 @@ func NewServer(db *sql.DB) *Server {
 	}
 
 	s := &Server{
+		startedAt:     time.Now(),
 		DB:            db,
 		Router:        http.NewServeMux(),
 		WSHub:         api.NewHub(),
@@ -449,7 +455,8 @@ func (s *Server) routes() {
 	// System API
 	systemHandler := api.NewSystemHandler(s.DB)
 	s.Router.Handle("GET /api/system/backup", protect(need(access.Admin, systemHandler.DownloadBackup)))
-	s.Router.Handle("GET /api/system/proxy", protect(need(access.Admin, s.handleProxyNotice)))
+	s.Router.Handle("GET /api/system/attention", protect(need(access.Admin, s.handleAttention)))
+	s.Router.Handle("GET /api/system/details", protect(need(access.Admin, s.handleServerDetails)))
 	s.Router.Handle("POST /api/system/backup", protect(need(access.Admin, systemHandler.DownloadProtectedBackup)))
 	s.Router.Handle("POST /api/system/restore", protect(need(access.Admin, systemHandler.RestoreBackup)))
 	s.Router.Handle("POST /api/system/reset", protect(need(access.Admin, systemHandler.FactoryReset)))
@@ -528,6 +535,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	nonce := base64.StdEncoding.EncodeToString(nonceBytes)
 	r = r.WithContext(context.WithValue(r.Context(), nonceCtxKey{}, nonce))
 	s.noticeForwarded(r)
+	s.noticeInsecure(r)
 
 	// Security Headers
 	w.Header().Set("X-Content-Type-Options", "nosniff")

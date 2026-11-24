@@ -1204,6 +1204,7 @@ func readTemp() (float64, error) {
 	}
 
 	var bestTemp float64 = 0
+	found := false
 
 	for _, entry := range entries {
 		if !strings.HasPrefix(entry.Name(), "thermal_zone") {
@@ -1242,14 +1243,23 @@ func readTemp() (float64, error) {
 		if !strings.Contains(s, "wifi") &&
 			!strings.Contains(s, "battery") &&
 			!strings.Contains(s, "wireless") {
+			found = true
 			if tempC > bestTemp {
 				bestTemp = tempC
 			}
 		}
 	}
 
+	// No sensor at all — a virtual machine has none, a container usually sees
+	// none — is not a reading of zero degrees: the widget would draw "0 °C".
+	if !found {
+		return 0, errNoSensor
+	}
 	return bestTemp, nil
 }
+
+// errNoSensor is a machine with no temperature sensor to read.
+var errNoSensor = errors.New("no temperature sensor")
 
 func parseKB(s string) uint64 {
 	s = strings.TrimSuffix(s, " kB")

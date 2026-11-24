@@ -21,6 +21,10 @@ class SocketService {
     private socket: WebSocket | null = null;
     private statsListeners: ((stats: SystemStats) => void)[] = [];
     private notificationListeners: NotificationListener[] = [];
+    // Whether the stream is reaching this page: 'ok' once a message has arrived, 'failing' after several
+    // closes in a row with none. The telemetry widget says which, rather than showing "—" for ever.
+    private status: 'idle' | 'ok' | 'failing' = 'idle';
+    private statusListeners: ((status: 'idle' | 'ok' | 'failing') => void)[] = [];
     private reconnectTimeout?: ReturnType<typeof setTimeout>;
     private reconnectDelay: number = 1000;
     private reconnectAttempts: number = 0;
@@ -59,6 +63,7 @@ class SocketService {
         this.socket.onmessage = (event) => {
             try {
                 const message: WSMessage = JSON.parse(event.data);
+                this.setStatus('ok');
                 if (message.type === 'stats') {
                     this.notifyStats(message.payload);
                 } else {
@@ -74,6 +79,7 @@ class SocketService {
             // A single close (e.g. a page refresh tearing down the socket) is
             // normal and stays at debug level; only warn if it keeps failing.
             if (this.reconnectAttempts >= SocketService.WARN_AFTER) {
+                this.setStatus('failing');
                 console.warn('[SocketService] WebSocket keeps closing; reconnecting…');
             } else {
                 console.debug('[SocketService] WebSocket closed; reconnecting…');
@@ -116,6 +122,20 @@ class SocketService {
         return () => {
             this.notificationListeners = this.notificationListeners.filter(l => l !== listener);
         };
+    }
+
+    subscribeStatus(listener: (status: 'idle' | 'ok' | 'failing') => void) {
+        this.statusListeners.push(listener);
+        listener(this.status);
+        return () => {
+            this.statusListeners = this.statusListeners.filter(l => l !== listener);
+        };
+    }
+
+    private setStatus(status: 'idle' | 'ok' | 'failing') {
+        if (status === this.status) return;
+        this.status = status;
+        this.statusListeners.forEach(l => l(status));
     }
 
     private notifyStats(stats: SystemStats) {

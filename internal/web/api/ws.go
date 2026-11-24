@@ -9,6 +9,7 @@ import (
 	"runtime"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"golang.org/x/net/websocket"
@@ -224,8 +225,25 @@ func sameOriginWS(r *http.Request) bool {
 	return false
 }
 
+// wsOriginRefused says a socket was refused because the page's origin and the
+// address this server was reached at differ: what a proxy in front that changes
+// the address does, and the reason the telemetry widget then shows nothing.
+var wsOriginRefused atomic.Bool
+
+// WSOriginRefused says whether the telemetry socket has been refused for its
+// origin since this process started.
+func WSOriginRefused() bool { return wsOriginRefused.Load() }
+
+// HostStats is the machine's processor, memory and temperature, as the
+// telemetry widget gets them. A temperature below zero means no sensor.
+func HostStats() SystemStats {
+	s, _ := gatherStats()
+	return s
+}
+
 func (h *Hub) HandleWebSocket(w http.ResponseWriter, r *http.Request) {
 	if !sameOriginWS(r) {
+		wsOriginRefused.Store(true)
 		http.Error(w, "error.forbidden", http.StatusForbidden)
 		return
 	}
