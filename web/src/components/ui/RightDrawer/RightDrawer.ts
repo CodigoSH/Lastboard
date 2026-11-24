@@ -203,9 +203,13 @@ class RightDrawer extends HTMLElement {
         });
 
         this._keydownHandler = (e: KeyboardEvent) => {
-            if (e.key === 'Escape' && this.isOpen) {
-                this.close();
-            }
+            if (e.key !== 'Escape' || !this.isOpen) return;
+            // Escape with a dialog of a section open closes that dialog, which the browser does by itself just
+            // after this; closing the whole drawer with it threw away the section the person was in. Asked of the
+            // section rather than of where the key landed: focus is not always inside the dialog.
+            const section = this.shadowRoot?.querySelector('settings-content')?.shadowRoot;
+            if (section?.querySelector('dialog[open]') || e.composedPath().some(n => n instanceof HTMLDialogElement)) return;
+            this.close();
         };
         window.addEventListener('keydown', this._keydownHandler);
     }
