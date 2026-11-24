@@ -164,10 +164,14 @@
         #twoFactorForm .tf-actions { display: flex; flex-direction: column; gap: 10px; margin-top: 24px; }
         #twoFactorForm #tfCode { letter-spacing: 0.08em; }
         #twoFactorForm[hidden], #loginForm[hidden] { display: none; }
-        .passkey-row { margin-top: 12px; }
-        .passkey-row[hidden] { display: none; }
-        .passkey-row .premium-btn { width: 100%; display: inline-flex; align-items: center; justify-content: center; gap: 8px; white-space: nowrap; }
-        .passkey-row svg { width: 16px; height: 16px; flex-shrink: 0; }
+        /* The way in and, beside it, a passkey: a square key as tall as the button, outlined rather
+           than filled, so it reads as the second way and not a rival to the first. */
+        .signin-row { display: flex; gap: 8px; align-items: stretch; margin-top: 32px; }
+        .signin-row #submitBtn { flex: 1; min-width: 0; }
+        .passkey-go { flex: none; width: 48px; padding: 0; display: inline-flex; align-items: center; justify-content: center; }
+        .passkey-go[hidden] { display: none; }
+        .passkey-go svg { width: 18px; height: 18px; }
+        .passkey-go:hover, .passkey-go:focus-visible { color: var(--accent); }
 
         .pw-toggle svg {
             width: 18px;
@@ -217,16 +221,14 @@
 
                 <div id="feedback" class="feedback"></div>
 
-                <div style="margin-top: 32px;">
+                <div class="signin-row">
                     <button type="submit" id="submitBtn" class="premium-btn filled">Sign In</button>
-                </div>
-
-                <div class="passkey-row" id="passkeyRow" hidden>
-                    <button type="button" id="passkeyBtn" class="premium-btn ghost">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8" cy="15" r="4"></circle><path d="M10.85 12.15 19 4"></path><path d="m18 5 3 3"></path><path d="m15 8 2 2"></path></svg>
-                        <span id="passkeyLabel">Use a passkey</span>
+                    <!-- A passkey, beside the way in and quieter than it: shown only where one can work. -->
+                    <button type="button" id="passkeyBtn" class="premium-btn ghost passkey-go" aria-label="Use a passkey" title="Use a passkey" hidden>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.4 3.6a2.7 2.7 0 0 1 3.8 0l2.2 2.2a2.7 2.7 0 0 1 0 3.8l-2.6 2.6a2.7 2.7 0 0 1-3.8 0l-.3-.3L5.5 20.1a2 2 0 0 1-1.4.6H3.5v-1.6a2 2 0 0 1 .6-1.4l.6-.6h2v-2h2v-2h2l1.6-1.6-.3-.3a2.7 2.7 0 0 1 0-3.8z"/><path d="M16 8h.01"/></svg>
                     </button>
                 </div>
+
                 {{if .DemoOnly}}
                 <div style="margin-top: 12px; text-align: center;">
                     <button type="button" id="demoBtn" class="premium-btn ghost" style="width: 100%; opacity: 0.75;">

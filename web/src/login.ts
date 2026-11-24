@@ -100,8 +100,11 @@ bootstrap(async () => {
         const rememberText = document.getElementById('rememberMeText');
         if (rememberText) rememberText.textContent = i18n.t('auth.remember_me');
         if (submitBtn) submitBtn.textContent = i18n.t('auth.sign_in');
-        const passkeyLabel = document.getElementById('passkeyLabel');
-        if (passkeyLabel) passkeyLabel.textContent = i18n.t('passkey.sign_in');
+        const passkeyKey = document.getElementById('passkeyBtn');
+        if (passkeyKey) {
+            passkeyKey.setAttribute('aria-label', i18n.t('passkey.sign_in'));
+            passkeyKey.title = i18n.t('passkey.sign_in');
+        }
         document.querySelectorAll('.pw-toggle').forEach(btn => {
             btn.setAttribute('aria-label', i18n.t('auth.toggle_password'));
         });
@@ -182,62 +185,84 @@ bootstrap(async () => {
         }
     });
 
-    // Passkey sign-in: no password and no second step; the device proves who it is.
-    const passkeyRow = document.getElementById('passkeyRow') as HTMLElement | null;
+    // Passkey sign-in: no password and no second step; the device proves who it is. Offered without a
+    // button of its own: a key at the end of the username field, and the account's passkeys among the
+    // field's suggestions where the browser can list them. Only where a passkey can work at all.
     const passkeyBtn = document.getElementById('passkeyBtn') as HTMLButtonElement | null;
-    if (passkeyRow && passkeyBtn && passkeysSupported(window)) {
-        passkeyRow.hidden = false;
-        passkeyBtn.addEventListener('click', async () => {
-            passkeyBtn.disabled = true;
-            try {
-                const remember = (document.getElementById('remember_me') as HTMLInputElement | null)?.checked ?? false;
-                const begin = await fetch('/api/login/passkey/begin', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ remember_me: remember })
-                });
-                if (!begin.ok) {
-                    const key = (await begin.text()).trim();
-                    if (key === 'passkey.not_available') passkeyRow.hidden = true;
-                    notify(i18n.t(key) || i18n.t('auth.connection_error'), 'error');
-                    return;
-                }
-                const options = requestOptionsFromServer(await begin.json());
-                let credential: PublicKeyCredential | null;
-                try {
-                    credential = await navigator.credentials.get({ publicKey: options as unknown as PublicKeyCredentialRequestOptions }) as PublicKeyCredential | null;
-                } catch (err) {
-                    // Closing the browser's dialog is a choice, not a failure.
-                    if ((err as { name?: string })?.name === 'NotAllowedError' || (err as { name?: string })?.name === 'AbortError') return;
-                    throw err;
-                }
-                if (!credential) return;
-                const res = credential.response as AuthenticatorAssertionResponse;
-                const finish = await fetch('/api/login/passkey/finish', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(assertionToFinishBody({
-                        rawId: credential.rawId,
-                        clientDataJSON: res.clientDataJSON,
-                        authenticatorData: res.authenticatorData,
-                        signature: res.signature,
-                        userHandle: res.userHandle,
-                    }))
-                });
-                if (finish.ok) {
-                    signedIn();
-                    return;
-                }
-                const key = (await finish.text()).trim();
-                if (key === 'passkey.not_available') passkeyRow.hidden = true;
-                notify(i18n.t(key) || i18n.t('passkey.refused'), 'error');
-                shake();
-            } catch (error) {
-                console.error('Passkey error:', error);
-                notify(i18n.t('auth.connection_error'), 'error');
-            } finally {
-                passkeyBtn.disabled = false;
+    const usernameField = document.getElementById('username') as HTMLInputElement | null;
+    if (passkeyBtn && usernameField && passkeysSupported(window)) {
+        passkeyBtn.hidden = false;
+        let waiting: AbortController | null = null;
+
+        /** Asks the browser for a passkey and signs in with it: from the key, or from the field's suggestions. */
+        const passkeySignIn = async (how: 'button' | 'conditional') => {
+            waiting?.abort();
+            const control = new AbortController();
+            waiting = control;
+            const remember = (document.getElementById('remember_me') as HTMLInputElement | null)?.checked ?? false;
+            const begin = await fetch('/api/login/passkey/begin', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ remember_me: remember })
+            });
+            if (!begin.ok) {
+                const key = (await begin.text()).trim();
+                if (key === 'passkey.not_available') passkeyBtn.hidden = true;
+                if (how === 'button') notify(i18n.t(key) || i18n.t('auth.connection_error'), 'error');
+                return;
             }
+            const options = requestOptionsFromServer(await begin.json());
+            let credential: PublicKeyCredential | null;
+            try {
+                credential = await navigator.credentials.get({
+                    publicKey: options as unknown as PublicKeyCredentialRequestOptions,
+                    signal: control.signal,
+                    ...(how === 'conditional' ? { mediation: 'conditional' as CredentialMediationRequirement } : {}),
+                }) as PublicKeyCredential | null;
+            } catch (err) {
+                // Closing the browser's dialog, or the key taking over from the suggestions, is a choice.
+                const name = (err as { name?: string })?.name;
+                if (name === 'NotAllowedError' || name === 'AbortError') return;
+                throw err;
+            }
+            if (!credential) return;
+            const res = credential.response as AuthenticatorAssertionResponse;
+            const finish = await fetch('/api/login/passkey/finish', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(assertionToFinishBody({
+                    rawId: credential.rawId,
+                    clientDataJSON: res.clientDataJSON,
+                    authenticatorData: res.authenticatorData,
+                    signature: res.signature,
+                    userHandle: res.userHandle,
+                }))
+            });
+            if (finish.ok) {
+                signedIn();
+                return;
+            }
+            const key = (await finish.text()).trim();
+            if (key === 'passkey.not_available') passkeyBtn.hidden = true;
+            notify(i18n.t(key) || i18n.t('passkey.refused'), 'error');
+            shake();
+        };
+        const fail = (error: unknown) => {
+            console.error('Passkey error:', error);
+            notify(i18n.t('auth.connection_error'), 'error');
+        };
+
+        passkeyBtn.addEventListener('click', () => {
+            passkeyBtn.disabled = true;
+            passkeySignIn('button').catch(fail).finally(() => { passkeyBtn.disabled = false; });
+        });
+
+        // The suggestions: the browser keeps this request open and answers it when a passkey is picked
+        // from the list under the field. A browser that cannot do it keeps the key alone.
+        usernameField.autocomplete = 'username webauthn';
+        const pkc = window.PublicKeyCredential as unknown as { isConditionalMediationAvailable?: () => Promise<boolean> };
+        void pkc.isConditionalMediationAvailable?.().then(yes => {
+            if (yes) passkeySignIn('conditional').catch(fail);
         });
     }
 
