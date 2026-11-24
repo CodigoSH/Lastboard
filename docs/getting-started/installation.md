@@ -111,6 +111,10 @@ on — so it cannot erase a database from a script.
 
 The image is the same. Run it with `podman run`, or as a service with a Quadlet file; `podman compose` reads the `docker-compose.yml` above as well. The [Podman guide](../podman/overview.md) has the commands, the Quadlet file and the two settings the socket needs (`--security-opt label=disable`, and no `PUID` or `PGID`).
 
+## Method 4: Proxmox VE (OCI image)
+
+Proxmox VE 9.1 and later can run the same image as an LXC container, with no Docker inside: pull `git.codigosh.com/codigosh/lastboard:latest` as an OCI template and create the container from it, or let a tool that manages OCI applications on Proxmox, such as ProxMenux, do both. Put `/var/lib/lastboard`, where the database lives, on a mount point of its own: an update recreates the container from the new image, and only what is on a mount point carries over. Lastboard cannot replace its own program in such a container, so **About** says when there is a newer version instead of offering a button — see [Updating](updating.md#from-a-container-image-oci).
+
 ## Connecting Docker and Podman hosts
 
 However Lastboard is installed, a host is added in **Settings → Docker / Podman**, and the Lastboard Agent reaches any of them:

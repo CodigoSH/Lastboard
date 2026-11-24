@@ -140,7 +140,7 @@ Give a bookmark a URL and a status position and Lastboard watches it. No second 
 
 ### Operations
 
-- **A web updater** that downloads, verifies the signature and the checksum, extracts, **runs the new binary once on your server**, **copies your database**, installs and restarts — showing each step as it happens. Nothing is changed unless every step before the swap passed, the version you had stays beside the new one, and the server comes back **without closing its port**, so a reverse proxy or tunnel in front never sees it down.
+- **A web updater** that downloads, verifies the signature and the checksum, extracts, **runs the new binary once on your server**, **copies your database**, installs and restarts — showing each step as it happens. Nothing is changed unless every step before the swap passed, the version you had stays beside the new one, and the server comes back **without closing its port**, so a reverse proxy or tunnel in front never sees it down. An installation made from a container image — Docker, Podman, or an OCI image on Proxmox VE — is told when there is a newer image instead of being offered a button that could not work there.
 - **Beta channel**, opt-in per user.
 - **One-line install** on Linux with a systemd unit, `--uninstall`, `--purge` and `--reinstall`, that tells you which version you have and stops when you already have the latest, and a timestamped copy of your database taken before every upgrade.
 - **Runs unprivileged** on request (`PUID`/`PGID`), fixing data-directory ownership itself before dropping privileges.
