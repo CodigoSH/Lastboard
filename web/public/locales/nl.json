@@ -763,7 +763,7 @@
   "notifier.update_binary_unusable": "De nieuwe versie kan niet op deze server draaien en is daarom niet geïnstalleerd.",
   "notifier.update_backup_failed": "De database kon niet worden gekopieerd voor de update, dus de update is gestopt. Controleer de vrije schijfruimte.",
   "notifier.update_in_progress": "Er loopt al een update. Wacht tot die klaar is.",
-  "notifier.update_unprivileged": "Automatische update niet beschikbaar: de app kan zijn eigen bestanden niet vervangen. Update met 'docker pull' of door het installatiescript opnieuw uit te voeren.",
+  "notifier.update_unprivileged": "Er is een nieuwe versie, maar deze installatie kan haar eigen programma niet vervangen. Als je haar vanuit een containerimage (OCI) hebt geïnstalleerd, werk dan de image bij.",
   "notifier.update_invalid_url": "Ongeldige updatebron. Probeer het opnieuw of update handmatig.",
   "update.modal_title": "Software-update",
   "update.intro": "Het pakket wordt gedownload, gecontroleerd en geïnstalleerd, en de service herstart vanzelf.",
@@ -1245,5 +1245,7 @@
   "import.parse_failed": "Dat bestand kon niet worden gelezen",
   "setup.already_initialized": "Lastboard is al ingesteld",
   "setup.encryption_failed": "Wachtwoord kon niet worden beveiligd",
-  "setup.failed_create_user": "Account kon niet worden aangemaakt"
+  "setup.failed_create_user": "Account kon niet worden aangemaakt",
+  "settings.image_mode": "Bijwerken via de image",
+  "settings.image_desc": "Deze installatie kan haar eigen programma niet vervangen. Als je haar vanuit een containerimage (OCI) hebt geïnstalleerd, werk dan de image bij."
 }

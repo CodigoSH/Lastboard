@@ -763,7 +763,7 @@
   "notifier.update_binary_unusable": "新しいバージョンはこのサーバーで実行できないため、インストールされませんでした。",
   "notifier.update_backup_failed": "更新前にデータベースをコピーできなかったため、更新を中止しました。ディスクの空き容量を確認してください。",
   "notifier.update_in_progress": "すでに更新を実行中です。完了するまでお待ちください。",
-  "notifier.update_unprivileged": "自動アップデートは利用できません：アプリが自身のファイルを置き換えられません。「docker pull」またはインストールスクリプトの再実行で更新してください。",
+  "notifier.update_unprivileged": "新しいバージョンがありますが、このインストールは自身のプログラムを置き換えられません。コンテナイメージ（OCI）からインストールした場合は、イメージを更新してください。",
   "notifier.update_invalid_url": "更新元が無効です。もう一度試すか、手動で更新してください。",
   "update.modal_title": "ソフトウェアの更新",
   "update.intro": "パッケージをダウンロードして検証し、インストールしたあとサービスが自動的に再起動します。",
@@ -1245,5 +1245,7 @@
   "import.parse_failed": "このファイルを読み取れませんでした",
   "setup.already_initialized": "Lastboardはすでにセットアップ済みです",
   "setup.encryption_failed": "パスワードを保護できませんでした",
-  "setup.failed_create_user": "アカウントを作成できませんでした"
+  "setup.failed_create_user": "アカウントを作成できませんでした",
+  "settings.image_mode": "イメージで更新",
+  "settings.image_desc": "このインストールは自身のプログラムを置き換えられません。コンテナイメージ（OCI）からインストールした場合は、イメージを更新してください。"
 }

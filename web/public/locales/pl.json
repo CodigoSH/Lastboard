@@ -763,7 +763,7 @@
   "notifier.update_binary_unusable": "Nowa wersja nie może działać na tym serwerze, więc nie została zainstalowana.",
   "notifier.update_backup_failed": "Nie udało się skopiować bazy danych przed aktualizacją, więc aktualizacja została przerwana. Sprawdź wolne miejsce na dysku.",
   "notifier.update_in_progress": "Aktualizacja już trwa. Poczekaj, aż się zakończy.",
-  "notifier.update_unprivileged": "Automatyczna aktualizacja niedostępna: aplikacja nie może zastąpić własnych plików. Zaktualizuj przez 'docker pull' lub ponownie uruchamiając skrypt instalacyjny.",
+  "notifier.update_unprivileged": "Jest nowa wersja, ale ta instalacja nie może zastąpić własnego programu. Jeśli zainstalowano ją z obrazu kontenera (OCI), zaktualizuj obraz.",
   "notifier.update_invalid_url": "Nieprawidłowe źródło aktualizacji. Spróbuj ponownie lub zaktualizuj ręcznie.",
   "update.modal_title": "Aktualizacja oprogramowania",
   "update.intro": "Pakiet zostanie pobrany, zweryfikowany i zainstalowany, a usługa uruchomi się ponownie sama.",
@@ -1245,5 +1245,7 @@
   "import.parse_failed": "Nie udało się odczytać tego pliku",
   "setup.already_initialized": "Lastboard jest już skonfigurowany",
   "setup.encryption_failed": "Nie udało się zabezpieczyć hasła",
-  "setup.failed_create_user": "Nie udało się utworzyć konta"
+  "setup.failed_create_user": "Nie udało się utworzyć konta",
+  "settings.image_mode": "Aktualizacja przez obraz",
+  "settings.image_desc": "Ta instalacja nie może zastąpić własnego programu. Jeśli zainstalowano ją z obrazu kontenera (OCI), zaktualizuj obraz."
 }

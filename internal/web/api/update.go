@@ -69,6 +69,11 @@ type UpdateResponse struct {
 	IsDocker       bool   `json:"is_docker"`
 	Os             string `json:"os"`
 	Arch           string `json:"arch"`
+	// Replaceable is false when this process cannot put a new binary where its
+	// own is: an installation made from a container image, wherever the image
+	// runs. The panel then says there is a newer version and that the image is
+	// what to update, rather than offering a button that fails halfway.
+	Replaceable bool `json:"replaceable"`
 	// CheckError is set when the release server could not be asked. Without
 	// it, a failed check answered exactly like "nothing newer" and the panel
 	// said "You're up to date" to somebody whose server could not look.
@@ -102,6 +107,24 @@ func inContainerUnder(root string) bool {
 	return false
 }
 
+// binaryReplaceable says whether this process may write in the directory its
+// binary is in, which is what replacing it needs. Asked of the directory rather
+// than guessed from the runtime, so it covers every way an image can run —
+// Docker, Podman, an OCI image on Proxmox, anything else — and an installation
+// made with the installer, which owns its binary, always passes.
+//
+// A variable so a test can say which it is.
+var binaryReplaceable = func() bool {
+	exe, err := os.Executable()
+	if err != nil {
+		return false
+	}
+	if real, e := filepath.EvalSymlinks(exe); e == nil {
+		exe = real
+	}
+	return checkDirWritable(filepath.Dir(exe)) == nil
+}
+
 func (h *UpdateHandler) CheckUpdate(w http.ResponseWriter, r *http.Request) {
 	// 1. Check if Docker
 	isDocker := false
@@ -110,6 +133,10 @@ func (h *UpdateHandler) CheckUpdate(w http.ResponseWriter, r *http.Request) {
 	} else {
 		isDocker = inContainer()
 	}
+
+	// Docker and Podman are already updated from outside; anything else is
+	// asked whether it can replace its own binary.
+	replaceable := isDocker || binaryReplaceable()
 
 	w.Header().Set("Content-Type", "application/json")
 
@@ -139,7 +166,7 @@ func (h *UpdateHandler) CheckUpdate(w http.ResponseWriter, r *http.Request) {
 				// There is no binary to download for a container: the image is
 				// what changes.
 				assetUrl := ""
-				if !isDocker {
+				if !isDocker && replaceable {
 					assetName := "lastboard-" + goos + "-" + goarch + ".tar.gz"
 					assetUrl = "https://git.codigosh.com/CodigoSH/Lastboard/releases/download/" + latest + "/" + assetName
 				}
@@ -150,6 +177,7 @@ func (h *UpdateHandler) CheckUpdate(w http.ResponseWriter, r *http.Request) {
 					ReleaseNotes:   releaseNotes,
 					AssetUrl:       assetUrl,
 					IsDocker:       isDocker,
+					Replaceable:    replaceable,
 					Os:             goos,
 					Arch:           goarch,
 				})
@@ -164,6 +192,7 @@ func (h *UpdateHandler) CheckUpdate(w http.ResponseWriter, r *http.Request) {
 		CurrentVersion: version.Current,
 		LatestVersion:  version.Current,
 		IsDocker:       isDocker,
+		Replaceable:    replaceable,
 		Os:             runtime.GOOS,
 		Arch:           runtime.GOARCH,
 		CheckError:     checkError,
@@ -594,15 +623,10 @@ func (h *UpdateHandler) PerformUpdate(w http.ResponseWriter, r *http.Request) {
 	// directory not writable, so bail out early with an actionable message
 	// instead of a cryptic permission error mid-swap. The binary can still be
 	// updated externally: `docker pull` (Docker) or re-running the install script.
-	if exe, err := os.Executable(); err == nil {
-		if real, e := filepath.EvalSymlinks(exe); e == nil {
-			exe = real
-		}
-		if e := checkDirWritable(filepath.Dir(exe)); e != nil {
-			slog.Warn("Update unavailable: binary directory not writable (unprivileged)", "dir", filepath.Dir(exe), "error", e)
-			http.Error(w, "notifier.update_unprivileged", http.StatusForbidden)
-			return
-		}
+	if !binaryReplaceable() {
+		slog.Warn("Update unavailable: the binary's directory is not writable (an image, or an unprivileged service)")
+		http.Error(w, "notifier.update_unprivileged", http.StatusForbidden)
+		return
 	}
 
 	// 1. Get Asset URL from request

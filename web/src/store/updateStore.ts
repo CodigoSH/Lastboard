@@ -101,7 +101,7 @@ class UpdateStore {
         if (this.isBusy()) return;
         this.set({
             info,
-            phase: info?.available || info?.is_docker ? 'available' : 'idle',
+            phase: info?.available || info?.is_docker || info?.replaceable === false ? 'available' : 'idle',
         });
     }
 
@@ -109,7 +109,7 @@ class UpdateStore {
     reset() {
         if (this.isBusy()) return;
         this.set({
-            phase: this.state.info?.available || this.state.info?.is_docker ? 'available' : 'idle',
+            phase: this.state.info?.available || this.state.info?.is_docker || this.state.info?.replaceable === false ? 'available' : 'idle',
             steps: freshSteps(),
             errorKey: null,
             errorDetail: null,

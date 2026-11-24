@@ -1,9 +1,12 @@
 package api_test
 
 import (
+	"io"
 	"net/http"
 	"strings"
 	"testing"
+
+	"git.codigosh.com/CodigoSH/Lastboard/internal/web/api"
 )
 
 // Characterization tests for PerformUpdate's authorization and validation
@@ -119,5 +122,32 @@ func TestPerformUpdate_InvalidURLStaysHTTPWhenStreaming(t *testing.T) {
 		`{"asset_url":"https://evil.example.com/x"}`, "text/event-stream")
 	if code != http.StatusBadRequest {
 		t.Errorf("expected 400 for foreign host asking for the stream, got %d", code)
+	}
+}
+
+// An installation that cannot replace its own binary — one made from a
+// container image, wherever it runs — is refused before anything is
+// downloaded, with the message that says to update the image. The first admin
+// gets that answer and not the one for somebody who may not update.
+func TestPerformUpdate_RefusedWhenTheBinaryCannotBeReplaced(t *testing.T) {
+	server, db, cleanup := setupFullServer(t)
+	defer cleanup()
+	defer api.SetBinaryReplaceable(false)()
+
+	createUser(t, db.DB, "admin", "password", "admin")
+	s := doLogin(t, server.URL, "admin", "password")
+
+	req, _ := http.NewRequest("POST", server.URL+"/api/system/update/perform",
+		strings.NewReader(`{"asset_url":"https://git.codigosh.com/CodigoSH/Lastboard/releases/x"}`))
+	req.Header.Set("Content-Type", "application/json")
+	s.attach(req)
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer resp.Body.Close()
+	raw, _ := io.ReadAll(resp.Body)
+	if resp.StatusCode != http.StatusForbidden || strings.TrimSpace(string(raw)) != "notifier.update_unprivileged" {
+		t.Errorf("updating a binary that cannot be replaced: %d %q", resp.StatusCode, raw)
 	}
 }

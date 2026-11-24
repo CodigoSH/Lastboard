@@ -763,7 +763,7 @@
   "notifier.update_binary_unusable": "Versi baru tidak dapat berjalan di server ini, jadi tidak dipasang.",
   "notifier.update_backup_failed": "Basis data tidak dapat disalin sebelum memperbarui, jadi pembaruan dihentikan. Periksa ruang disk yang kosong.",
   "notifier.update_in_progress": "Pembaruan sedang berjalan. Tunggu hingga selesai.",
-  "notifier.update_unprivileged": "Pembaruan otomatis tidak tersedia: aplikasi tidak dapat mengganti berkasnya sendiri. Perbarui dengan 'docker pull' atau menjalankan ulang skrip instalasi.",
+  "notifier.update_unprivileged": "Ada versi baru, tetapi instalasi ini tidak dapat mengganti programnya sendiri. Jika Anda memasangnya dari image kontainer (OCI), perbarui image-nya.",
   "notifier.update_invalid_url": "Sumber pembaruan tidak valid. Coba lagi atau perbarui secara manual.",
   "update.modal_title": "Pembaruan sistem",
   "update.intro": "Paket diunduh, diverifikasi, dan dipasang, lalu layanan memulai ulang sendiri.",
@@ -1245,5 +1245,7 @@
   "import.parse_failed": "File itu tidak bisa dibaca",
   "setup.already_initialized": "Lastboard sudah disiapkan",
   "setup.encryption_failed": "Kata sandi tidak bisa diamankan",
-  "setup.failed_create_user": "Akun tidak bisa dibuat"
+  "setup.failed_create_user": "Akun tidak bisa dibuat",
+  "settings.image_mode": "Diperbarui lewat image",
+  "settings.image_desc": "Instalasi ini tidak dapat mengganti programnya sendiri. Jika Anda memasangnya dari image kontainer (OCI), perbarui image-nya."
 }

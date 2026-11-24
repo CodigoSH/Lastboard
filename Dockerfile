@@ -97,6 +97,11 @@ COPY --from=bins /out/healthcheck /app/healthcheck
 # Networking Configuration
 EXPOSE 8080
 
+# Where the data lives, declared so that whatever runs the image keeps it apart
+# from the image: a runtime that recreates the container to update it — an OCI
+# image on Proxmox VE, for one — knows which directory to carry over.
+VOLUME /var/lib/lastboard
+
 # Environment Defaults
 ENV DB_FILE=/var/lib/lastboard/lastboard.db
 ENV PORT=8080

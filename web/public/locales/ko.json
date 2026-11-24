@@ -763,7 +763,7 @@
   "notifier.update_binary_unusable": "새 버전은 이 서버에서 실행할 수 없어 설치되지 않았습니다.",
   "notifier.update_backup_failed": "업데이트 전에 데이터베이스를 복사할 수 없어 업데이트가 중단되었습니다. 디스크 여유 공간을 확인하세요.",
   "notifier.update_in_progress": "이미 업데이트가 진행 중입니다. 끝날 때까지 기다려 주세요.",
-  "notifier.update_unprivileged": "자동 업데이트를 사용할 수 없습니다: 앱이 자체 파일을 교체할 수 없습니다. 'docker pull' 또는 설치 스크립트를 다시 실행하여 업데이트하세요.",
+  "notifier.update_unprivileged": "새 버전이 있지만 이 설치는 자체 프로그램을 교체할 수 없습니다. 컨테이너 이미지(OCI)로 설치했다면 이미지를 업데이트하세요.",
   "notifier.update_invalid_url": "업데이트 소스가 잘못되었습니다. 다시 시도하거나 수동으로 업데이트하세요.",
   "update.modal_title": "소프트웨어 업데이트",
   "update.intro": "패키지를 내려받아 검증하고 설치한 뒤 서비스가 스스로 다시 시작합니다.",
@@ -1245,5 +1245,7 @@
   "import.parse_failed": "이 파일을 읽을 수 없습니다",
   "setup.already_initialized": "Lastboard는 이미 설정되었습니다",
   "setup.encryption_failed": "비밀번호를 보호하지 못했습니다",
-  "setup.failed_create_user": "계정을 만들지 못했습니다"
+  "setup.failed_create_user": "계정을 만들지 못했습니다",
+  "settings.image_mode": "이미지로 업데이트",
+  "settings.image_desc": "이 설치는 자체 프로그램을 교체할 수 없습니다. 컨테이너 이미지(OCI)로 설치했다면 이미지를 업데이트하세요."
 }

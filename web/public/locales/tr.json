@@ -763,7 +763,7 @@
   "notifier.update_binary_unusable": "Yeni sürüm bu sunucuda çalışamıyor, bu yüzden kurulmadı.",
   "notifier.update_backup_failed": "Güncellemeden önce veritabanı kopyalanamadı, bu yüzden güncelleme durduruldu. Boş disk alanını kontrol edin.",
   "notifier.update_in_progress": "Bir güncelleme zaten çalışıyor. Bitmesini bekleyin.",
-  "notifier.update_unprivileged": "Otomatik güncelleme kullanılamıyor: uygulama kendi dosyalarını değiştiremiyor. 'docker pull' ile veya kurulum betiğini yeniden çalıştırarak güncelleyin.",
+  "notifier.update_unprivileged": "Yeni bir sürüm var, ancak bu kurulum kendi programını değiştiremez. Bir kapsayıcı imajından (OCI) kurduysanız imajı güncelleyin.",
   "notifier.update_invalid_url": "Geçersiz güncelleme kaynağı. Tekrar deneyin veya elle güncelleyin.",
   "update.modal_title": "Yazılım güncellemesi",
   "update.intro": "Paket indirilir, doğrulanır ve kurulur; ardından hizmet kendiliğinden yeniden başlar.",
@@ -1245,5 +1245,7 @@
   "import.parse_failed": "Bu dosya okunamadı",
   "setup.already_initialized": "Lastboard zaten kurulu",
   "setup.encryption_failed": "Parola güvenceye alınamadı",
-  "setup.failed_create_user": "Hesap oluşturulamadı"
+  "setup.failed_create_user": "Hesap oluşturulamadı",
+  "settings.image_mode": "İmajla güncelleme",
+  "settings.image_desc": "Bu kurulum kendi programını değiştiremez. Bir kapsayıcı imajından (OCI) kurduysanız imajı güncelleyin."
 }

@@ -121,7 +121,9 @@ export const body = (data: UpdateModalData) => {
         </button>`;
 
     let message = '';
-    if (data.phase === 'available') message = data.text.intro;
+    // Updated from outside there is nothing to download here: the notice says what
+    // to do instead, and the sentence about downloading would contradict it.
+    if (data.phase === 'available') message = data.isDocker ? '' : data.text.intro;
     else if (data.phase === 'running') message = data.text.runningHint;
     else if (data.phase === 'restarting') message = data.text.restarting;
     else if (data.phase === 'done') message = data.text.done;

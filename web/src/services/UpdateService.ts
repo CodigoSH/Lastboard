@@ -6,6 +6,9 @@ export interface UpdateInfo {
     release_notes?: string;
     asset_url?: string;
     is_docker: boolean;
+    /** False when this installation cannot replace its own binary — one made from
+     *  a container image, wherever it runs: updated from outside, like Docker. */
+    replaceable?: boolean;
     /** i18n key, set when the release server could not be asked. Never "up to date". */
     check_error?: string;
 }
@@ -63,6 +66,7 @@ class UpdateService {
                 release_notes: info.release_notes,
                 asset_url: info.asset_url,
                 is_docker: info.is_docker,
+                replaceable: info.replaceable !== false,
                 check_error: info.check_error,
             };
         } catch (error) {

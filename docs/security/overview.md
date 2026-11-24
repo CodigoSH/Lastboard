@@ -261,8 +261,8 @@ data-directory ownership automatically and then drops privileges **before servin
 See [Configuration](../getting-started/configuration.md#puid--pgid-running-unprivileged).
 
 > One consequence: an unprivileged process cannot replace its own binary, so the in-app updater
-> is unavailable in that mode. Update with `docker compose pull` or by re-running the install
-> script.
+> is unavailable in that mode. **About** says so before anything is pressed: update the image
+> (see [Updating](../getting-started/updating.md)).
 
 ## Public demo mode
 

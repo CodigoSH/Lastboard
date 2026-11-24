@@ -763,7 +763,7 @@
   "notifier.update_binary_unusable": "The new version can't run on this server, so it wasn't installed.",
   "notifier.update_backup_failed": "Couldn't copy the database before updating, so the update stopped. Check the free disk space.",
   "notifier.update_in_progress": "An update is already running. Wait for it to finish.",
-  "notifier.update_unprivileged": "Automatic update isn't available: the app can't replace its own files. Update with 'docker pull' or by re-running the install script.",
+  "notifier.update_unprivileged": "A new version is available, but this installation cannot replace its own program. If you installed it from a container image (OCI), update the image.",
   "notifier.update_invalid_url": "Invalid update source. Try again or update manually.",
   "update.modal_title": "Software update",
   "update.intro": "The release is downloaded, verified and installed, and the service restarts by itself.",
@@ -1245,5 +1245,7 @@
   "import.parse_failed": "That file couldn't be read",
   "setup.already_initialized": "Lastboard is already set up",
   "setup.encryption_failed": "Couldn't secure that password",
-  "setup.failed_create_user": "Couldn't create that account"
+  "setup.failed_create_user": "Couldn't create that account",
+  "settings.image_mode": "Updated from the image",
+  "settings.image_desc": "This installation cannot replace its own program. If you installed it from a container image (OCI), update the image."
 }

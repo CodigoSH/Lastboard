@@ -763,7 +763,7 @@
   "notifier.update_binary_unusable": "新版本无法在此服务器上运行，因此未安装。",
   "notifier.update_backup_failed": "更新前无法复制数据库，因此更新已停止。请检查可用磁盘空间。",
   "notifier.update_in_progress": "已有更新正在进行。请等待其完成。",
-  "notifier.update_unprivileged": "自动更新不可用：应用无法替换自身文件。请使用 'docker pull' 或重新运行安装脚本进行更新。",
+  "notifier.update_unprivileged": "有新版本，但此安装无法替换自身的程序。如果你是从容器镜像（OCI）安装的，请更新镜像。",
   "notifier.update_invalid_url": "更新来源无效。请重试或手动更新。",
   "update.modal_title": "软件更新",
   "update.intro": "将下载并校验安装包，安装后服务会自行重启。",
@@ -1245,5 +1245,7 @@
   "import.parse_failed": "无法读取该文件",
   "setup.already_initialized": "Lastboard 已完成初始设置",
   "setup.encryption_failed": "无法加密该密码",
-  "setup.failed_create_user": "无法创建该账户"
+  "setup.failed_create_user": "无法创建该账户",
+  "settings.image_mode": "通过镜像更新",
+  "settings.image_desc": "此安装无法替换自身的程序。如果你是从容器镜像（OCI）安装的，请更新镜像。"
 }

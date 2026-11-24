@@ -1170,15 +1170,18 @@ export const updateStatusTemplate = (isAdmin: boolean, updateInfo: any) => {
     if (!isAdmin) return '';
     if (!updateInfo) return '';
 
-    if (updateInfo.is_docker) {
+    if (updateInfo.is_docker || updateInfo.replaceable === false) {
+        // Updated from outside: Docker when it is recognised, otherwise an
+        // installation that cannot replace its own binary (an image run elsewhere).
+        const known = updateInfo.is_docker === true;
         return `
             <div style="background: rgba(var(--info-rgb), 0.1); border: 1px solid rgba(var(--info-rgb), 0.3); padding: 16px; border-radius: var(--radius); width: 100%; text-align: left;">
                     <div style="display: flex; gap: 12px; align-items: flex-start;">
                     <svg viewBox="0 0 24 24" style="width: 24px; height: 24px; fill: var(--accent); flex-shrink: 0;"><path d="M21 12l-4.37-6.16c-.37-.52-.98-.84-1.63-.84h-3V4c0-1.1-.9-2-2-2s-2 .9-2 2v1H5c-.65 0-1.26.32-1.63.84L-1 12v3h2v4c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2v-4h2v-3zm-11 7H7v-3h3v3zm-5 0H2v-3h3v3zm12 0h-3v-3h3v3z"/></svg>
                     <div>
-                        <h4 style="margin: 0 0 4px 0; font-size: 14px; color: var(--text-main);">${i18n.t('settings.docker_mode')}</h4>
+                        <h4 style="margin: 0 0 4px 0; font-size: 14px; color: var(--text-main);">${esc(i18n.t(known ? 'settings.docker_mode' : 'settings.image_mode'))}</h4>
                         <p style="margin: 0; font-size: 13px; color: var(--text-dim);">
-                            ${i18n.t('settings.docker_desc')}<br>
+                            ${esc(i18n.t(known ? 'settings.docker_desc' : 'settings.image_desc'))}<br>
                             ${updateInfo.available ? `<strong style="color: var(--accent);">${i18n.t('settings.new_version_notif')} (${updateInfo.latest_version})</strong>` : i18n.t('settings.up_to_date_docker_msg')}
                         </p>
                     </div>

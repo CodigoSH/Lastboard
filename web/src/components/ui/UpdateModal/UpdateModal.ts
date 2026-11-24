@@ -199,7 +199,7 @@ export class UpdateModal extends HTMLElement {
             phase: state.phase,
             currentVersion: info?.current_version || '',
             latestVersion: info?.latest_version || '',
-            isDocker: !!info?.is_docker,
+            isDocker: !!info?.is_docker || info?.replaceable === false,
             steps: this.buildSteps(state),
             errorText: state.errorKey ? i18n.t(state.errorKey) : '',
             detailText: state.errorDetail ? i18n.t(state.errorDetail) : '',
@@ -215,8 +215,8 @@ export class UpdateModal extends HTMLElement {
                 restarting: i18n.t('update.restarting'),
                 done: i18n.t('update.done', { version: info?.latest_version || '' }),
                 retry: i18n.t('general.retry'),
-                dockerTitle: i18n.t('settings.docker_mode'),
-                dockerBody: i18n.t('settings.docker_desc'),
+                dockerTitle: i18n.t(info?.is_docker ? 'settings.docker_mode' : 'settings.image_mode'),
+                dockerBody: i18n.t(info?.is_docker ? 'settings.docker_desc' : 'settings.image_desc'),
             },
         };
     }

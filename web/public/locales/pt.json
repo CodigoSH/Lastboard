@@ -763,7 +763,7 @@
   "notifier.update_binary_unusable": "A nova versão não pode ser executada neste servidor, por isso não foi instalada.",
   "notifier.update_backup_failed": "Não foi possível copiar o banco de dados antes de atualizar, por isso a atualização parou. Verifique o espaço livre em disco.",
   "notifier.update_in_progress": "Já existe uma atualização em andamento. Aguarde até que termine.",
-  "notifier.update_unprivileged": "Atualização automática indisponível: o app não pode substituir os próprios arquivos. Atualize com 'docker pull' ou executando novamente o script de instalação.",
+  "notifier.update_unprivileged": "Há uma versão nova, mas esta instalação não pode substituir o próprio programa. Se você a instalou a partir de uma imagem de contêiner (OCI), atualize a imagem.",
   "notifier.update_invalid_url": "Origem de atualização inválida. Tente novamente ou atualize manualmente.",
   "update.modal_title": "Atualização do sistema",
   "update.intro": "O pacote é baixado, verificado e instalado, e o serviço reinicia sozinho.",
@@ -1245,5 +1245,7 @@
   "import.parse_failed": "Não foi possível ler esse arquivo",
   "setup.already_initialized": "O Lastboard já está configurado",
   "setup.encryption_failed": "Não foi possível proteger a senha",
-  "setup.failed_create_user": "Não foi possível criar a conta"
+  "setup.failed_create_user": "Não foi possível criar a conta",
+  "settings.image_mode": "Atualização pela imagem",
+  "settings.image_desc": "Esta instalação não pode substituir o próprio programa. Se você a instalou a partir de uma imagem de contêiner (OCI), atualize a imagem."
 }

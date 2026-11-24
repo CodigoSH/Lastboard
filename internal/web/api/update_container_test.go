@@ -126,3 +126,33 @@ func TestAReleaseLookupThatNeverAnswersGivesUp(t *testing.T) {
 		t.Fatal("the lookup was still waiting after 3s: it has no time limit")
 	}
 }
+
+// An installation that is not a recognised container but cannot replace its own
+// binary — an OCI image run as an LXC container on Proxmox, say — is told there
+// is something newer and given nothing to download: the image is what changes.
+func TestABinaryThatCannotBeReplacedIsToldToUpdateTheImage(t *testing.T) {
+	defer SetBinaryReplaceable(false)()
+	h := &UpdateHandler{
+		docker: func() bool { return false },
+		latest: func(bool) (string, string, error) { return "v99.0.0", "notes", nil },
+	}
+	rec := httptest.NewRecorder()
+	h.CheckUpdate(rec, httptest.NewRequest("GET", "/api/system/update/check?beta=false", nil))
+	var r UpdateResponse
+	if err := json.Unmarshal(rec.Body.Bytes(), &r); err != nil {
+		t.Fatal(err)
+	}
+	if !r.Available || r.Replaceable || r.AssetUrl != "" || r.IsDocker {
+		t.Errorf("a binary that cannot be replaced: %+v", r)
+	}
+
+	SetBinaryReplaceable(true)
+	rec = httptest.NewRecorder()
+	h.CheckUpdate(rec, httptest.NewRequest("GET", "/api/system/update/check?beta=false", nil))
+	if err := json.Unmarshal(rec.Body.Bytes(), &r); err != nil {
+		t.Fatal(err)
+	}
+	if !r.Replaceable || r.AssetUrl == "" {
+		t.Errorf("a binary that can be replaced: %+v", r)
+	}
+}

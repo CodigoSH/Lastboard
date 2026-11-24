@@ -763,7 +763,7 @@
   "notifier.update_binary_unusable": "لا يمكن تشغيل الإصدار الجديد على هذا الخادم، لذلك لم يُثبَّت.",
   "notifier.update_backup_failed": "تعذّر نسخ قاعدة البيانات قبل التحديث، لذلك توقف التحديث. تحقّق من المساحة الحرة على القرص.",
   "notifier.update_in_progress": "هناك تحديث قيد التنفيذ بالفعل. انتظر حتى ينتهي.",
-  "notifier.update_unprivileged": "التحديث التلقائي غير متاح: لا يمكن للتطبيق استبدال ملفاته. حدِّث باستخدام 'docker pull' أو بإعادة تشغيل سكربت التثبيت.",
+  "notifier.update_unprivileged": "يتوفر إصدار جديد، لكن لا يمكن لهذا التثبيت استبدال برنامجه. إذا كان مثبّتًا من صورة حاوية (OCI)، فحدّث الصورة.",
   "notifier.update_invalid_url": "مصدر التحديث غير صالح. حاول مرة أخرى أو حدِّث يدويًا.",
   "update.modal_title": "تحديث النظام",
   "update.intro": "يجري تنزيل الحزمة والتحقق منها وتثبيتها، ثم تُعيد الخدمة تشغيل نفسها.",
@@ -1245,5 +1245,7 @@
   "import.parse_failed": "تعذّرت قراءة هذا الملف",
   "setup.already_initialized": "تم إعداد Lastboard بالفعل",
   "setup.encryption_failed": "تعذّر تأمين كلمة المرور",
-  "setup.failed_create_user": "تعذّر إنشاء الحساب"
+  "setup.failed_create_user": "تعذّر إنشاء الحساب",
+  "settings.image_mode": "التحديث عبر الصورة",
+  "settings.image_desc": "لا يمكن لهذا التثبيت استبدال برنامجه. إذا كان مثبّتًا من صورة حاوية (OCI)، فحدّث الصورة."
 }

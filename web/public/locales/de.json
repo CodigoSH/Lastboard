@@ -763,7 +763,7 @@
   "notifier.update_binary_unusable": "Die neue Version kann auf diesem Server nicht laufen und wurde daher nicht installiert.",
   "notifier.update_backup_failed": "Die Datenbank konnte vor dem Update nicht kopiert werden, daher wurde das Update abgebrochen. Prüfe den freien Speicherplatz.",
   "notifier.update_in_progress": "Ein Update läuft bereits. Warte, bis es abgeschlossen ist.",
-  "notifier.update_unprivileged": "Automatisches Update nicht verfügbar: Die App kann ihre eigenen Dateien nicht ersetzen. Aktualisiere mit 'docker pull' oder durch erneutes Ausführen des Installationsskripts.",
+  "notifier.update_unprivileged": "Eine neue Version ist verfügbar, aber diese Installation kann ihr eigenes Programm nicht ersetzen. Wenn du sie aus einem Container-Image (OCI) installiert hast, aktualisiere das Image.",
   "notifier.update_invalid_url": "Ungültige Update-Quelle. Versuche es erneut oder aktualisiere manuell.",
   "update.modal_title": "Software-Update",
   "update.intro": "Das Paket wird heruntergeladen, geprüft und installiert; danach startet der Dienst von selbst neu.",
@@ -1245,5 +1245,7 @@
   "import.parse_failed": "Diese Datei konnte nicht gelesen werden",
   "setup.already_initialized": "Lastboard ist bereits eingerichtet",
   "setup.encryption_failed": "Passwort konnte nicht gesichert werden",
-  "setup.failed_create_user": "Konto konnte nicht erstellt werden"
+  "setup.failed_create_user": "Konto konnte nicht erstellt werden",
+  "settings.image_mode": "Aktualisierung über das Image",
+  "settings.image_desc": "Diese Installation kann ihr eigenes Programm nicht ersetzen. Wenn du sie aus einem Container-Image (OCI) installiert hast, aktualisiere das Image."
 }

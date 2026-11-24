@@ -763,7 +763,7 @@
   "notifier.update_binary_unusable": "La nuova versione non può essere eseguita su questo server, quindi non è stata installata.",
   "notifier.update_backup_failed": "Impossibile copiare il database prima dell'aggiornamento, quindi l'aggiornamento si è fermato. Controlla lo spazio libero su disco.",
   "notifier.update_in_progress": "Un aggiornamento è già in corso. Attendi che finisca.",
-  "notifier.update_unprivileged": "Aggiornamento automatico non disponibile: l'app non può sostituire i propri file. Aggiorna con 'docker pull' o rieseguendo lo script di installazione.",
+  "notifier.update_unprivileged": "È disponibile una nuova versione, ma questa installazione non può sostituire il proprio programma. Se l'hai installata da un'immagine di container (OCI), aggiorna l'immagine.",
   "notifier.update_invalid_url": "Origine dell'aggiornamento non valida. Riprova o aggiorna manualmente.",
   "update.modal_title": "Aggiornamento del sistema",
   "update.intro": "Il pacchetto viene scaricato, verificato e installato, poi il servizio si riavvia da solo.",
@@ -1245,5 +1245,7 @@
   "import.parse_failed": "Non è stato possibile leggere il file",
   "setup.already_initialized": "Lastboard è già configurato",
   "setup.encryption_failed": "Non è stato possibile proteggere la password",
-  "setup.failed_create_user": "Non è stato possibile creare l'account"
+  "setup.failed_create_user": "Non è stato possibile creare l'account",
+  "settings.image_mode": "Aggiornamento tramite immagine",
+  "settings.image_desc": "Questa installazione non può sostituire il proprio programma. Se l'hai installata da un'immagine di container (OCI), aggiorna l'immagine."
 }

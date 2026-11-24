@@ -20,16 +20,22 @@ behind it without interrupting anything.
 
 > **Just published, and nothing shows up?** A release's page appears about ten minutes after its tag is pushed, while its files are built. A check made before then — by the top bar or by anyone else on your server — finds the previous version and keeps that answer for ten minutes. Press **Check for Updates** again a little later. An installed app that was open before you updated keeps running the old interface until you close it fully and open it again.
 
-> **Running unprivileged?** If you run Lastboard as a non-root user (by setting `PUID`/`PGID`), the in-app web updater is unavailable — the process cannot replace its own binary. Use the **Manual Update** steps below instead (`docker compose pull` for Docker, or re-running the install script for native installs).
+> **No Update button?** An installation that cannot replace its own program — one made from a container image, or one running as a non-root user (`PUID`/`PGID`) — is updated from outside. Lastboard checks whether it may write where its binary is, so it does not need to know what runs it: **About** says when there is a newer version and that the image is what to update, without offering a button that would fail halfway. See **From a container image (OCI)** below.
 
 ## Manual Update
 
-### Docker Installation
-If you installed Lastboard using Docker Compose, pull the latest image and recreate the container:
+### From a container image (OCI)
+Update the image and recreate the container from it. The data lives in `/var/lib/lastboard`, which the image declares as a volume, so it is kept.
+
+With Docker Compose:
 ```bash
 docker compose pull
 docker compose up -d
 ```
+
+With Podman, pull the image and recreate the container the same way you created it.
+
+On Proxmox VE, an OCI image runs as an LXC container. Proxmox has no step that swaps the image of an existing container, so it is recreated from the new image; the database survives only if `/var/lib/lastboard` is on its own mount point. Tools that manage OCI applications on Proxmox, such as ProxMenux, do this for you: they rebuild the container from the new image and keep its data.
 
 ### Native Installation
 Run the native installation script again. It detects your existing installation and updates the binary while preserving your configuration.
