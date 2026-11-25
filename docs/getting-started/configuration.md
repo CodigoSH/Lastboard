@@ -39,7 +39,13 @@ systemctl cat lastboard
 
 **The installer rewrites the service file every time it runs**, and keeps only the three answers it asks about: `PORT`, `TRUST_PROXY` and `TRUST_PROXY_HOPS`. So there are two places, depending on the setting:
 
-**`PORT`, `TRUST_PROXY` and `TRUST_PROXY_HOPS`** are lines in `/etc/systemd/system/lastboard.service`, such as `Environment="TRUST_PROXY=false"`. Edit the value there, or run the installer again and answer its questions; either way they survive the next update. Then load the change and restart:
+**`PORT`, `TRUST_PROXY` and `TRUST_PROXY_HOPS`** are lines in `/etc/systemd/system/lastboard.service`, such as `Environment="TRUST_PROXY=false"`. Open the file with an editor, `nano` here, and change the value, or run the installer again and answer its questions; either way they survive the next update:
+
+```bash
+sudo nano /etc/systemd/system/lastboard.service
+```
+
+Then load the change and restart:
 
 ```bash
 sudo systemctl daemon-reload && sudo systemctl restart lastboard
