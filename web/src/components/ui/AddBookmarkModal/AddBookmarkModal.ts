@@ -2,6 +2,7 @@ import { template } from './AddBookmarkModal.template';
 import { adoptSharedStyles } from '../../../services/sharedStyles';
 import { dashboardStore } from '../../../store/dashboardStore';
 import { i18n } from '../../../services/i18n';
+import { isWebAddress } from '../../../services/webAddress';
 import { loadProxmox, allGuests } from '../../../services/proxmoxApi';
 import { fetchDockerSettings, hostsForWidget } from '../../../services/dockerHosts';
 import { fetchContainers, containerName } from '../../../services/dockerShared';
@@ -195,6 +196,13 @@ class AddBookmarkModal extends HTMLElement {
 
         this.submitHandler = async (e: Event) => {
             e.preventDefault();
+
+            // A bookmark is a link: text that is not an address (it has a space, or
+            // nothing for a name) is said here, not saved as `http://not a url`.
+            if (!isWebAddress(this.protocol + this.url.replace(/^https?:\/\//, ''))) {
+                if (window.notifier) window.notifier.show(i18n.t('error.invalid_url'), 'error');
+                return;
+            }
 
             // Re-read values just in case (though state should be consistent).
             // The icon is downloaded here, once, so the board never asks a CDN
