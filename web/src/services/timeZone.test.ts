@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'bun:test';
-import { resolveTimeZone, isSupportedTimeZone } from './timeZone';
+import { resolveTimeZone, isSupportedTimeZone, dayPeriodLabel } from './timeZone';
 
 describe('resolveTimeZone', () => {
     it('passes through a zone Intl accepts', () => {
@@ -40,5 +40,18 @@ describe('isSupportedTimeZone', () => {
     it('reports support without throwing', () => {
         expect(isSupportedTimeZone('Europe/Madrid')).toBe(true);
         expect(isSupportedTimeZone('Zona/Invalida')).toBe(false);
+    });
+});
+
+describe('dayPeriodLabel', () => {
+    it('drops the dots and the space of "a. m." and "p. m."', () => {
+        expect(dayPeriodLabel('a. m.')).toBe('AM');
+        expect(dayPeriodLabel('p. m.')).toBe('PM');
+        expect(dayPeriodLabel('a. m.')).toBe('AM'); // the narrow no-break space ICU uses
+    });
+
+    it('leaves a plain mark alone', () => {
+        expect(dayPeriodLabel('pm')).toBe('PM');
+        expect(dayPeriodLabel('AM')).toBe('AM');
     });
 });

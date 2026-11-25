@@ -1,7 +1,7 @@
 
 import { i18n } from '../../services/i18n';
 import { dashboardStore } from '../../store/dashboardStore';
-import { resolveTimeZone } from '../../services/timeZone';
+import { resolveTimeZone, dayPeriodLabel } from '../../services/timeZone';
 
 class ClockWidget extends HTMLElement {
     private timer?: ReturnType<typeof setInterval>;
@@ -127,9 +127,7 @@ class ClockWidget extends HTMLElement {
 
             const timeHTML = parts.map(p => {
                 if (p.type === 'dayPeriod') {
-                    // Clean up just in case (uppercase, remove dots)
-                    const val = p.value.toUpperCase().replace(/\./g, '').trim();
-                    return `<span class="ampm">${val}</span>`;
+                    return `<span class="ampm">${dayPeriodLabel(p.value)}</span>`;
                 }
                 return p.value;
             }).join('');

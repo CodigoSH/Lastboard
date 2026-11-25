@@ -38,3 +38,11 @@ export function resolveTimeZone(tz?: string | null): string | undefined {
     if (typeof tz !== 'string') return undefined;
     return isSupportedTimeZone(tz) ? tz : undefined;
 }
+
+/**
+ * The AM/PM mark as the clock shows it: upper case, without dots or spaces,
+ * so "a. m." (Spanish) reads "AM" and not "A M".
+ */
+export function dayPeriodLabel(value: string): string {
+    return value.toUpperCase().replace(/[.\s]/g, '');
+}
