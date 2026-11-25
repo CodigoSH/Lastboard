@@ -96,7 +96,7 @@ A **Section** is a container that groups related bookmarks, and widgets, togethe
 
 ## Mobile Visibility and Ordering
 
-Lastboard renders a simplified, touch-friendly layout on phones. You have full control over which bookmarks appear there and in what order.
+Lastboard renders a simplified, touch-friendly layout on phones: a single list of **bookmarks**. Widgets and section titles are not drawn there — they stay on the board and show on a tablet or a computer — and a bookmark inside a section appears in the list like any other. You have full control over which bookmarks appear on the phone and in what order.
 
 ![Lastboard on mobile](../assets/mobile.png)
 
