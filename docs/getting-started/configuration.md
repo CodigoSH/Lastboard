@@ -29,6 +29,51 @@ Lastboard is designed to work out-of-the-box, but you can customize its behavior
 
 > **Upgrades copy the database first.** Before it swaps the binary, `install.sh` stops the service and leaves a copy beside it as `lastboard.db.backup-YYYYMMDD-HHMMSS`, so a migration that goes wrong is recoverable. The three most recent copies are kept and older ones removed. Running the installer when you already have the latest version changes nothing and takes no copy; `--reinstall` forces it. To restore one, stop the service, move the copy over `lastboard.db`, and start it again.
 
+## Changing a setting on a native installation
+
+A native installation runs as a systemd service, and its settings are the `Environment=` lines of that service. See the lot, with whatever you added, with:
+
+```bash
+systemctl cat lastboard
+```
+
+**The installer rewrites the service file every time it runs**, and keeps only the three answers it asks about: `PORT`, `TRUST_PROXY` and `TRUST_PROXY_HOPS`. So there are two places, depending on the setting:
+
+**`PORT`, `TRUST_PROXY` and `TRUST_PROXY_HOPS`** are lines in `/etc/systemd/system/lastboard.service`, such as `Environment="TRUST_PROXY=false"`. Edit the value there, or run the installer again and answer its questions; either way they survive the next update. Then load the change and restart:
+
+```bash
+sudo systemctl daemon-reload && sudo systemctl restart lastboard
+```
+
+**Everything else** in the table above (`TZ`, `LOG_FORMAT`, `PUSH_SUBJECT`, `MAX_ITEMS_PER_USER`, the `AUTH_PROXY_*` ones…) goes in a *drop-in*, a small file beside the service that the installer never touches. Open it with:
+
+```bash
+sudo systemctl edit lastboard
+```
+
+and write only what you add, under `[Service]`:
+
+```ini
+[Service]
+Environment="TZ=Europe/Madrid"
+Environment="LOG_FORMAT=json"
+```
+
+Save, close the editor and restart:
+
+```bash
+sudo systemctl restart lastboard
+```
+
+The drop-in is the file `/etc/systemd/system/lastboard.service.d/override.conf`. A line there for a variable the service file also sets wins over it, and any other service setting can be changed the same way: `MemoryMax=1G` in it raises the memory limit the installer sets at 512 MB, which a line edited in the service file itself would lose at the next update.
+
+Two things to know:
+
+- `PUID` and `PGID` are not needed here: the service already runs as the unprivileged `lastboard` user.
+- To check what the running service got, `systemctl show lastboard -p Environment` lists the variables, and **Settings → About → Server details** says whether the proxy settings took.
+
+On **Docker**, Podman or an **OCI image** the same variables are set where the container is defined (the `environment:` of the compose file, `-e` of `docker run`, or the container's environment variables on Proxmox VE), and the container is recreated to apply them.
+
 ## PUID / PGID (running unprivileged)
 
 By default Lastboard runs as `root` (`PUID=0`). This is the safest default for **Proxmox/LXC** setups, where bind-mount ownership often makes a non-root container unable to write its database.
@@ -55,13 +100,7 @@ TRUST_PROXY=true
 
 The native installer asks about it in plain words — *Behind a reverse proxy or a tunnel?* — and then how many a request passes through; running it again to update keeps what you answered before.
 
-**Changing it on a native installation.** The answer lives in the service file, as a line `Environment="TRUST_PROXY=false"` in `/etc/systemd/system/lastboard.service`. Change `false` to `true` (and `TRUST_PROXY_HOPS` if more than one proxy is in front), then load it and restart:
-
-```bash
-sudo systemctl daemon-reload && sudo systemctl restart lastboard
-```
-
-Running the installer again and answering *yes* does the same, and keeps the rest. Either way the notice in **Settings → About** goes away after the restart. On Docker the setting is an environment variable of the container instead.
+**Changing it on a native installation** takes one line in the service file and a restart: see [Changing a setting on a native installation](#changing-a-setting-on-a-native-installation). On Docker, Podman or an OCI image it is an environment variable of the container, which is recreated to apply it.
 
 **Lastboard notices a proxy nobody declared.** With the flag off, a request from this machine or the local network that carries `X-Forwarded-For`, `X-Real-Ip` or `Forwarded` is what a proxy sends, so the log says so once and **Settings → About** lists **A proxy is in front and was not declared** for the administrator. It changes nothing by itself. The same header from the internet is ignored: anybody can type it.
 
