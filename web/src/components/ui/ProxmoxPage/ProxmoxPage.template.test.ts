@@ -116,6 +116,14 @@ describe('the overview', () => {
         expect(html).not.toContain('proxmoxpage.latest_tasks');
         expect(html).toContain('dockerpage.collecting');
     });
+    test('no nodes with a host configured is not "not configured"', () => {
+        // A hypervisor that does not answer has no nodes to show: saying Proxmox is
+        // not set up contradicts the card above that names the host and its error.
+        const down = { ...base, hosts: [host({ error: 'proxmox.connection_error', guests: [], stores: [] })], nodes: [], stores: [] };
+        const html = overviewHtml(down, t, fmt, tfmt);
+        expect(html).not.toContain('proxmox.not_configured');
+        expect(overviewHtml({ ...down, hosts: [] }, t, fmt, tfmt)).toContain('proxmox.not_configured');
+    });
     test('a calm fleet says so', () => {
         expect(attentionHtml([], false, t, fmt)).toContain('infra.all_ok');
     });
