@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test';
-import { isWebAddress } from './webAddress';
+import { addressAuthority, isWebAddress } from './webAddress';
 
 describe('isWebAddress', () => {
     test('accepts what a browser can open', () => {
@@ -12,5 +12,15 @@ describe('isWebAddress', () => {
         for (const bad of ['http://esto no es una url', 'http://', 'https://', 'http://a b.com', 'http://exa mple', 'http://exa%20mple', 'https://nas /x', '', 'ftp://x.com', 'javascript:alert(1)']) {
             expect(isWebAddress(bad)).toBe(false);
         }
+    });
+});
+
+describe('addressAuthority', () => {
+    // The space rule in isWebAddress reads this part, and a runtime that already
+    // refuses a space in `URL` (Bun) would hide it: so it is checked on its own.
+    test('is what comes before the path, query and fragment', () => {
+        expect(addressAuthority('https://nas.local:5000/a path?q=1#x')).toBe('nas.local:5000');
+        expect(addressAuthority('http://exa mple/x')).toBe('exa mple');
+        expect(addressAuthority('  http://a.b  ')).toBe('a.b');
     });
 });
