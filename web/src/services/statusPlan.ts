@@ -108,3 +108,16 @@ export class OneAtATime {
         if (next) await this.request(next);
     }
 }
+
+/**
+ * What the batch answer for one address means for its bookmark's dot. "blocked" is
+ * the server saying it was not allowed to ask (the account may only reach the
+ * internet and the address is on the local network): that is no verdict, so the
+ * bookmark has no dot, as before its first check. Anything else that is not "up"
+ * is down.
+ */
+export function statusFromAnswer(answer: string | undefined): 'up' | 'down' | undefined {
+    if (answer === 'up') return 'up';
+    if (answer === 'blocked') return undefined;
+    return 'down';
+}

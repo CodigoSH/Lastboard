@@ -145,8 +145,10 @@ func TestAnInternetOnlyMemberCannotMakeTheServerReachTheLocalNetwork(t *testing.
 	var status map[string]string
 	w = household(http.MethodPost, "/api/dashboard/health/batch", batch)
 	_ = json.Unmarshal(w.Body.Bytes(), &status)
-	if status[local.URL] != "down" {
-		t.Errorf("status check, internet-only member: %v, want down", status)
+	// Not "down": the server was not allowed to look, and a service it never asked
+	// about is not one it can call down. What matters here is that it was not reached.
+	if status[local.URL] != "blocked" {
+		t.Errorf("status check, internet-only member: %v, want blocked", status)
 	}
 	if n := hits.Load(); n != 0 {
 		t.Fatalf("the local server received %d requests made for an internet-only member", n)

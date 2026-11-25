@@ -10,6 +10,7 @@ import (
 	"log/slog"
 	"net"
 	"net/http"
+	"net/url"
 	"os"
 	"regexp"
 	"sort"
@@ -738,14 +739,36 @@ func (h *DashboardHandler) CheckHealthBatch(w http.ResponseWriter, r *http.Reque
 	writeJSON(w, out)
 }
 
-// probeURL says "up" or "down" for a URL. It is probeTimed without the timing:
-// there is one probe, so the status checks on the board and the background
-// monitor can never disagree about what up means.
+// probeURL says "up", "down" or "blocked" for a URL. It is probeTimed without the
+// timing: there is one probe, so the status checks on the board and the
+// background monitor can never disagree about what up means.
+//
+// "blocked" is not a verdict on the service: the account asking may only reach
+// the internet and the address is on the local network, so nothing was asked.
+// Calling that "down" painted every home service red for an account that was
+// never allowed to look at it.
 func probeURL(ctx context.Context, rawUrl string) string {
 	if up, _, _ := probeTimed(ctx, rawUrl); up {
 		return "up"
 	}
+	if util.IsInternetOnly(ctx) && pointsAtLocalNetwork(rawUrl) {
+		return "blocked"
+	}
 	return "down"
+}
+
+// pointsAtLocalNetwork says whether the address a URL names is on the local
+// network. A name that does not resolve is not: it is simply down.
+func pointsAtLocalNetwork(rawUrl string) bool {
+	u, err := url.Parse(rawUrl)
+	if err != nil || u.Hostname() == "" {
+		return false
+	}
+	ip, err := resolveHostCached(u.Hostname())
+	if err != nil {
+		return false
+	}
+	return util.IsLocalAddress(net.ParseIP(ip))
 }
 
 // CheckHealth single-URL endpoint kept for backwards compatibility.

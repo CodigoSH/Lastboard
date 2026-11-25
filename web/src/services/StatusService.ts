@@ -2,7 +2,7 @@ import { dashboardStore } from '../store/dashboardStore';
 import { dashboardService } from './dashboardService';
 import { accessAllows, isForbidden } from './access';
 import { userStore } from '../store/userStore';
-import { OneAtATime, planStatusCheck, type Scope } from './statusPlan';
+import { OneAtATime, planStatusCheck, statusFromAnswer, type Scope } from './statusPlan';
 
 /**
  * StatusService
@@ -105,7 +105,7 @@ class StatusService {
             try {
                 const results = await dashboardService.checkHealthBatch(urls);
                 dashboardStore.setItemStatuses(urls.flatMap(url => {
-                    const status = (results[url] === 'up' ? 'up' : 'down') as 'up' | 'down';
+                    const status = statusFromAnswer(results[url]);
                     return (plan.byUrl.get(url) ?? []).map(id => ({ id, status }));
                 }));
             } catch (error) {

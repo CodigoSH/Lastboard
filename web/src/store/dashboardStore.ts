@@ -227,7 +227,7 @@ class DashboardStore {
      * Batch update multiple item statuses with only ONE notification.
      * Crucial for performance during mass pings (e.g. 50+ bookmarks).
      */
-    setItemStatuses(updates: { id: number, status: 'up' | 'down' | 'pending' }[]) {
+    setItemStatuses(updates: { id: number, status: 'up' | 'down' | 'pending' | undefined }[]) {
         let hasChanged = false;
         
         updates.forEach(update => {

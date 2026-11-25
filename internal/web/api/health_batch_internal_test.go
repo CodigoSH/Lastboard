@@ -11,6 +11,8 @@ import (
 	"sync/atomic"
 	"testing"
 	"time"
+
+	"git.codigosh.com/CodigoSH/Lastboard/internal/web/util"
 )
 
 // A hundred bookmarks used to mean a hundred sockets opened at once, from one
@@ -118,5 +120,31 @@ func TestTheSingleHealthCheckAnswersJSONEvenWhenTheServiceIsDown(t *testing.T) {
 		if body := strings.TrimSpace(rec.Body.String()); body != tc.want {
 			t.Errorf("%s: body %q, want %q", name, body, tc.want)
 		}
+	}
+}
+
+// An account that may only reach the internet is not told its home services are
+// down: nothing was asked, so the answer is "blocked". A service on the internet
+// that does not answer is still down, and an account that may reach the local
+// network gets the real answer.
+func TestAnInternetOnlyAccountIsToldBlockedNotDown(t *testing.T) {
+	local := httptest.NewServer(http.NotFoundHandler())
+	defer local.Close()
+	closed := httptest.NewServer(http.NotFoundHandler())
+	closedURL := closed.URL
+	closed.Close()
+	limited := util.InternetOnly(context.Background())
+
+	if got := probeURL(limited, local.URL); got != "blocked" {
+		t.Errorf("a local service for an internet-only account: %q, want blocked", got)
+	}
+	if got := probeURL(limited, closedURL); got != "blocked" {
+		t.Errorf("a closed local port for an internet-only account: %q, want blocked", got)
+	}
+	if got := probeURL(limited, "http://no-such-host.invalid/"); got != "down" {
+		t.Errorf("a name that does not resolve: %q, want down", got)
+	}
+	if got := probeURL(context.Background(), local.URL); got != "up" {
+		t.Errorf("a local service for an account that may reach it: %q, want up", got)
 	}
 }

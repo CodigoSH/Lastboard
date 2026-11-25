@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'bun:test';
-import { CHUNK_SIZE, OneAtATime, mergeScope, planStatusCheck, type CheckableItem, type Scope } from './statusPlan';
+import { CHUNK_SIZE, OneAtATime, mergeScope, planStatusCheck, statusFromAnswer, type CheckableItem, type Scope } from './statusPlan';
 
 const bm = (id: number, url: string | undefined, status?: CheckableItem['status'], statusCheck = true): CheckableItem => ({
     id, type: 'bookmark', status,
@@ -134,5 +134,23 @@ describe('OneAtATime', () => {
         fail = false;
         await runner.request('all');
         expect(calls).toEqual(['all', 'all']);
+    });
+});
+
+describe('statusFromAnswer', () => {
+    it('keeps up and down as the server said them', () => {
+        expect(statusFromAnswer('up')).toBe('up');
+        expect(statusFromAnswer('down')).toBe('down');
+    });
+
+    it('gives no dot to an address the account was not allowed to look at', () => {
+        // A home service is not "down" for somebody who may only reach the internet:
+        // nothing was asked, so it has no dot, as before its first check.
+        expect(statusFromAnswer('blocked')).toBeUndefined();
+    });
+
+    it('treats a missing or unknown answer as down', () => {
+        expect(statusFromAnswer(undefined)).toBe('down');
+        expect(statusFromAnswer('???')).toBe('down');
     });
 });

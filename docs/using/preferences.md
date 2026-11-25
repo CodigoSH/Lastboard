@@ -77,7 +77,7 @@ The permissions, by area:
 
 - **Board** — edit the board; have several boards (needs *edit the board*); import and export boards; fetch new icons from the internet. Without *edit the board* the account sees the board prepared for it and changes nothing.
 - **Widgets** — use API widgets; read the health of other machines with Server Health. Clock, weather, notes and Markdown widgets are always available.
-- **Network reach** — **reach the local network**. What the account points the server at may be on your LAN only if this is on. Off, the server reaches only the internet on its behalf.
+- **Network reach** — **reach the local network**. What the account points the server at may be on your LAN only if this is on. Off, the server reaches only the internet on its behalf, and a bookmark that points at an address on your LAN has no up/down dot for that account: the server was not allowed to look, so it does not say the service is down.
 - **Infrastructure** — **Docker** and **Proxmox**, each at **None**, **View** or **Control**. They are the account's *own* Docker agents and Proxmox servers (see [Docker](#docker--podman) and [Proxmox](#proxmox)); Proxmox is further limited by what its API token allows.
 - **Monitoring** — see the up/down dots; monitor around the clock; send alerts (needs monitoring).
 - **Server** — see the load (CPU, memory, temperature) of the machine Lastboard runs on.
