@@ -16,6 +16,7 @@ import (
 	"strings"
 	"syscall"
 	"time"
+	"unicode/utf8"
 
 	"git.codigosh.com/CodigoSH/Lastboard/internal/core/totp"
 	"git.codigosh.com/CodigoSH/Lastboard/internal/core/webauthn"
@@ -327,8 +328,19 @@ func (h *SystemHandler) DownloadProtectedBackup(w http.ResponseWriter, r *http.R
 		http.Error(w, "general.invalid_input", http.StatusBadRequest)
 		return
 	}
+	// A backup carries every secret on the server, so the password that closes it is
+	// held to the least an account's own is. Opening an older backup made with a
+	// shorter one is not affected: this only judges a password being chosen now.
+	if input.Password != "" && utf8.RuneCountInString(input.Password) < minBackupPasswordChars {
+		http.Error(w, "error.password_min_length", http.StatusBadRequest)
+		return
+	}
 	h.serveBackup(w, r, input.Password)
 }
+
+// minBackupPasswordChars is the shortest password a new protected backup accepts,
+// the same as for an account.
+const minBackupPasswordChars = 8
 
 // queryAll runs a query and scans every row. A row that cannot be read is an
 // error, never a row left out: a backup that quietly lacks a bookmark looks

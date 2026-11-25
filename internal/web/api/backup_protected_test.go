@@ -174,3 +174,20 @@ func TestRestoreIgnoresSettingsItDoesNotCarry(t *testing.T) {
 		t.Error("a restore wrote a setting the backup format does not carry")
 	}
 }
+
+// The password that closes a backup is not shorter than an account's own: a file
+// with every secret on the server is only as safe as its password. An empty one
+// still means "no password", and a longer one is taken.
+func TestABackupPasswordHasAMinimumLength(t *testing.T) {
+	server, db, cleanup := setupTestServer(t)
+	defer cleanup()
+	createUser(t, db, "boss", "correcthorse", "admin")
+	cookie := loginAndGetCookie(t, server, "boss", "correcthorse")
+
+	for pw, want := range map[string]int{"123": 400, "1234567": 400, "12345678": 200, "ñandú ñandú": 200, "": 200} {
+		code, _ := secretReq(t, "POST", server.URL+"/api/system/backup", cookie, `{"password":"`+pw+`"}`)
+		if code != want {
+			t.Errorf("password %q: got %d, want %d", pw, code, want)
+		}
+	}
+}

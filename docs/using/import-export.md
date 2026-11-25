@@ -28,6 +28,7 @@ A backup holds each account's **Proxmox connections, Docker hosts, monitoring se
 
 When you press **Download Backup**, you can type a **password** (and confirm it). The whole file is then sealed under it: nothing inside can be read without it. Leave the fields empty to download the plain file.
 
+- The password is at least **8 characters**, as an account's is. Backups made earlier with a shorter one still restore.
 - The password is **not stored anywhere**. **There is no recovery**: a protected backup whose password is lost cannot be opened.
 - To restore a protected backup, choose the file as usual and type its password when asked. A wrong password asks again, and nothing is changed until it is right.
 - Sealing uses Argon2id to derive the key and AES-256-GCM to encrypt, both from the Go standard library and its extended crypto module.

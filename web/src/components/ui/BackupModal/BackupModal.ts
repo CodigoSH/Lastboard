@@ -56,6 +56,12 @@ export class BackupModal extends HTMLElement {
 
         const submit = () => {
             const value = password?.value || '';
+            // Typed, it is a password: not shorter than an account's own (the server holds the same line).
+            if (value !== '' && Array.from(value).length < 8) {
+                if (window.notifier) window.notifier.show(i18n.t('error.password_min_length'), 'error');
+                password?.focus();
+                return;
+            }
             if (value !== (confirm?.value || '')) {
                 if (window.notifier) window.notifier.show(i18n.t('backup.password_mismatch'), 'error');
                 confirm?.focus();
