@@ -46,7 +46,7 @@
   "attention.proxy": "Перед сервером есть прокси, который не указан",
   "attention.proxy_why": "У всех посетителей адрес прокси: в списке сеансов и в ограничениях входа.",
   "attention.restart_container": "Добавьте это в переменные окружения контейнера и пересоздайте контейнер.",
-  "attention.restart_native": "Измените это в {file}, затем выполните: {command}",
+  "attention.restart_native": "Измените это в файле службы, затем перезапустите Lastboard:",
   "attention.see_all": "Показать всё",
   "attention.socket": "Телеметрия не может подключиться",
   "attention.socket_act_host": "Настройте прокси так, чтобы он сохранял адрес или передавал X-Forwarded-Host.",

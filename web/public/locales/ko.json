@@ -46,7 +46,7 @@
   "attention.proxy": "선언되지 않은 프록시가 앞에 있습니다",
   "attention.proxy_why": "모든 방문자가 프록시의 주소로 보입니다(세션 목록과 로그인 제한).",
   "attention.restart_container": "컨테이너의 환경 변수에 추가한 뒤 컨테이너를 다시 만드세요.",
-  "attention.restart_native": "{file}에서 변경한 뒤 실행하세요: {command}",
+  "attention.restart_native": "서비스 파일에서 변경한 뒤 Lastboard를 다시 시작하세요:",
   "attention.see_all": "모두 보기",
   "attention.socket": "텔레메트리가 연결되지 않습니다",
   "attention.socket_act_host": "프록시가 주소를 유지하거나 X-Forwarded-Host를 보내도록 하세요.",

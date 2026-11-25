@@ -46,7 +46,7 @@
   "attention.proxy": "前面有未声明的代理",
   "attention.proxy_why": "所有访客都显示为代理的地址：会话列表和登录限制中都是如此。",
   "attention.restart_container": "请将其添加到容器的环境变量中，并重新创建容器。",
-  "attention.restart_native": "请在 {file} 中修改，然后执行：{command}",
+  "attention.restart_native": "请在服务文件中修改，然后重启 Lastboard：",
   "attention.see_all": "查看全部",
   "attention.socket": "遥测无法连接",
   "attention.socket_act_host": "让代理保留地址，或发送 X-Forwarded-Host。",

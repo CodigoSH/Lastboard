@@ -76,17 +76,22 @@ export function attentionInOrder(items: AttentionItem[]): AttentionItem[] {
         .map(x => x.item);
 }
 
-interface Words { icon: string; title: string; why?: string; code?: string; act?: string; link?: { label: string; attrs: string } }
+interface Words { icon: string; title: string; why?: string; code?: string; act?: string; after?: string[]; link?: { label: string; attrs: string } }
 
 /** The service file of a native installation and the command that makes a change in it count: never translated. */
 export const SERVICE_FILE = '/etc/systemd/system/lastboard.service';
 export const RESTART_COMMAND = 'sudo systemctl daemon-reload && sudo systemctl restart lastboard';
 
-/** What to do about a setting that is read at start: where it lives depends on how Lastboard is installed. */
-export function restartText(install: unknown, t: T): string {
+/**
+ * What to do about a setting that is read at start: where it lives depends on how Lastboard is installed.
+ * The file and the command are not part of the sentence, so they are not interpolated into it: the translation
+ * wraps every interpolated value in marks that say which way to read it, invisible, and a command copied with
+ * one at its end is not a command any more (systemctl: unit "lastboard\u2069" not found).
+ */
+export function restartWords(install: unknown, t: T): Pick<Words, 'act' | 'after'> {
     return install === 'container'
-        ? t('attention.restart_container')
-        : t('attention.restart_native', { file: SERVICE_FILE, command: RESTART_COMMAND });
+        ? { act: t('attention.restart_container') }
+        : { act: t('attention.restart_native'), after: [SERVICE_FILE, RESTART_COMMAND] };
 }
 
 /** What each kind of item says: what is wrong, why it matters, the one thing to do. Null for a kind this page does not know. */
@@ -110,9 +115,9 @@ function words(item: AttentionItem, t: T, fmt: Fmt): Words | null {
         case 'socket':
             return p.trust_proxy
                 ? { icon: ICON.pulse(14), title: t('attention.socket'), why: t('attention.socket_why'), act: t('attention.socket_act_host') }
-                : { icon: ICON.pulse(14), title: t('attention.socket'), why: t('attention.socket_why'), code: 'TRUST_PROXY=true', act: restartText(p.install, t) };
+                : { icon: ICON.pulse(14), title: t('attention.socket'), why: t('attention.socket_why'), code: 'TRUST_PROXY=true', ...restartWords(p.install, t) };
         case 'proxy':
-            return { icon: ICON.warning(14), title: t('attention.proxy'), why: t('attention.proxy_why'), code: 'TRUST_PROXY=true', act: restartText(p.install, t) };
+            return { icon: ICON.warning(14), title: t('attention.proxy'), why: t('attention.proxy_why'), code: 'TRUST_PROXY=true', ...restartWords(p.install, t) };
         case 'https':
             return { icon: ICON.lock(14), title: t('attention.https'), why: t('attention.https_why'), act: t('attention.https_act') };
         case 'update':
@@ -154,7 +159,7 @@ export function attentionListHtml(items: AttentionItem[], t: T, fmt: Fmt): strin
     return attentionInOrder(items).map(item => {
         const w = words(item, t, fmt);
         if (!w) return '';
-        const fix = `${w.code ? `<code>${esc(w.code)}</code>` : ''}${w.act ? `<span>${esc(w.act)}</span>` : ''}${
+        const fix = `${w.code ? `<code>${esc(w.code)}</code>` : ''}${w.act ? `<span>${esc(w.act)}</span>` : ''}${(w.after ?? []).map(c => `<code>${esc(c)}</code>`).join('')}${
             w.link ? `<a class="about-need__link" ${w.link.attrs}>${esc(w.link.label)}${ICON.chevron(14)}</a>` : ''}`;
         return `<div class="about-need about-need--${item.tone}" data-attention-item="${esc(item.key)}">
             <span class="about-need__mark">${w.icon}</span>

@@ -46,13 +46,17 @@ describe('what needs the administrator', () => {
     test('the proxy that was not declared says where to change it, by how Lastboard is installed', () => {
         const native = attentionListHtml([{ key: 'proxy', tone: 'warn', params: { install: 'native' } }], t, fmt);
         expect(native).toContain('<code>TRUST_PROXY=true</code>');
-        // The file and the command are given to the sentence untouched: they are not words to translate.
-        expect(native).toContain(esc(JSON.stringify({ file: SERVICE_FILE, command: RESTART_COMMAND })));
+        // The file and the command are code of their own, not words handed to the translation: that wraps a value in
+        // invisible marks, and a command copied with one at its end is not a command (systemctl: unit not found).
+        expect(native).toContain(`<code>${SERVICE_FILE}</code>`);
+        expect(native).toContain(`<code>${esc(RESTART_COMMAND)}</code>`);
+        expect(native).toContain('[attention.restart_native]');
+        expect(native).not.toMatch(/[\u2066-\u2069]/);
         const container = attentionListHtml([{ key: 'proxy', tone: 'warn', params: { install: 'container' } }], t, fmt);
         expect(container).toContain('[attention.restart_container]');
         expect(container).not.toContain(SERVICE_FILE);
         // An answer from a server that does not say is read as a native installation.
-        expect(attentionListHtml([{ key: 'proxy', tone: 'warn' }], t, fmt)).toContain('attention.restart_native');
+        expect(attentionListHtml([{ key: 'proxy', tone: 'warn' }], t, fmt)).toContain('[attention.restart_native]');
         // The same words for a refused socket while TRUST_PROXY is off.
         expect(attentionListHtml([{ key: 'socket', tone: 'warn', params: { trust_proxy: false, install: 'container' } }], t, fmt)).toContain('[attention.restart_container]');
     });

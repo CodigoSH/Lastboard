@@ -46,7 +46,7 @@
   "attention.proxy": "申告されていないプロキシが前段にあります",
   "attention.proxy_why": "すべての訪問者がプロキシのアドレスで扱われます（セッション一覧とログインの制限）。",
   "attention.restart_container": "コンテナの環境変数に追加し、コンテナを作り直してください。",
-  "attention.restart_native": "{file} で変更し、次を実行してください: {command}",
+  "attention.restart_native": "サービスファイルで変更し、Lastboard を再起動してください:",
   "attention.see_all": "すべて表示",
   "attention.socket": "テレメトリーが接続できません",
   "attention.socket_act_host": "プロキシがアドレスを保つか、X-Forwarded-Host を送るようにしてください。",

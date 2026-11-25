@@ -46,7 +46,7 @@
   "attention.proxy": "Hay un proxy delante sin declarar",
   "attention.proxy_why": "Todos los visitantes aparecen con la dirección del proxy: en las sesiones y en los límites de inicio de sesión.",
   "attention.restart_container": "Añádelo a las variables de entorno del contenedor y vuelve a crearlo.",
-  "attention.restart_native": "Cámbialo en {file} y ejecuta después: {command}",
+  "attention.restart_native": "Cámbialo en el fichero del servicio y reinicia Lastboard después:",
   "attention.see_all": "Ver todo",
   "attention.socket": "La telemetría no puede conectar",
   "attention.socket_act_host": "Haz que el proxy conserve la dirección o envíe X-Forwarded-Host.",

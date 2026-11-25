@@ -46,7 +46,7 @@
   "attention.proxy": "Önünde bildirilmemiş bir proxy var",
   "attention.proxy_why": "Tüm ziyaretçiler proxy'nin adresiyle görünüyor: oturumlarda ve giriş sınırlarında.",
   "attention.restart_container": "Konteynerin ortam değişkenlerine ekleyin ve konteyneri yeniden oluşturun.",
-  "attention.restart_native": "{file} dosyasında değiştirin, ardından çalıştırın: {command}",
+  "attention.restart_native": "Hizmet dosyasında değiştirin, ardından Lastboard'i yeniden başlatın:",
   "attention.see_all": "Tümünü gör",
   "attention.socket": "Telemetri bağlanamıyor",
   "attention.socket_act_host": "Proxy'nin adresi korumasını veya X-Forwarded-Host göndermesini sağlayın.",

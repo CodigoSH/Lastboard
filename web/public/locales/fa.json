@@ -46,7 +46,7 @@
   "attention.proxy": "یک پراکسی جلوی آن است که اعلام نشده",
   "attention.proxy_why": "همهٔ بازدیدکنندگان با نشانی پراکسی دیده می‌شوند: در نشست‌ها و در محدودیت‌های ورود.",
   "attention.restart_container": "آن را به متغیرهای محیطی کانتینر اضافه کنید و کانتینر را دوباره بسازید.",
-  "attention.restart_native": "آن را در {file} تغییر دهید، سپس اجرا کنید: {command}",
+  "attention.restart_native": "آن را در فایل سرویس تغییر دهید، سپس Lastboard را دوباره راه‌اندازی کنید:",
   "attention.see_all": "نمایش همه",
   "attention.socket": "تله‌متری نمی‌تواند وصل شود",
   "attention.socket_act_host": "کاری کنید پراکسی نشانی را حفظ کند یا X-Forwarded-Host بفرستد.",

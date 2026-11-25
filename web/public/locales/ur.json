@@ -46,7 +46,7 @@
   "attention.proxy": "آگے ایک پراکسی ہے جس کا اعلان نہیں کیا گیا",
   "attention.proxy_why": "ہر ملاقاتی پراکسی کے پتے کے ساتھ دکھائی دیتا ہے: سیشن میں اور لاگ ان کی حدود میں۔",
   "attention.restart_container": "اسے کنٹینر کے ماحولیاتی متغیرات میں شامل کریں اور کنٹینر دوبارہ بنائیں۔",
-  "attention.restart_native": "اسے {file} میں تبدیل کریں، پھر چلائیں: {command}",
+  "attention.restart_native": "اسے سروس فائل میں تبدیل کریں، پھر Lastboard دوبارہ شروع کریں:",
   "attention.see_all": "سب دیکھیں",
   "attention.socket": "ٹیلی میٹری جڑ نہیں پا رہی",
   "attention.socket_act_host": "پراکسی کو پتہ برقرار رکھنے یا X-Forwarded-Host بھیجنے دیں۔",

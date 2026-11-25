@@ -46,7 +46,7 @@
   "attention.proxy": "সামনে একটি প্রক্সি আছে যা ঘোষণা করা হয়নি",
   "attention.proxy_why": "সব দর্শনার্থী প্রক্সির ঠিকানায় দেখা যায়: সেশনে এবং সাইন-ইনের সীমায়।",
   "attention.restart_container": "কন্টেইনারের এনভায়রনমেন্টে এটি যোগ করুন এবং কন্টেইনারটি নতুন করে তৈরি করুন।",
-  "attention.restart_native": "{file} ফাইলে এটি পরিবর্তন করুন, তারপর চালান: {command}",
+  "attention.restart_native": "সার্ভিস ফাইলে এটি পরিবর্তন করুন, তারপর Lastboard আবার চালু করুন:",
   "attention.see_all": "সব দেখুন",
   "attention.socket": "টেলিমেট্রি সংযোগ করতে পারছে না",
   "attention.socket_act_host": "প্রক্সিকে ঠিকানা অপরিবর্তিত রাখতে বা X-Forwarded-Host পাঠাতে দিন।",

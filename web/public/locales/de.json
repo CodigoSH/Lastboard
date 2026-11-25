@@ -46,7 +46,7 @@
   "attention.proxy": "Ein Proxy steht davor und ist nicht angegeben",
   "attention.proxy_why": "Alle Besucher haben die Adresse des Proxys: in den Sitzungen und bei den Anmeldelimits.",
   "attention.restart_container": "Füge es den Umgebungsvariablen des Containers hinzu und erstelle den Container neu.",
-  "attention.restart_native": "Ändere es in {file} und führe dann aus: {command}",
+  "attention.restart_native": "Ändere es in der Service-Datei und starte Lastboard dann neu:",
   "attention.see_all": "Alle anzeigen",
   "attention.socket": "Telemetrie kann sich nicht verbinden",
   "attention.socket_act_host": "Lass den Proxy die Adresse beibehalten oder X-Forwarded-Host senden.",

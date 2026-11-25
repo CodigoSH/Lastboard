@@ -46,7 +46,7 @@
   "attention.proxy": "Ada proxy di depan yang tidak dinyatakan",
   "attention.proxy_why": "Semua pengunjung memakai alamat proxy: di sesi dan di batas masuk.",
   "attention.restart_container": "Tambahkan ke variabel lingkungan kontainer, lalu buat ulang kontainernya.",
-  "attention.restart_native": "Ubah di {file}, lalu jalankan: {command}",
+  "attention.restart_native": "Ubah di berkas layanan, lalu mulai ulang Lastboard:",
   "attention.see_all": "Lihat semua",
   "attention.socket": "Telemetri tidak dapat terhubung",
   "attention.socket_act_host": "Buat proxy mempertahankan alamat, atau mengirim X-Forwarded-Host.",
