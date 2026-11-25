@@ -288,8 +288,15 @@
         /* Actions */
         .wizard-actions {
             display: flex;
-            gap: 20px;
+            flex-wrap: wrap;
+            gap: 12px 20px;
             margin-top: 48px;
+        }
+
+        /* The main button is never narrower than its words: "Create administrator" broke
+           in two at a phone's width. When both do not fit on a line, Back goes above it. */
+        .wizard-actions .premium-btn.filled {
+            min-width: max-content;
         }
 
         /* Avatar Helper */
