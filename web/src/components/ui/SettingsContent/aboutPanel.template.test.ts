@@ -1,5 +1,6 @@
 import { describe, expect, test } from 'bun:test';
-import { attentionCardHtml, attentionDialogHtml, attentionInOrder, attentionListHtml, bytesText, serverButtonHtml, serverDialogHtml, supportText, type AttentionItem, type Fmt, type T } from './aboutPanel.template';
+import { escapeHtml as esc } from '../../../services/escape';
+import { RESTART_COMMAND, SERVICE_FILE, attentionCardHtml, attentionDialogHtml, attentionInOrder, attentionListHtml, bytesText, serverButtonHtml, serverDialogHtml, supportText, type AttentionItem, type Fmt, type T } from './aboutPanel.template';
 
 const t: T = (key, params) => (params ? `[${key} ${JSON.stringify(params)}]` : `[${key}]`);
 const fmt: Fmt = { num: n => String(n), date: () => 'a date', duration: s => `${s}s` };
@@ -40,6 +41,20 @@ describe('what needs the administrator', () => {
         const on = attentionListHtml([{ key: 'socket', tone: 'warn', params: { trust_proxy: true } }], t, fmt);
         expect(on).not.toContain('<code>');
         expect(on).toContain('[attention.socket_act_host]');
+    });
+
+    test('the proxy that was not declared says where to change it, by how Lastboard is installed', () => {
+        const native = attentionListHtml([{ key: 'proxy', tone: 'warn', params: { install: 'native' } }], t, fmt);
+        expect(native).toContain('<code>TRUST_PROXY=true</code>');
+        // The file and the command are given to the sentence untouched: they are not words to translate.
+        expect(native).toContain(esc(JSON.stringify({ file: SERVICE_FILE, command: RESTART_COMMAND })));
+        const container = attentionListHtml([{ key: 'proxy', tone: 'warn', params: { install: 'container' } }], t, fmt);
+        expect(container).toContain('[attention.restart_container]');
+        expect(container).not.toContain(SERVICE_FILE);
+        // An answer from a server that does not say is read as a native installation.
+        expect(attentionListHtml([{ key: 'proxy', tone: 'warn' }], t, fmt)).toContain('attention.restart_native');
+        // The same words for a refused socket while TRUST_PROXY is off.
+        expect(attentionListHtml([{ key: 'socket', tone: 'warn', params: { trust_proxy: false, install: 'container' } }], t, fmt)).toContain('[attention.restart_container]');
     });
 
     test('a channel name someone typed is written as text', () => {

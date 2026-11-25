@@ -87,6 +87,10 @@ type UpdateResponse struct {
 // container and then silently reverts.
 func inContainer() bool { return inContainerUnder("/") }
 
+// InContainer is inContainer for the code that says how to change a setting: a container is told to change its
+// environment, a native installation its service file.
+func InContainer() bool { return inContainer() }
+
 // inContainerUnder is inContainer against a root that a test can build.
 //
 // Each engine leaves its own mark: Docker writes /.dockerenv and Podman

@@ -78,6 +78,17 @@ export function attentionInOrder(items: AttentionItem[]): AttentionItem[] {
 
 interface Words { icon: string; title: string; why?: string; code?: string; act?: string; link?: { label: string; attrs: string } }
 
+/** The service file of a native installation and the command that makes a change in it count: never translated. */
+export const SERVICE_FILE = '/etc/systemd/system/lastboard.service';
+export const RESTART_COMMAND = 'sudo systemctl daemon-reload && sudo systemctl restart lastboard';
+
+/** What to do about a setting that is read at start: where it lives depends on how Lastboard is installed. */
+export function restartText(install: unknown, t: T): string {
+    return install === 'container'
+        ? t('attention.restart_container')
+        : t('attention.restart_native', { file: SERVICE_FILE, command: RESTART_COMMAND });
+}
+
 /** What each kind of item says: what is wrong, why it matters, the one thing to do. Null for a kind this page does not know. */
 function words(item: AttentionItem, t: T, fmt: Fmt): Words | null {
     const p = item.params ?? {};
@@ -99,9 +110,9 @@ function words(item: AttentionItem, t: T, fmt: Fmt): Words | null {
         case 'socket':
             return p.trust_proxy
                 ? { icon: ICON.pulse(14), title: t('attention.socket'), why: t('attention.socket_why'), act: t('attention.socket_act_host') }
-                : { icon: ICON.pulse(14), title: t('attention.socket'), why: t('attention.socket_why'), code: 'TRUST_PROXY=true', act: t('attention.restart_act') };
+                : { icon: ICON.pulse(14), title: t('attention.socket'), why: t('attention.socket_why'), code: 'TRUST_PROXY=true', act: restartText(p.install, t) };
         case 'proxy':
-            return { icon: ICON.warning(14), title: t('attention.proxy'), why: t('attention.proxy_why'), code: 'TRUST_PROXY=true', act: t('attention.restart_act') };
+            return { icon: ICON.warning(14), title: t('attention.proxy'), why: t('attention.proxy_why'), code: 'TRUST_PROXY=true', act: restartText(p.install, t) };
         case 'https':
             return { icon: ICON.lock(14), title: t('attention.https'), why: t('attention.https_why'), act: t('attention.https_act') };
         case 'update':

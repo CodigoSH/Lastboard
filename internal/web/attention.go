@@ -59,6 +59,15 @@ func dbFile() string {
 	return "./lastboard.db"
 }
 
+// installKind says how this server is installed, because what to do about a setting depends on it: a
+// container's environment is changed where the container is defined, a native installation's in its service file.
+func installKind() string {
+	if api.InContainer() {
+		return "container"
+	}
+	return "native"
+}
+
 // handleAttention lists what needs the administrator: only what this server
 // can see for itself and somebody can act on, a problem and never a
 // suggestion.
@@ -89,11 +98,12 @@ func (s *Server) handleAttention(w http.ResponseWriter, r *http.Request) {
 	if api.WSOriginRefused() {
 		out = append(out, attentionItem{Key: "socket", Tone: "warn", Params: map[string]any{
 			"trust_proxy": os.Getenv("TRUST_PROXY") == "true",
+			"install":     installKind(),
 		}})
 	}
 
 	if s.forwardedUnread.Load() {
-		out = append(out, attentionItem{Key: "proxy", Tone: "warn"})
+		out = append(out, attentionItem{Key: "proxy", Tone: "warn", Params: map[string]any{"install": installKind()}})
 	}
 
 	// Information rather than a fault: plain HTTP on a home network is a

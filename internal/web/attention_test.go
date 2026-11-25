@@ -77,6 +77,29 @@ func TestARefusedTelemetrySocketIsSaid(t *testing.T) {
 	}
 }
 
+// What the administrator is told to do about a proxy depends on how Lastboard is installed, so the
+// server says which it is.
+func TestTheProxyNoticeSaysHowLastboardIsInstalled(t *testing.T) {
+	t.Setenv("TRUST_PROXY", "false")
+	srv := newTestServer(t, true)
+	admin := adminOf(t, srv)
+	r := httptest.NewRequest(http.MethodGet, "/", nil)
+	r.RemoteAddr = "172.18.0.4:50000"
+	r.Header.Set("X-Forwarded-For", "203.0.113.9")
+	srv.noticeForwarded(r)
+
+	item, said := attentionOf(t, admin, "proxy")
+	if !said {
+		t.Fatal("an undeclared proxy is not listed")
+	}
+	if got := item.Params["install"]; got != "container" && got != "native" {
+		t.Errorf("the proxy item says install=%v, want container or native", got)
+	}
+	if want := installKind(); item.Params["install"] != want {
+		t.Errorf("the proxy item says install=%v, this process is %q", item.Params["install"], want)
+	}
+}
+
 // Plain HTTP is noticed when somebody signed in uses Lastboard so from another machine; not from
 // this one, and not a request nobody is behind (a proxy's health probe, a status check by the
 // server's own address), which an administrator on HTTPS was being told about.
