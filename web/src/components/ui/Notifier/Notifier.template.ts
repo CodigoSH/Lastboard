@@ -6,5 +6,5 @@
  * position on both desktop and mobile. Toasts are appended here at runtime.
  */
 export const template = () => `
-    <div class="toast-container" role="region" aria-live="polite" aria-atomic="false"></div>
+    <div class="toast-container" popover="manual" role="region" aria-live="polite" aria-atomic="false"></div>
 `;

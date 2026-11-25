@@ -1,7 +1,20 @@
+/* A manual popover: it lives in the browser's top layer, so a toast shows above
+   an open dialog and its backdrop instead of dimmed underneath them. The
+   browser's own popover styling is reset, and the box is only there while a
+   toast is. */
+.toast-container:not(:popover-open) {
+    display: none;
+}
+
 .toast-container {
     position: fixed;
-    bottom: 24px;
-    left: 50%;
+    inset: auto auto 24px 50%;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: inherit;
+    overflow: visible;
     transform: translateX(-50%);
     z-index: 1000;
     display: flex;

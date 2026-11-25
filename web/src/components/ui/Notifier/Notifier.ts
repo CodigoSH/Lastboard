@@ -149,6 +149,7 @@ class AppNotifier extends HTMLElement {
         toast.addEventListener('mouseleave', () => this.resume(toast));
 
         container.appendChild(toast);
+        this.raise(container);
         requestAnimationFrame(() => toast.classList.add('toast--visible'));
 
         this.startTimer(toast, duration);
@@ -198,7 +199,26 @@ class AppNotifier extends HTMLElement {
         window.setTimeout(() => {
             toast.remove();
             this.pump();
+            if (!this.container?.children.length) this.lower();
         }, EXIT_MS);
+    }
+
+    /** Puts the toasts on top of whatever was opened last: opening again moves the popover to the front of the top layer. */
+    private raise(container: HTMLElement) {
+        try {
+            if (container.matches(':popover-open')) container.hidePopover();
+            container.showPopover();
+        } catch {
+            // No popover support: the toasts stay where the stylesheet puts them.
+        }
+    }
+
+    private lower() {
+        try {
+            this.container?.hidePopover();
+        } catch {
+            // Already closed.
+        }
     }
 
     private pump() {
