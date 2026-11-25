@@ -1882,6 +1882,8 @@ class SettingsContent extends HTMLElement {
                 avatar_url: resizedDataUrl
             });
 
+            // A refused picture is not kept: the next save of the name would send it again.
+            if (!saved) this.prefs.avatar_url = u.avatar_url;
             this.render();
             if (saved && window.notifier) window.notifier.show(i18n.t('notifier.avatar_updated'));
         } catch (error) {
