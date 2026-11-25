@@ -408,7 +408,8 @@ func (h *UserHandler) GetUsers(w http.ResponseWriter, r *http.Request) {
 	}
 	defer rows.Close()
 
-	var users []map[string]interface{}
+	// Empty, not nil: an account with nobody else is `[]`, not `null`.
+	users := []map[string]interface{}{}
 	for rows.Next() {
 		var u user.User
 		if err := rows.Scan(&u.ID, &u.Username, &u.Role, &u.CreatedAt, &u.AvatarUrl); err != nil {

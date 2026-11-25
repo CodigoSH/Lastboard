@@ -3,6 +3,7 @@ package api_test
 import (
 	"fmt"
 	"net/http"
+	"strings"
 	"testing"
 )
 
@@ -63,4 +64,17 @@ func TestUsernamesThatDifferOnlyByCaseAreRefused(t *testing.T) {
 		loginAndGetCookie(t, server, "OLD", "correcthorse")
 		loginAndGetCookie(t, server, "old", "correcthorse")
 	})
+}
+
+// The list of the other accounts is an array even when there are none, so a
+// reader that loops over it does not meet `null`.
+func TestAnEmptyListOfUsersIsAnArray(t *testing.T) {
+	server, db, cleanup := setupFullServer(t)
+	defer cleanup()
+	createUser(t, db.DB, "boss", "correcthorse", "admin")
+	cookie := loginAndGetCookie(t, server, "boss", "correcthorse")
+	code, body := secretReq(t, "GET", server.URL+"/api/users", cookie, "")
+	if code != http.StatusOK || strings.TrimSpace(body) != "[]" {
+		t.Errorf("got %d %q, want 200 and []", code, body)
+	}
 }

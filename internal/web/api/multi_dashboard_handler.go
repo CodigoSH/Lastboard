@@ -175,16 +175,12 @@ func (h *MultiDashboardHandler) CreateDashboard(w http.ResponseWriter, r *http.R
 		return
 	}
 
-	var pos int
-	if err := h.DB.QueryRowContext(r.Context(), "SELECT position FROM dashboards WHERE id = ?", id).Scan(&pos); err != nil {
+	// The row as it was stored, so the answer carries the date the list will show
+	// (it used to say year 1).
+	created := dashboard.Dashboard{ID: int(id), Name: name}
+	if err := h.DB.QueryRowContext(r.Context(), "SELECT position, created_at FROM dashboards WHERE id = ?", id).Scan(&created.Position, &created.CreatedAt); err != nil {
 		http.Error(w, "general.db_error", http.StatusInternalServerError)
 		return
-	}
-
-	created := dashboard.Dashboard{
-		ID:       int(id),
-		Name:     name,
-		Position: pos,
 	}
 
 	w.Header().Set("Content-Type", "application/json")

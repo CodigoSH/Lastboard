@@ -10,6 +10,7 @@ import (
 	"strings"
 	"sync"
 	"testing"
+	"time"
 
 	"git.codigosh.com/CodigoSH/Lastboard/internal/platform/database"
 	"git.codigosh.com/CodigoSH/Lastboard/internal/web/api"
@@ -61,10 +62,11 @@ func setupBoardsServer(t *testing.T) (*httptest.Server, *database.DB, func()) {
 }
 
 type board struct {
-	ID        int    `json:"id"`
-	Name      string `json:"name"`
-	Position  int    `json:"position"`
-	IsDefault bool   `json:"is_default"`
+	ID        int       `json:"id"`
+	Name      string    `json:"name"`
+	Position  int       `json:"position"`
+	IsDefault bool      `json:"is_default"`
+	CreatedAt time.Time `json:"created_at"`
 }
 
 func boardsOf(t *testing.T, serverURL string, s *userSession) []board {
@@ -186,6 +188,9 @@ func TestANewBoardLandsAtTheEnd(t *testing.T) {
 	}
 	if created.Position != 1 {
 		t.Errorf("position = %d, want it after the board that was there", created.Position)
+	}
+	if created.CreatedAt.Year() < 2000 {
+		t.Errorf("created_at = %v: the answer to creating a board carries its date", created.CreatedAt)
 	}
 }
 
