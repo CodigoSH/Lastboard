@@ -135,6 +135,20 @@ class RightDrawer extends HTMLElement {
         // Surgical update instead of rebuilding the whole shadow DOM, so the
         // content panel and the side menu persist and are not re-animated.
         this.updateSelection();
+        // The address says which section is open, so a reload (an update ends in one) lands in it.
+        this.dispatchEvent(new CustomEvent('drawer-section', { bubbles: true, composed: true, detail: { section } }));
+    }
+
+    /** The section that is open, or null while the drawer is shut. */
+    get section(): string | null {
+        return this.selectedSection;
+    }
+
+    /** Whether the menu has this section for the signed-in account: an address can name any. */
+    hasSection(section: string): boolean {
+        return Array.from(this.shadowRoot?.querySelectorAll<HTMLElement>('.right-drawer__menu-item') ?? []).some(
+            (el) => el.dataset.section === section,
+        );
     }
 
     /**

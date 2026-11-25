@@ -176,7 +176,11 @@ bootstrap(async () => {
     if (asked.view) {
         history.replaceState(null, '', boardAddress(window.location.pathname, window.location.search, window.location.hash));
         const target = { tab: asked.tab ?? undefined, sel: asked.sel ?? undefined };
-        if (asked.view === 'settings') drawer.open();
+        if (asked.view === 'settings') {
+            // The section the address names, when this account has it; the first one otherwise.
+            if (asked.tab && drawer.hasSection(asked.tab)) drawer.selectSection(asked.tab);
+            drawer.open();
+        }
         else ((asked.view === 'monitor' ? monitorPage : asked.view === 'proxmox' ? proxmoxPage : dockerPage) as any).open(target);
     }
 
@@ -426,8 +430,12 @@ window.addEventListener('widget-selected', async (e: Event) => {
 // The drawer is a place of the browser's history too: opening it is a step, and Back closes it.
 window.addEventListener('drawer-open', () => {
     surfaces.note('drawer', true);
-    drawerNav.open({ tab: '', sel: null });
+    drawerNav.open({ tab: drawer.section ?? '', sel: null });
     if (topbar) topbar.setState({ drawerOpen: true });
+});
+// Another section of Preferences changes what the address says, and takes no step of its own.
+window.addEventListener('drawer-section', (e: Event) => {
+    drawerNav.replace({ tab: (e as CustomEvent).detail.section, sel: null });
 });
 window.addEventListener('drawer-close', () => {
     surfaces.note('drawer', false);
@@ -440,7 +448,9 @@ window.addEventListener('popstate', (e: PopStateEvent) => {
     if (effect.kind === 'leave') { drawer.close(); return; }
     // Forward onto the drawer's entry: it opens again, unless the board is being edited.
     if (drawer.isOpen) return;
-    if (dashboardStore.getState().isEditing) drawerNav.forget(); else drawer.open();
+    if (dashboardStore.getState().isEditing) { drawerNav.forget(); return; }
+    if (effect.state.tab && drawer.hasSection(effect.state.tab)) drawer.selectSection(effect.state.tab);
+    drawer.open();
 });
 
 // Choosing another board from the bar brings the board back: what was on top of it has nothing to do with the new one.
