@@ -225,6 +225,14 @@ func (s *Server) routes() {
 			}
 		}
 
+		// An address under /api that no route claims is a missing endpoint, not a
+		// page: answering it with the dashboard's HTML and a 200 made a mistyped
+		// call look as if it had worked.
+		if strings.HasPrefix(path, "/api/") {
+			http.Error(w, "error.not_found", http.StatusNotFound)
+			return
+		}
+
 		// 3. Fallback to Protected Index (SPA Root)
 		// If we got here, it's either "/" or a client-side route, OR a real 404.
 		// We treat it as SPA root which requires Auth.

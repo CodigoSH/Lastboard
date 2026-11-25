@@ -574,3 +574,21 @@ func TestThePagesOpenedWithoutASessionSayNoindexInThePageToo(t *testing.T) {
 		})
 	}
 }
+
+// An address under /api that no route claims used to fall through to the
+// dashboard's page and answer 200 with HTML, so a mistyped call looked as if it
+// had worked. It is a missing endpoint, whether or not anybody is signed in.
+func TestUnknownAPIAddressIsNotFound(t *testing.T) {
+	server := newTestServer(t, true)
+
+	for _, path := range []string{"/api/no-such-endpoint", "/api/dashboards/1/nothing/here", "/api/"} {
+		rec := httptest.NewRecorder()
+		server.Router.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, path, nil))
+		if rec.Code != http.StatusNotFound {
+			t.Errorf("GET %s = %d, want 404", path, rec.Code)
+		}
+		if strings.Contains(rec.Body.String(), "<html") {
+			t.Errorf("GET %s answered with a page", path)
+		}
+	}
+}
