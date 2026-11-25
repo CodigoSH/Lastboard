@@ -1796,11 +1796,21 @@ class SettingsContent extends HTMLElement {
     async updateUsername(newUsername: string) {
         const u = userStore.getUser();
         if (!u) return;
-        await userStore.updateProfile({
+        if (!newUsername.trim()) {
+            if (window.notifier) window.notifier.show(i18n.t('notifier.username_required'), 'error');
+            this.render();
+            return;
+        }
+        const saved = await userStore.updateProfile({
             username: newUsername,
             avatar_url: this.prefs.avatar_url || u.avatar_url
         });
-        if (window.notifier) window.notifier.show(i18n.t('notifier.username_updated'));
+        // Said only when the server took it; otherwise the box goes back to the name it has.
+        if (saved) {
+            if (window.notifier) window.notifier.show(i18n.t('notifier.username_updated'));
+        } else {
+            this.render();
+        }
     }
 
     async updatePassword() {
@@ -1867,13 +1877,13 @@ class SettingsContent extends HTMLElement {
             // Optimistic localized update
             this.prefs.avatar_url = resizedDataUrl;
 
-            await userStore.updateProfile({
+            const saved = await userStore.updateProfile({
                 username: u.username,
                 avatar_url: resizedDataUrl
             });
 
             this.render();
-            if (window.notifier) window.notifier.show(i18n.t('notifier.avatar_updated'));
+            if (saved && window.notifier) window.notifier.show(i18n.t('notifier.avatar_updated'));
         } catch (error) {
             console.error('Resize failed', error);
             if (window.notifier) window.notifier.show(i18n.t('notifier.avatar_error'), 'error');

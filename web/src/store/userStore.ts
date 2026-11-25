@@ -225,8 +225,9 @@ class UserStore {
         }
     }
 
-    async updateProfile(data: Partial<User>) {
-        if (!this.user) return;
+    /** True when the server took the change (or the session ended because of it); false when it was refused, after telling the user. */
+    async updateProfile(data: Partial<User>): Promise<boolean> {
+        if (!this.user) return false;
         try {
             const response = await userService.updateProfile(data);
 
@@ -242,15 +243,17 @@ class UserStore {
                     document.body.style.opacity = '0';
                     window.location.href = '/login';
                 }, 2000);
-                return;
+                return true;
             }
 
             this.user = { ...this.user, ...data };
             this.notify();
             if (window.notifier) window.notifier.show(i18n.t('notifier.profile_updated'));
+            return true;
         } catch (e) {
             console.error('[UserStore] Update profile failed', e);
             if (window.notifier) window.notifier.show(i18n.t('notifier.profile_error'), 'error');
+            return false;
         }
     }
 
