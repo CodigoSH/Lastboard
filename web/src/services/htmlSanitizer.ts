@@ -181,6 +181,15 @@ export class HTMLSanitizer {
                 }
             }
         }
+
+        this.pinLinkRel(element);
+    }
+
+    /** A link that opens a new tab never hands that tab a handle back to this one. */
+    private pinLinkRel(element: Element): void {
+        if (element.tagName.toLowerCase() === 'a' && element.hasAttribute('target')) {
+            element.setAttribute('rel', 'noopener noreferrer');
+        }
     }
 
     private isDangerousUrl(url: string): boolean {
