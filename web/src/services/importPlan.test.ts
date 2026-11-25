@@ -115,3 +115,20 @@ describe('freeBoardName', () => {
         expect(freeBoardName('Media', ['Media', 'Media (2)'])).toBe('Media (3)');
     });
 });
+
+describe('freeBoardName and the length limit', () => {
+    it('keeps a name that fills the limit inside it once a number is added', () => {
+        const full = 'a'.repeat(50);
+        const out = freeBoardName(full, [full]);
+        expect(Array.from(out).length).toBeLessThanOrEqual(50);
+        expect(out.endsWith(' (2)')).toBe(true);
+        const next = freeBoardName(full, [full, out]);
+        expect(Array.from(next).length).toBeLessThanOrEqual(50);
+        expect(next.endsWith(' (3)')).toBe(true);
+    });
+
+    it('counts characters, not bytes', () => {
+        const full = '語'.repeat(50);
+        expect(Array.from(freeBoardName(full, [full])).length).toBeLessThanOrEqual(50);
+    });
+});

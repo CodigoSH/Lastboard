@@ -141,12 +141,21 @@ export function bookmarkRequest(dashboardId: number, sectionId: number, it: Plan
     };
 }
 
-/** The name, or the name with " (2)", " (3)"… when the account already has a board by that name (case aside). */
-export function freeBoardName(name: string, taken: string[]): string {
+/** How long a board name may be, in characters: the server's limit. */
+export const BOARD_NAME_MAX = 50;
+
+/**
+ * The name, or the name with " (2)", " (3)"… when the account already has a board
+ * by that name (case aside). The number goes inside the limit: a name that already
+ * fills it is cut to leave room, so the server does not refuse what an import made.
+ */
+export function freeBoardName(name: string, taken: string[], max = BOARD_NAME_MAX): string {
     const used = new Set(taken.map(t => t.toLowerCase()));
     if (!used.has(name.toLowerCase())) return name;
     for (let n = 2; ; n++) {
-        const candidate = `${name} (${n})`;
+        const suffix = ` (${n})`;
+        const base = Array.from(name).slice(0, Math.max(1, max - suffix.length)).join('').trimEnd();
+        const candidate = `${base}${suffix}`;
         if (!used.has(candidate.toLowerCase())) return candidate;
     }
 }
