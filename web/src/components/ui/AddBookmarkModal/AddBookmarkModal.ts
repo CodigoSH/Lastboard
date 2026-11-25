@@ -197,6 +197,12 @@ class AddBookmarkModal extends HTMLElement {
         this.submitHandler = async (e: Event) => {
             e.preventDefault();
 
+            // A title of only spaces is no title: the field's own "required" lets it through.
+            if (this.bookmarkTitle.trim() === '') {
+                if (window.notifier) window.notifier.show(i18n.t('error.label_required'), 'error');
+                return;
+            }
+
             // A bookmark is a link: text that is not an address (it has a space, or
             // nothing for a name) is said here, not saved as `http://not a url`.
             if (!isWebAddress(this.protocol + this.url.replace(/^https?:\/\//, ''))) {
@@ -240,7 +246,7 @@ class AddBookmarkModal extends HTMLElement {
             // Written by the same function the service detector uses, so a
             // bookmark made there is the one this editor would have made.
             const content = bookmarkContent({
-                label: this.bookmarkTitle,
+                label: this.bookmarkTitle.trim(),
                 url: this.protocol + this.url.replace(/^https?:\/\//, ''),
                 icon: iconUrl,
                 iconName: this.selectedIconName,
