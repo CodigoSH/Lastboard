@@ -870,13 +870,16 @@
 
 /* ── Kebab (per-item actions menu) ──────────────────────────────────────── */
 
+/* Sized by the tile it sits on, up to 28px: on a one-cell bookmark (39px wide at a
+   tablet's width) a fixed 28px button covered the icon and the name entirely. */
 .kebab-btn {
     position: absolute;
-    top: 4px;
-    inset-inline-end: 4px;
+    top: 2px;
+    inset-inline-end: 2px;
     z-index: 999;
-    width: 28px;
-    height: 28px;
+    width: clamp(18px, 42%, 28px);
+    height: auto;
+    aspect-ratio: 1;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -888,6 +891,11 @@
     cursor: pointer;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     transition: color 0.15s, border-color 0.15s, transform 0.15s;
+}
+
+.kebab-btn svg {
+    width: 60%;
+    height: 60%;
 }
 
 .kebab-btn:hover {
