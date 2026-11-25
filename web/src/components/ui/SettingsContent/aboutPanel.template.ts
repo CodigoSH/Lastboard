@@ -221,7 +221,9 @@ export function serverDialogHtml(d: ServerDetails | null, t: T, fmt: Fmt): strin
         const h = d.host;
         machine.push(row(t('server_info.cpu'), `${esc(fmt.num(Math.round(h.cpu_percent)))} %${small(t('server_info.cores', { count: fmt.num(h.cores) }))}`, meter(h.cpu_percent, 100, t('server_info.cpu'))));
         machine.push(row(t('server_info.memory'), esc(t('server_info.used_of', { used: bytesText(h.mem_used_bytes, fmt), total: bytesText(h.mem_total_bytes, fmt) })), meter(h.mem_used_bytes, h.mem_total_bytes, t('server_info.memory'))));
-        machine.push(row(t('server_info.temperature'), h.temperature !== undefined ? `${esc(fmt.num(Math.round(h.temperature)))} °C` : esc(t('widget.telemetry.remote.no_sensor'))));
+        // Only where the machine has a sensor to read: a virtual machine has none and a container usually sees none, and a
+        // row that says there is none is noise on every one of them.
+        if (h.temperature !== undefined) machine.push(row(t('server_info.temperature'), `${esc(fmt.num(Math.round(h.temperature)))} °C`));
     }
     if (d.disk_free_bytes !== undefined && d.disk_total_bytes !== undefined) {
         machine.push(row(t('server_info.disk'), esc(t('server_info.free_of', { free: bytesText(d.disk_free_bytes, fmt), total: bytesText(d.disk_total_bytes, fmt) })),

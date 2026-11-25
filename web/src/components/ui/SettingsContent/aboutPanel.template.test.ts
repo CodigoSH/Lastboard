@@ -102,8 +102,10 @@ describe('the server details', () => {
         }
     });
 
-    test('a machine with no sensor says so instead of a temperature', () => {
-        expect(serverDialogHtml(details, t, fmt)).toContain('[widget.telemetry.remote.no_sensor]');
+    test('the temperature is a row only where the machine has a sensor', () => {
+        const without = serverDialogHtml(details, t, fmt);
+        expect(without).not.toContain('[server_info.temperature]');
+        expect(without).not.toContain('°C');
         expect(serverDialogHtml({ ...details, host: { ...details.host, temperature: 48.6 } }, t, fmt)).toContain('49 °C');
     });
 
