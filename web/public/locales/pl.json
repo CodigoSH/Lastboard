@@ -35,6 +35,8 @@
   "attention.channels": "Kanały alertów z błędem: {count}",
   "attention.channels_act": "Otwórz Powiadomienia",
   "attention.channels_why": "Ostatni alert do {names} nie dotarł: {reason}.",
+  "attention.copied": "Skopiowano",
+  "attention.copy": "Kopiuj",
   "attention.disk": "Dysk jest prawie pełny",
   "attention.disk_act": "Zwolnij miejsce na serwerze.",
   "attention.disk_why": "Zostało tylko {free} z {total}. Baza danych i kopia robiona przed każdą aktualizacją potrzebują miejsca.",

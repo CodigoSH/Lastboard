@@ -35,6 +35,8 @@
   "attention.channels": "Каналы оповещений с ошибками: {count}",
   "attention.channels_act": "Открыть уведомления",
   "attention.channels_why": "Последнее оповещение в {names} не дошло: {reason}.",
+  "attention.copied": "Скопировано",
+  "attention.copy": "Копировать",
   "attention.disk": "Диск почти заполнен",
   "attention.disk_act": "Освободите место на сервере.",
   "attention.disk_why": "Осталось {free} из {total}. Базе данных и копии, которая делается перед каждым обновлением, нужно место.",

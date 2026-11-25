@@ -35,6 +35,8 @@
   "attention.channels": "Başarısız uyarı kanalları: {count}",
   "attention.channels_act": "Bildirimleri aç",
   "attention.channels_why": "{names} kanalına giden son uyarı ulaşmadı: {reason}.",
+  "attention.copied": "Kopyalandı",
+  "attention.copy": "Kopyala",
   "attention.disk": "Disk neredeyse dolu",
   "attention.disk_act": "Sunucuda yer açın.",
   "attention.disk_why": "{total} alanın yalnızca {free} kadarı kaldı. Veritabanı ve her güncellemeden önce alınan kopya için yer gerekir.",

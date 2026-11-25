@@ -35,6 +35,8 @@
   "attention.channels": "실패한 알림 채널: {count}",
   "attention.channels_act": "알림 열기",
   "attention.channels_why": "{names}(으)로 보낸 마지막 알림이 전달되지 않았습니다: {reason}.",
+  "attention.copied": "복사됨",
+  "attention.copy": "복사",
   "attention.disk": "디스크가 거의 가득 찼습니다",
   "attention.disk_act": "서버의 공간을 확보하세요.",
   "attention.disk_why": "{total} 중 {free}만 남았습니다. 데이터베이스와 업데이트 전에 만드는 사본에 공간이 필요합니다.",

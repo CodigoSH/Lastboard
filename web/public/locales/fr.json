@@ -35,6 +35,8 @@
   "attention.channels": "Canaux d’alerte en échec : {count}",
   "attention.channels_act": "Ouvrir les notifications",
   "attention.channels_why": "La dernière alerte vers {names} n’est pas passée : {reason}.",
+  "attention.copied": "Copié",
+  "attention.copy": "Copier",
   "attention.disk": "Le disque est presque plein",
   "attention.disk_act": "Libérez de l’espace sur le serveur.",
   "attention.disk_why": "Il ne reste que {free} sur {total}. La base de données et la copie faite avant chaque mise à jour ont besoin de place.",

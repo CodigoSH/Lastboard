@@ -35,6 +35,8 @@
   "attention.channels": "Κανάλια ειδοποιήσεων με αποτυχία: {count}",
   "attention.channels_act": "Άνοιγμα Ειδοποιήσεων",
   "attention.channels_why": "Η τελευταία ειδοποίηση προς {names} δεν έφτασε: {reason}.",
+  "attention.copied": "Αντιγράφηκε",
+  "attention.copy": "Αντιγραφή",
   "attention.disk": "Ο δίσκος είναι σχεδόν γεμάτος",
   "attention.disk_act": "Ελευθερώστε χώρο στον διακομιστή.",
   "attention.disk_why": "Απομένουν {free} από {total}. Η βάση δεδομένων και το αντίγραφο πριν από κάθε ενημέρωση χρειάζονται χώρο.",

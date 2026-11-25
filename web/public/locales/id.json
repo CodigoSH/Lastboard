@@ -35,6 +35,8 @@
   "attention.channels": "Kanal peringatan gagal: {count}",
   "attention.channels_act": "Buka Notifikasi",
   "attention.channels_why": "Peringatan terakhir ke {names} tidak terkirim: {reason}.",
+  "attention.copied": "Disalin",
+  "attention.copy": "Salin",
   "attention.disk": "Disk hampir penuh",
   "attention.disk_act": "Kosongkan ruang di server.",
   "attention.disk_why": "Tersisa {free} dari {total}. Basis data dan salinan yang dibuat sebelum setiap pembaruan memerlukan ruang.",

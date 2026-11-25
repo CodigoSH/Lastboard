@@ -35,6 +35,8 @@
   "attention.channels": "Alert channels failing: {count}",
   "attention.channels_act": "Open Notifications",
   "attention.channels_why": "The last alert to {names} did not get through: {reason}.",
+  "attention.copied": "Copied",
+  "attention.copy": "Copy",
   "attention.disk": "The disk is almost full",
   "attention.disk_act": "Free some space on the server.",
   "attention.disk_why": "Only {free} of {total} left. The database, and the copy made before each update, need room.",

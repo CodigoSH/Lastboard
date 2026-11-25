@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'bun:test';
 import { escapeHtml as esc } from '../../../services/escape';
-import { RESTART_COMMAND, SERVICE_FILE, attentionCardHtml, attentionDialogHtml, attentionInOrder, attentionListHtml, bytesText, serverButtonHtml, serverDialogHtml, supportText, type AttentionItem, type Fmt, type T } from './aboutPanel.template';
+import { EDIT_COMMAND, RESTART_COMMAND, SERVICE_FILE, attentionCardHtml, attentionDialogHtml, attentionInOrder, attentionListHtml, bytesText, serverButtonHtml, serverDialogHtml, supportText, type AttentionItem, type Fmt, type T } from './aboutPanel.template';
 
 const t: T = (key, params) => (params ? `[${key} ${JSON.stringify(params)}]` : `[${key}]`);
 const fmt: Fmt = { num: n => String(n), date: () => 'a date', duration: s => `${s}s` };
@@ -48,7 +48,8 @@ describe('what needs the administrator', () => {
         expect(native).toContain('<code>TRUST_PROXY=true</code>');
         // The file and the command are code of their own, not words handed to the translation: that wraps a value in
         // invisible marks, and a command copied with one at its end is not a command (systemctl: unit not found).
-        expect(native).toContain(`<code>${SERVICE_FILE}</code>`);
+        expect(native).toContain(`<code>${esc(EDIT_COMMAND)}</code>`);
+        expect(EDIT_COMMAND).toBe('sudo nano /etc/systemd/system/lastboard.service');
         expect(native).toContain(`<code>${esc(RESTART_COMMAND)}</code>`);
         expect(native).toContain('[attention.restart_native]');
         expect(native).not.toMatch(/[\u2066-\u2069]/);
@@ -59,6 +60,21 @@ describe('what needs the administrator', () => {
         expect(attentionListHtml([{ key: 'proxy', tone: 'warn' }], t, fmt)).toContain('[attention.restart_native]');
         // The same words for a refused socket while TRUST_PROXY is off.
         expect(attentionListHtml([{ key: 'socket', tone: 'warn', params: { trust_proxy: false, install: 'container' } }], t, fmt)).toContain('[attention.restart_container]');
+    });
+
+    test('every command or setting to type has a button that copies exactly it', () => {
+        const html = attentionListHtml([{ key: 'proxy', tone: 'warn', params: { install: 'native' } }], t, fmt);
+        for (const text of ['TRUST_PROXY=true', EDIT_COMMAND, RESTART_COMMAND]) {
+            expect(html).toContain(`<code>${esc(text)}</code><button type="button" class="about-code__copy" data-action="copy-code" data-copy="${esc(text)}"`);
+        }
+        expect(html.match(/data-action="copy-code"/g)?.length).toBe(3);
+        // The button says what it does, and what it says once done.
+        expect(html).toContain('aria-label="[attention.copy]"');
+        expect(html).toContain('data-done="[attention.copied]"');
+        // What is copied is the attribute, so what the person sees and what lands on the clipboard cannot differ.
+        expect(html).not.toMatch(/[\u2066-\u2069]/);
+        // A text that is not an installation setting has no button to press.
+        expect(attentionListHtml([{ key: 'https', tone: 'info' }], t, fmt)).not.toContain('copy-code');
     });
 
     test('a channel name someone typed is written as text', () => {

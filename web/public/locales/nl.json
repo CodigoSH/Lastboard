@@ -35,6 +35,8 @@
   "attention.channels": "Falende waarschuwingskanalen: {count}",
   "attention.channels_act": "Meldingen openen",
   "attention.channels_why": "De laatste waarschuwing naar {names} kwam niet aan: {reason}.",
+  "attention.copied": "Gekopieerd",
+  "attention.copy": "Kopiëren",
   "attention.disk": "De schijf is bijna vol",
   "attention.disk_act": "Maak ruimte vrij op de server.",
   "attention.disk_why": "Nog maar {free} van {total} vrij. De database en de kopie die vóór elke update wordt gemaakt, hebben ruimte nodig.",

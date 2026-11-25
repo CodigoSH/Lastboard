@@ -35,6 +35,8 @@
   "attention.channels": "Canali di avviso in errore: {count}",
   "attention.channels_act": "Apri Notifiche",
   "attention.channels_why": "L’ultimo avviso a {names} non è arrivato: {reason}.",
+  "attention.copied": "Copiato",
+  "attention.copy": "Copia",
   "attention.disk": "Il disco è quasi pieno",
   "attention.disk_act": "Libera spazio sul server.",
   "attention.disk_why": "Restano {free} su {total}. Il database e la copia fatta prima di ogni aggiornamento hanno bisogno di spazio.",

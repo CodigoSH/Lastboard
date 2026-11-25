@@ -35,6 +35,8 @@
   "attention.channels": "发送失败的提醒渠道：{count}",
   "attention.channels_act": "打开通知",
   "attention.channels_why": "发往 {names} 的最后一条提醒未送达：{reason}。",
+  "attention.copied": "已复制",
+  "attention.copy": "复制",
   "attention.disk": "磁盘空间即将用尽",
   "attention.disk_act": "请释放服务器上的空间。",
   "attention.disk_why": "{total} 中仅剩 {free}。数据库以及每次更新前生成的副本都需要空间。",

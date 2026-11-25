@@ -35,6 +35,8 @@
   "attention.channels": "قنوات تنبيه متعثرة: {count}",
   "attention.channels_act": "فتح الإشعارات",
   "attention.channels_why": "لم يصل آخر تنبيه إلى {names}: {reason}.",
+  "attention.copied": "تم النسخ",
+  "attention.copy": "نسخ",
   "attention.disk": "القرص ممتلئ تقريبًا",
   "attention.disk_act": "حرّر بعض المساحة على الخادم.",
   "attention.disk_why": "تبقّى {free} من {total}. تحتاج قاعدة البيانات والنسخة التي تُؤخذ قبل كل تحديث إلى مساحة.",

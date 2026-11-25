@@ -35,6 +35,8 @@
   "attention.channels": "کانال‌های هشدار ناموفق: {count}",
   "attention.channels_act": "باز کردن اعلان‌ها",
   "attention.channels_why": "آخرین هشدار به {names} نرسید: {reason}.",
+  "attention.copied": "کپی شد",
+  "attention.copy": "کپی",
   "attention.disk": "دیسک تقریباً پر است",
   "attention.disk_act": "در سرور فضا آزاد کنید.",
   "attention.disk_why": "فقط {free} از {total} مانده است. پایگاه داده و نسخه‌ای که پیش از هر به‌روزرسانی گرفته می‌شود به فضا نیاز دارند.",

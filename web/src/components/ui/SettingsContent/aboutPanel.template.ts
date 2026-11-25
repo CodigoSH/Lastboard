@@ -80,6 +80,8 @@ interface Words { icon: string; title: string; why?: string; code?: string; act?
 
 /** The service file of a native installation and the command that makes a change in it count: never translated. */
 export const SERVICE_FILE = '/etc/systemd/system/lastboard.service';
+/** The line that opens it for editing: what a person types, not only where the file is. */
+export const EDIT_COMMAND = `sudo nano ${SERVICE_FILE}`;
 export const RESTART_COMMAND = 'sudo systemctl daemon-reload && sudo systemctl restart lastboard';
 
 /**
@@ -91,7 +93,7 @@ export const RESTART_COMMAND = 'sudo systemctl daemon-reload && sudo systemctl r
 export function restartWords(install: unknown, t: T): Pick<Words, 'act' | 'after'> {
     return install === 'container'
         ? { act: t('attention.restart_container') }
-        : { act: t('attention.restart_native'), after: [SERVICE_FILE, RESTART_COMMAND] };
+        : { act: t('attention.restart_native'), after: [EDIT_COMMAND, RESTART_COMMAND] };
 }
 
 /** What each kind of item says: what is wrong, why it matters, the one thing to do. Null for a kind this page does not know. */
@@ -154,12 +156,21 @@ export function attentionCardHtml(items: AttentionItem[], t: T, fmt: Fmt): strin
     </div>`;
 }
 
+/**
+ * A command or a setting to type, with a button that puts it on the clipboard: selecting it by hand is where a
+ * character is lost. What is copied is the attribute, never read back out of the page.
+ */
+function codeCopy(text: string, t: T): string {
+    const label = esc(t('attention.copy'));
+    return `<span class="about-code"><code>${esc(text)}</code><button type="button" class="about-code__copy" data-action="copy-code" data-copy="${esc(text)}" data-done="${esc(t('attention.copied'))}" aria-label="${label}" title="${label}"><span class="about-code__ic">${ICON.copy(13)}</span><span class="about-code__ok">${ICON.check(13)}</span></button></span>`;
+}
+
 /** Every item, worst first, each with what is wrong, why it matters and the one thing to do. */
 export function attentionListHtml(items: AttentionItem[], t: T, fmt: Fmt): string {
     return attentionInOrder(items).map(item => {
         const w = words(item, t, fmt);
         if (!w) return '';
-        const fix = `${w.code ? `<code>${esc(w.code)}</code>` : ''}${w.act ? `<span>${esc(w.act)}</span>` : ''}${(w.after ?? []).map(c => `<code>${esc(c)}</code>`).join('')}${
+        const fix = `${w.code ? codeCopy(w.code, t) : ''}${w.act ? `<span>${esc(w.act)}</span>` : ''}${(w.after ?? []).map(c => codeCopy(c, t)).join('')}${
             w.link ? `<a class="about-need__link" ${w.link.attrs}>${esc(w.link.label)}${ICON.chevron(14)}</a>` : ''}`;
         return `<div class="about-need about-need--${item.tone}" data-attention-item="${esc(item.key)}">
             <span class="about-need__mark">${w.icon}</span>

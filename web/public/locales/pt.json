@@ -35,6 +35,8 @@
   "attention.channels": "Canais de alerta com falha: {count}",
   "attention.channels_act": "Abrir Notificações",
   "attention.channels_why": "O último alerta para {names} não chegou: {reason}.",
+  "attention.copied": "Copiado",
+  "attention.copy": "Copiar",
   "attention.disk": "O disco está quase cheio",
   "attention.disk_act": "Libere espaço no servidor.",
   "attention.disk_why": "Restam {free} de {total}. O banco de dados e a cópia feita antes de cada atualização precisam de espaço.",

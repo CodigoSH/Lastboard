@@ -35,6 +35,8 @@
   "attention.channels": "失敗しているアラートチャンネル: {count}",
   "attention.channels_act": "通知を開く",
   "attention.channels_why": "{names} への最後のアラートは届きませんでした: {reason}。",
+  "attention.copied": "コピーしました",
+  "attention.copy": "コピー",
   "attention.disk": "ディスクの空きがほとんどありません",
   "attention.disk_act": "サーバーの空き容量を増やしてください。",
   "attention.disk_why": "{total} のうち残りは {free} です。データベースと、更新のたびに作られるコピーに空き容量が必要です。",

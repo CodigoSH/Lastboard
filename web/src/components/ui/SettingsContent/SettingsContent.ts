@@ -1,4 +1,5 @@
 import { i18n } from '../../../services/i18n';
+import { copyText } from '../../../services/copyText';
 import { resizeImage } from '../../../services/image';
 import { adoptSharedStyles } from '../../../services/sharedStyles';
 import { userStore } from '../../../store/userStore';
@@ -194,6 +195,9 @@ class SettingsContent extends HTMLElement {
                     break;
                 case 'copy-support':
                     this.copySupport(el);
+                    break;
+                case 'copy-code':
+                    this.copyCode(el);
                     break;
                 case 'attention-open-update':
                     e.preventDefault();
@@ -884,6 +888,34 @@ class SettingsContent extends HTMLElement {
         return info?.available && info.latest_version
             ? [...this.attention, { key: 'update', tone: 'info', params: { version: String(info.latest_version) } }]
             : this.attention;
+    }
+
+    /**
+     * Copies the command or setting beside a button, and says so on the button itself: a toast would sit under the
+     * dialog the button is in. Where the clipboard cannot be written the text is selected instead, ready for Ctrl+C.
+     */
+    private async copyCode(button: HTMLElement) {
+        if (!(await copyText(button.dataset.copy ?? ''))) {
+            const code = button.parentElement?.querySelector('code');
+            const selection = window.getSelection();
+            if (code && selection) {
+                const range = document.createRange();
+                range.selectNodeContents(code);
+                selection.removeAllRanges();
+                selection.addRange(range);
+            }
+            return;
+        }
+        const was = button.getAttribute('aria-label') ?? '';
+        const done = button.dataset.done ?? was;
+        button.classList.add('about-code__copy--done');
+        button.setAttribute('aria-label', done);
+        button.title = done;
+        window.setTimeout(() => {
+            button.classList.remove('about-code__copy--done');
+            button.setAttribute('aria-label', was);
+            button.title = was;
+        }, 1600);
     }
 
     /** Copies what a support request needs; where the clipboard is not allowed (plain HTTP), shows it selected. */

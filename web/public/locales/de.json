@@ -35,6 +35,8 @@
   "attention.channels": "Fehlerhafte Alarmkanäle: {count}",
   "attention.channels_act": "Benachrichtigungen öffnen",
   "attention.channels_why": "Der letzte Alarm an {names} kam nicht an: {reason}.",
+  "attention.copied": "Kopiert",
+  "attention.copy": "Kopieren",
   "attention.disk": "Die Festplatte ist fast voll",
   "attention.disk_act": "Schaffe Platz auf dem Server.",
   "attention.disk_why": "Nur noch {free} von {total} frei. Die Datenbank und die Kopie, die vor jedem Update entsteht, brauchen Platz.",

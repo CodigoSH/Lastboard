@@ -35,6 +35,8 @@
   "attention.channels": "ناکام الرٹ چینلز: {count}",
   "attention.channels_act": "اطلاعات کھولیں",
   "attention.channels_why": "{names} کو آخری الرٹ نہیں پہنچا: {reason}۔",
+  "attention.copied": "کاپی ہو گیا",
+  "attention.copy": "کاپی",
   "attention.disk": "ڈسک تقریباً بھر گئی ہے",
   "attention.disk_act": "سرور پر کچھ جگہ خالی کریں۔",
   "attention.disk_why": "{total} میں سے صرف {free} باقی ہے۔ ڈیٹا بیس اور ہر اپ ڈیٹ سے پہلے بننے والی کاپی کو جگہ چاہیے۔",

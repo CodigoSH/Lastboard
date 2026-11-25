@@ -35,6 +35,8 @@
   "attention.channels": "ব্যর্থ অ্যালার্ট চ্যানেল: {count}",
   "attention.channels_act": "বিজ্ঞপ্তি খুলুন",
   "attention.channels_why": "{names}-এ শেষ অ্যালার্ট পৌঁছায়নি: {reason}।",
+  "attention.copied": "কপি হয়েছে",
+  "attention.copy": "কপি",
   "attention.disk": "ডিস্ক প্রায় ভরে গেছে",
   "attention.disk_act": "সার্ভারে কিছু জায়গা খালি করুন।",
   "attention.disk_why": "{total}-এর মধ্যে বাকি মাত্র {free}। ডেটাবেস এবং প্রতিটি আপডেটের আগে নেওয়া কপির জায়গা লাগে।",

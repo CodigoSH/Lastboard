@@ -35,6 +35,8 @@
   "attention.channels": "विफल अलर्ट चैनल: {count}",
   "attention.channels_act": "सूचनाएँ खोलें",
   "attention.channels_why": "{names} को आखिरी अलर्ट नहीं पहुँचा: {reason}।",
+  "attention.copied": "कॉपी हो गया",
+  "attention.copy": "कॉपी करें",
   "attention.disk": "डिस्क लगभग भर गई है",
   "attention.disk_act": "सर्वर पर कुछ जगह खाली करें।",
   "attention.disk_why": "{total} में से केवल {free} बचा है। डेटाबेस और हर अपडेट से पहले बनने वाली कॉपी को जगह चाहिए।",
