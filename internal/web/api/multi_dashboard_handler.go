@@ -100,13 +100,25 @@ func (h *MultiDashboardHandler) GetDashboards(w http.ResponseWriter, r *http.Req
 // nameTaken says whether another board of the account already has this name,
 // whatever its case. Two boards with one name look the same in the switcher and
 // in the manager, so a person cannot tell which one they are about to open or
-// delete. `except` is the board being renamed, which may keep its own name.
-func (h *MultiDashboardHandler) nameTaken(r *http.Request, userID int, name string, except int) bool {
+// delete. `except` is the board being renamed, which may keep its own name — and
+// so may a board whose name an older version let be shared: renaming it to what
+// it already is changes nothing, so it is not refused.
+func (h *MultiDashboardHandler) nameTaken(r *http.Request, userID int, name string, except int) (bool, error) {
+	if except > 0 {
+		var own string
+		err := h.DB.QueryRowContext(r.Context(),
+			`SELECT name FROM dashboards WHERE id = ? AND user_id = ?`, except, userID).Scan(&own)
+		if err == nil && strings.EqualFold(own, name) {
+			return false, nil
+		}
+	}
 	var n int
-	err := h.DB.QueryRowContext(r.Context(),
+	if err := h.DB.QueryRowContext(r.Context(),
 		`SELECT COUNT(*) FROM dashboards WHERE user_id = ? AND name = ? COLLATE NOCASE AND id <> ?`,
-		userID, name, except).Scan(&n)
-	return err == nil && n > 0
+		userID, name, except).Scan(&n); err != nil {
+		return false, err
+	}
+	return n > 0, nil
 }
 
 // CreateDashboard handles POST /api/dashboards
@@ -132,7 +144,13 @@ func (h *MultiDashboardHandler) CreateDashboard(w http.ResponseWriter, r *http.R
 		return
 	}
 
-	if h.nameTaken(r, userID, name, 0) {
+	taken, err := h.nameTaken(r, userID, name, 0)
+	if err != nil {
+		slog.Error("Failed to check a board name", "error", err)
+		http.Error(w, "general.db_error", http.StatusInternalServerError)
+		return
+	}
+	if taken {
 		http.Error(w, "error.dashboard_name_taken", http.StatusConflict)
 		return
 	}
@@ -297,7 +315,13 @@ func (h *MultiDashboardHandler) RenameDashboard(w http.ResponseWriter, r *http.R
 		return
 	}
 
-	if h.nameTaken(r, userID, name, dashID) {
+	taken, err := h.nameTaken(r, userID, name, dashID)
+	if err != nil {
+		slog.Error("Failed to check a board name", "error", err)
+		http.Error(w, "general.db_error", http.StatusInternalServerError)
+		return
+	}
+	if taken {
 		http.Error(w, "error.dashboard_name_taken", http.StatusConflict)
 		return
 	}

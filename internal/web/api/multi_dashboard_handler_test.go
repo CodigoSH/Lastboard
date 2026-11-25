@@ -261,6 +261,32 @@ func TestTwoBoardsOfOneAccountDoNotShareAName(t *testing.T) {
 	}
 }
 
+// An account that an older version let have two boards of one name can still save
+// one of them under the name it has: that changes nothing, so it is not refused.
+// Naming a third board after them still is.
+func TestABoardWithASharedNameKeepsItWhenRenamedToItself(t *testing.T) {
+	server, db, cleanup := setupBoardsServer(t)
+	defer cleanup()
+	createUser(t, db.DB, "alice", "password", "admin")
+	alice := userID(t, db.DB, "alice")
+	first := addBoard(t, db.DB, alice, "Servers", 0)
+	addBoard(t, db.DB, alice, "servers", 1) // the older version's duplicate
+	other := addBoard(t, db.DB, alice, "Media", 2)
+	s := doLogin(t, server.URL, "alice", "password")
+
+	rename := func(id int, name string) int {
+		resp := boardCall(t, "PATCH", fmt.Sprintf("%s/api/dashboards/%d", server.URL, id), s, `{"name":"`+name+`"}`)
+		defer resp.Body.Close()
+		return resp.StatusCode
+	}
+	if got := rename(first, "Servers"); got != http.StatusOK {
+		t.Errorf("saving a board under the name it has: got %d, want 200", got)
+	}
+	if got := rename(other, "SERVERS"); got != http.StatusConflict {
+		t.Errorf("naming another board after them: got %d, want 409", got)
+	}
+}
+
 func TestNobodyRenamesABoardThatIsNotTheirs(t *testing.T) {
 	server, db, cleanup := setupBoardsServer(t)
 	defer cleanup()
