@@ -2,6 +2,7 @@ package web
 
 import (
 	"encoding/json"
+	"log/slog"
 	"net"
 	"net/http"
 	"os"
@@ -168,9 +169,14 @@ func (s *Server) handleServerDetails(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, out)
 }
 
-// noticeInsecure remembers that somebody reached this server over plain HTTP
-// from another machine. This machine itself does not count: that is somebody
-// trying it out, or a proxy on the same host.
+// noticeInsecure remembers that somebody signed in reached this server over
+// plain HTTP from another machine. This machine itself does not count: that is
+// somebody trying it out, or a proxy on the same host.
+//
+// A person, not a request: a proxy's health probe, a status check of this very
+// server by its own address or the update's restart all arrive without HTTPS
+// and are nobody using Lastboard. Counting them told an administrator who was
+// on HTTPS that they were not, with nothing to say who was.
 func (s *Server) noticeInsecure(r *http.Request) {
 	if s.insecureSeen.Load() || util.IsSecureRequest(r) {
 		return
@@ -179,8 +185,12 @@ func (s *Server) noticeInsecure(r *http.Request) {
 	if err != nil {
 		host = r.RemoteAddr
 	}
-	if ip := net.ParseIP(host); ip != nil && !ip.IsLoopback() {
-		s.insecureSeen.Store(true)
+	ip := net.ParseIP(host)
+	if ip == nil || ip.IsLoopback() || !s.hasLiveSession(r) {
+		return
+	}
+	if s.insecureSeen.CompareAndSwap(false, true) {
+		slog.Info("somebody signed in is using Lastboard over plain HTTP", "from", host, "path", r.URL.Path)
 	}
 }
 

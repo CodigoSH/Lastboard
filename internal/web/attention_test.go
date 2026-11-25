@@ -5,6 +5,9 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
+
+	"git.codigosh.com/CodigoSH/Lastboard/internal/web/util"
 )
 
 // The disk is said at the lines its bar changes colour at, and not before.
@@ -74,19 +77,49 @@ func TestARefusedTelemetrySocketIsSaid(t *testing.T) {
 	}
 }
 
-// Plain HTTP is noticed from another machine, not from this one.
+// Plain HTTP is noticed when somebody signed in uses Lastboard so from another machine; not from
+// this one, and not a request nobody is behind (a proxy's health probe, a status check by the
+// server's own address), which an administrator on HTTPS was being told about.
 func TestPlainHTTPFromAnotherMachineIsNoticed(t *testing.T) {
-	seen := func(peer string) bool {
-		s := &Server{}
-		r := httptest.NewRequest(http.MethodGet, "/", nil)
-		r.RemoteAddr = peer
-		s.noticeInsecure(r)
-		return s.insecureSeen.Load()
+	srv := newTestServer(t, true)
+	var id int
+	if err := srv.DB.QueryRow("SELECT id FROM users WHERE username = 'probe'").Scan(&id); err != nil {
+		t.Fatal(err)
 	}
-	if !seen("192.168.1.30:50000") {
-		t.Error("plain HTTP from the LAN was not noticed")
+	token := util.SignToken(util.AccountSessionPayload(id, 0), srv.sessionSecret, time.Now().Add(time.Hour))
+	request := func(signedIn bool, forwardedProto string) {
+		r := httptest.NewRequest(http.MethodGet, "/health", nil)
+		r.RemoteAddr = "192.168.1.30:50000"
+		if signedIn {
+			r.AddCookie(&http.Cookie{Name: "session_token", Value: token})
+		}
+		if forwardedProto != "" {
+			r.Header.Set("X-Forwarded-Proto", forwardedProto)
+		}
+		srv.ServeHTTP(httptest.NewRecorder(), r)
 	}
-	if seen("127.0.0.1:50000") {
+
+	request(false, "")
+	if srv.insecureSeen.Load() {
+		t.Fatal("a request with nobody signed in behind it was noticed as somebody using plain HTTP")
+	}
+	request(true, "https")
+	if srv.insecureSeen.Load() {
+		t.Fatal("somebody signed in over HTTPS through a proxy was noticed as using plain HTTP")
+	}
+	request(true, "")
+	if !srv.insecureSeen.Load() {
+		t.Error("somebody signed in on plain HTTP from the LAN was not noticed")
+	}
+}
+
+// And this machine's own requests never count, signed in or not.
+func TestPlainHTTPFromThisMachineIsNotNoticed(t *testing.T) {
+	s := &Server{}
+	r := httptest.NewRequest(http.MethodGet, "/", nil)
+	r.RemoteAddr = "127.0.0.1:50000"
+	s.noticeInsecure(r)
+	if s.insecureSeen.Load() {
 		t.Error("plain HTTP from this machine was noticed")
 	}
 }
