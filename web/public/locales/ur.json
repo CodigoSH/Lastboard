@@ -1236,6 +1236,7 @@
   "auth.too_many_attempts": "بہت زیادہ کوششیں — تھوڑی دیر بعد دوبارہ کوشش کریں",
   "error.username_taken": "یہ صارف نام پہلے سے موجود ہے",
   "error.name_required": "ایک نام درکار ہے",
+  "error.dashboard_name_taken": "اس نام کا ڈیش بورڈ آپ کے پاس پہلے سے موجود ہے",
   "error.name_too_long": "یہ نام بہت لمبا ہے",
   "error.cannot_delete_last_dashboard": "کم از کم ایک ڈیش بورڈ ضروری ہے",
   "error.cannot_delete_superadmin": "ایڈمنسٹریٹر اکاؤنٹ حذف نہیں کیا جا سکتا",

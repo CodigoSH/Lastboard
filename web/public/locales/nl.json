@@ -1236,6 +1236,7 @@
   "auth.too_many_attempts": "Te veel pogingen — probeer straks opnieuw",
   "error.username_taken": "Die gebruikersnaam is al bezet",
   "error.name_required": "Er moet een naam bij",
+  "error.dashboard_name_taken": "Je hebt al een dashboard met die naam",
   "error.name_too_long": "Die naam is te lang",
   "error.cannot_delete_last_dashboard": "Er moet minstens één dashboard blijven",
   "error.cannot_delete_superadmin": "Het beheerdersaccount kan niet worden verwijderd",

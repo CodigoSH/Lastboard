@@ -1236,6 +1236,7 @@
   "auth.too_many_attempts": "Demasiados intentos, prueba en un rato",
   "error.username_taken": "Ese nombre de usuario ya existe",
   "error.name_required": "Hace falta un nombre",
+  "error.dashboard_name_taken": "Ya tienes un tablero con ese nombre",
   "error.name_too_long": "Ese nombre es demasiado largo",
   "error.cannot_delete_last_dashboard": "Tienes que dejar al menos un tablero",
   "error.cannot_delete_superadmin": "No se puede eliminar la cuenta de administrador",

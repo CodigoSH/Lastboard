@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'bun:test';
 import { readFileSync } from 'fs';
 import { join } from 'path';
-import { GRID_MAX, GRID_MIN, ImportTooLargeError, planImport } from './importPlan';
+import { GRID_MAX, GRID_MIN, ImportTooLargeError, freeBoardName, planImport } from './importPlan';
 
 const item = (title: string, group?: string) => ({ title, url: `https://${title}.example`, group });
 const board = (groups: Record<string, number>) => ({
@@ -102,5 +102,16 @@ describe('planImport', () => {
 
     it('skips a dashboard with nothing in it', () => {
         expect(planImport([{ name: 'Empty', items: [] }, board({ A: 1 })], 12, 'U')).toHaveLength(1);
+    });
+});
+
+describe('freeBoardName', () => {
+    it('keeps a name nobody has', () => {
+        expect(freeBoardName('Media', ['Main dashboard'])).toBe('Media');
+    });
+
+    it('numbers a name the account already has, whatever its case', () => {
+        expect(freeBoardName('Media', ['media'])).toBe('Media (2)');
+        expect(freeBoardName('Media', ['Media', 'Media (2)'])).toBe('Media (3)');
     });
 });

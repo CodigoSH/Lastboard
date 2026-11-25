@@ -1,7 +1,7 @@
 import { apiService } from './apiService';
 import { dashboardStore } from '../store/dashboardStore';
 import { dashboardService } from './dashboardService';
-import { bookmarkRequest, planImport, sectionRequest } from './importPlan';
+import { bookmarkRequest, freeBoardName, planImport, sectionRequest } from './importPlan';
 import { retryOnRateLimit } from './retryOnRateLimit';
 import { buildIconIndex, resolveImportedIcon } from './importIcons';
 import { iconService } from './iconService';
@@ -158,10 +158,14 @@ class ImportService {
         const plans = planImport((await this.prepareIcons(cfg)).dashboards || [], gridCols, ungroupedLabel);
         let firstDashId: number | null = null;
         const made: number[] = [];
+        // An import adds boards and never refuses one: a name the account already
+        // has gets a number, since two boards cannot share a name.
+        const taken = dashboardStore.getState().dashboards.map(d => d.name);
 
         try {
             for (const plan of plans) {
-                const dash = await retryOnRateLimit(() => dashboardStore.createDashboard(plan.name || 'Import'));
+                const dash = await retryOnRateLimit(() => dashboardStore.createDashboard(freeBoardName(plan.name || 'Import', taken)));
+                taken.push(dash.name);
                 made.push(dash.id);
                 if (firstDashId === null) firstDashId = dash.id;
 

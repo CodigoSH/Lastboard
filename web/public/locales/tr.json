@@ -1236,6 +1236,7 @@
   "auth.too_many_attempts": "Çok fazla deneme — birazdan tekrar dene",
   "error.username_taken": "Bu kullanıcı adı alınmış",
   "error.name_required": "Bir ad gerekiyor",
+  "error.dashboard_name_taken": "Bu adda bir paneliniz zaten var",
   "error.name_too_long": "Bu ad çok uzun",
   "error.cannot_delete_last_dashboard": "En az bir pano kalmalı",
   "error.cannot_delete_superadmin": "Yönetici hesabı silinemez",

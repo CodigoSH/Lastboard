@@ -2,7 +2,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'bun:test';
 import { readFileSync, readdirSync } from 'fs';
 import { join } from 'path';
 import { HAS_GO, startRealServer, type RealServer } from '../testing/realServer';
-import { bookmarkRequest, planImport, sectionRequest } from './importPlan';
+import { bookmarkRequest, freeBoardName, planImport, sectionRequest } from './importPlan';
 
 /**
  * The whole way an imported file travels, against a real server.
@@ -47,8 +47,13 @@ async function parse(name: string, format: string) {
 /** What `materialize` does, request for request, with the shared builders. */
 async function build(cfg: { dashboards: { name: string; items: never[] }[] }) {
     const made: { dashboard: number; sections: number; bookmarks: number }[] = [];
+    // A name the account already has is numbered, as the import does: the server
+    // refuses two boards with one name.
+    const taken = (await server.ok<{ name: string }[]>('GET', '/api/dashboards')).map(d => d.name);
     for (const plan of planImport(cfg.dashboards as never, 12, 'Ungrouped')) {
-        const dash = await server.ok<{ id: number }>('POST', '/api/dashboards', { name: plan.name });
+        const name = freeBoardName(plan.name, taken);
+        taken.push(name);
+        const dash = await server.ok<{ id: number }>('POST', '/api/dashboards', { name });
         let bookmarks = 0;
         for (const sec of plan.sections) {
             const section = await server.ok<{ id: number }>('POST', '/api/dashboard/item', sectionRequest(dash.id, sec));

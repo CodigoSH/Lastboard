@@ -1236,6 +1236,7 @@
   "auth.too_many_attempts": "Za dużo prób — spróbuj za chwilę",
   "error.username_taken": "Ta nazwa użytkownika jest zajęta",
   "error.name_required": "Potrzebna jest nazwa",
+  "error.dashboard_name_taken": "Masz już panel o tej nazwie",
   "error.name_too_long": "Ta nazwa jest za długa",
   "error.cannot_delete_last_dashboard": "Musisz zostawić choć jeden pulpit",
   "error.cannot_delete_superadmin": "Nie można usunąć konta administratora",

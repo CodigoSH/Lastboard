@@ -1236,6 +1236,7 @@
   "auth.too_many_attempts": "시도가 너무 많습니다. 잠시 후 다시 시도하세요",
   "error.username_taken": "이미 사용 중인 사용자 이름입니다",
   "error.name_required": "이름이 필요합니다",
+  "error.dashboard_name_taken": "이미 같은 이름의 대시보드가 있습니다",
   "error.name_too_long": "이름이 너무 깁니다",
   "error.cannot_delete_last_dashboard": "대시보드는 최소 하나가 필요합니다",
   "error.cannot_delete_superadmin": "관리자 계정은 삭제할 수 없습니다",

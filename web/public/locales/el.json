@@ -1236,6 +1236,7 @@
   "auth.too_many_attempts": "Πάρα πολλές προσπάθειες — δοκίμασε σε λίγο",
   "error.username_taken": "Αυτό το όνομα χρήστη είναι πιασμένο",
   "error.name_required": "Χρειάζεται όνομα",
+  "error.dashboard_name_taken": "Έχετε ήδη έναν πίνακα με αυτό το όνομα",
   "error.name_too_long": "Το όνομα είναι πολύ μεγάλο",
   "error.cannot_delete_last_dashboard": "Χρειάζεται τουλάχιστον ένας πίνακας",
   "error.cannot_delete_superadmin": "Δεν διαγράφεται ο λογαριασμός διαχειριστή",

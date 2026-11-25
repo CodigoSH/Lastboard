@@ -1236,6 +1236,7 @@
   "auth.too_many_attempts": "Tentativas a mais — tenta daqui a pouco",
   "error.username_taken": "Esse nome de usuário já existe",
   "error.name_required": "Falta um nome",
+  "error.dashboard_name_taken": "Você já tem um painel com esse nome",
   "error.name_too_long": "Esse nome é muito longo",
   "error.cannot_delete_last_dashboard": "Tens de manter pelo menos um painel",
   "error.cannot_delete_superadmin": "A conta de administrador não pode ser excluída",

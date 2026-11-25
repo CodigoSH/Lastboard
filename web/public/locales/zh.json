@@ -1236,6 +1236,7 @@
   "auth.too_many_attempts": "尝试次数过多，请稍后再试",
   "error.username_taken": "该用户名已被使用",
   "error.name_required": "需要一个名称",
+  "error.dashboard_name_taken": "你已经有一个同名的仪表板",
   "error.name_too_long": "名称太长",
   "error.cannot_delete_last_dashboard": "至少需要保留一个仪表板",
   "error.cannot_delete_superadmin": "无法删除管理员账户",

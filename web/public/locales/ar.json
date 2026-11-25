@@ -1236,6 +1236,7 @@
   "auth.too_many_attempts": "محاولات كثيرة — أعد المحاولة بعد قليل",
   "error.username_taken": "اسم المستخدم هذا مستخدم بالفعل",
   "error.name_required": "يلزم اسم",
+  "error.dashboard_name_taken": "لديك بالفعل لوحة قيادة بهذا الاسم",
   "error.name_too_long": "هذا الاسم طويل جدًا",
   "error.cannot_delete_last_dashboard": "يجب إبقاء لوحة واحدة على الأقل",
   "error.cannot_delete_superadmin": "لا يمكن حذف حساب المسؤول",

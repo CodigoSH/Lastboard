@@ -1236,6 +1236,7 @@
   "auth.too_many_attempts": "बहुत सारे प्रयास — थोड़ी देर बाद कोशिश करें",
   "error.username_taken": "यह उपयोगकर्ता नाम पहले से लिया गया है",
   "error.name_required": "एक नाम चाहिए",
+  "error.dashboard_name_taken": "इस नाम का डैशबोर्ड आपके पास पहले से है",
   "error.name_too_long": "यह नाम बहुत लंबा है",
   "error.cannot_delete_last_dashboard": "कम से कम एक डैशबोर्ड ज़रूरी है",
   "error.cannot_delete_superadmin": "व्यवस्थापक खाता हटाया नहीं जा सकता",

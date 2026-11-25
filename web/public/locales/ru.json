@@ -1236,6 +1236,7 @@
   "auth.too_many_attempts": "Слишком много попыток — попробуйте позже",
   "error.username_taken": "Это имя пользователя занято",
   "error.name_required": "Нужно название",
+  "error.dashboard_name_taken": "У вас уже есть панель с таким названием",
   "error.name_too_long": "Слишком длинное название",
   "error.cannot_delete_last_dashboard": "Нужен хотя бы один дашборд",
   "error.cannot_delete_superadmin": "Невозможно удалить учётную запись администратора",

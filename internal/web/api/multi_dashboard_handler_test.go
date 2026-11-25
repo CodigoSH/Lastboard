@@ -207,6 +207,60 @@ func TestABoardNeedsANameAndAReasonableOne(t *testing.T) {
 	}
 }
 
+// Two boards with one name look the same in the switcher and in the manager, so
+// nobody can tell which one they are about to open or delete. The other account's
+// boards do not count, and a board may keep its own name when it is renamed.
+func TestTwoBoardsOfOneAccountDoNotShareAName(t *testing.T) {
+	server, db, cleanup := setupBoardsServer(t)
+	defer cleanup()
+	createUser(t, db.DB, "alice", "password", "admin")
+	createUser(t, db.DB, "bob", "password", "user")
+	alice := doLogin(t, server.URL, "alice", "password")
+	bob := doLogin(t, server.URL, "bob", "password")
+	boardsOf(t, server.URL, alice)
+
+	post := func(s *userSession, name string) *http.Response {
+		return boardCall(t, "POST", server.URL+"/api/dashboards", s, `{"name":"`+name+`"}`)
+	}
+
+	first := post(alice, "Servers")
+	var created board
+	json.NewDecoder(first.Body).Decode(&created)
+	first.Body.Close()
+	if first.StatusCode != http.StatusCreated {
+		t.Fatalf("first board: got %d, want 201", first.StatusCode)
+	}
+
+	for _, name := range []string{"Servers", "  servers ", "SERVERS"} {
+		resp := post(alice, name)
+		if resp.StatusCode != http.StatusConflict {
+			t.Errorf("creating %q again: got %d, want 409", name, resp.StatusCode)
+		}
+		resp.Body.Close()
+	}
+
+	if resp := post(bob, "Servers"); resp.StatusCode != http.StatusCreated {
+		t.Errorf("another account's board with the same name: got %d, want 201", resp.StatusCode)
+	}
+
+	other := post(alice, "Media")
+	var media board
+	json.NewDecoder(other.Body).Decode(&media)
+	other.Body.Close()
+
+	rename := func(id int, name string) int {
+		resp := boardCall(t, "PATCH", fmt.Sprintf("%s/api/dashboards/%d", server.URL, id), alice, `{"name":"`+name+`"}`)
+		defer resp.Body.Close()
+		return resp.StatusCode
+	}
+	if got := rename(media.ID, "servers"); got != http.StatusConflict {
+		t.Errorf("renaming onto a name in use: got %d, want 409", got)
+	}
+	if got := rename(created.ID, "SERVERS"); got != http.StatusOK {
+		t.Errorf("renaming a board to its own name in another case: got %d, want 200", got)
+	}
+}
+
 func TestNobodyRenamesABoardThatIsNotTheirs(t *testing.T) {
 	server, db, cleanup := setupBoardsServer(t)
 	defer cleanup()

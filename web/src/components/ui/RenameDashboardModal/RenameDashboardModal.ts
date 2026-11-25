@@ -1,6 +1,7 @@
 import { template } from './RenameDashboardModal.template';
 import { adoptSharedStyles } from '../../../services/sharedStyles';
 import { dashboardStore } from '../../../store/dashboardStore';
+import { i18n } from '../../../services/i18n';
 import { isEnter } from '../../../services/imeKeys';
 import css from './RenameDashboardModal.css' with { type: 'text' };
 
@@ -72,13 +73,13 @@ class RenameDashboardModal extends HTMLElement {
     async handleSubmit() {
         const name = this.state.name.trim();
         if (!name) {
-            this.state.error = 'Name cannot be empty';
+            this.state.error = i18n.t('error.name_required');
             this.render();
             return;
         }
 
         if (this.state.id === -1) {
-            this.state.error = 'Invalid dashboard ID';
+            this.state.error = i18n.t('error.invalid_id');
             this.render();
             return;
         }
@@ -90,7 +91,7 @@ class RenameDashboardModal extends HTMLElement {
             await dashboardStore.renameDashboard(this.state.id, name);
             this.close();
         } catch (error: any) {
-            this.state.error = error.message || 'Error renaming dashboard';
+            this.state.error = i18n.t(String(error?.message || '').trim() || 'settings.save_error');
             this.state.loading = false;
             this.render();
         }

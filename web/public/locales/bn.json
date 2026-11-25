@@ -1236,6 +1236,7 @@
   "auth.too_many_attempts": "অনেক বার চেষ্টা — একটু পরে আবার চেষ্টা করুন",
   "error.username_taken": "এই ব্যবহারকারীর নামটি নেওয়া হয়েছে",
   "error.name_required": "একটি নাম দরকার",
+  "error.dashboard_name_taken": "এই নামে আপনার ইতিমধ্যে একটি ড্যাশবোর্ড আছে",
   "error.name_too_long": "এই নামটি খুব দীর্ঘ",
   "error.cannot_delete_last_dashboard": "অন্তত একটি ড্যাশবোর্ড থাকতে হবে",
   "error.cannot_delete_superadmin": "অ্যাডমিনিস্ট্রেটর অ্যাকাউন্ট মুছে ফেলা যাবে না",

@@ -1236,6 +1236,7 @@
   "auth.too_many_attempts": "تلاش‌های زیاد — کمی بعد دوباره امتحان کنید",
   "error.username_taken": "این نام کاربری گرفته شده است",
   "error.name_required": "یک نام لازم است",
+  "error.dashboard_name_taken": "شما از قبل داشبوردی با این نام دارید",
   "error.name_too_long": "این نام خیلی بلند است",
   "error.cannot_delete_last_dashboard": "حداقل یک داشبورد لازم است",
   "error.cannot_delete_superadmin": "حساب مدیر قابل حذف نیست",

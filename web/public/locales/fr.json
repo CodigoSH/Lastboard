@@ -1236,6 +1236,7 @@
   "auth.too_many_attempts": "Trop de tentatives, réessayez bientôt",
   "error.username_taken": "Ce nom d'utilisateur est déjà pris",
   "error.name_required": "Il faut un nom",
+  "error.dashboard_name_taken": "Vous avez déjà un tableau de bord portant ce nom",
   "error.name_too_long": "Ce nom est trop long",
   "error.cannot_delete_last_dashboard": "Il faut garder au moins un tableau",
   "error.cannot_delete_superadmin": "Le compte administrateur ne peut pas être supprimé",

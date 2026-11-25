@@ -1,6 +1,7 @@
 import { template } from './AddDashboardModal.template';
 import { adoptSharedStyles } from '../../../services/sharedStyles';
 import { dashboardStore } from '../../../store/dashboardStore';
+import { i18n } from '../../../services/i18n';
 import { isEnter } from '../../../services/imeKeys';
 import css from './AddDashboardModal.css' with { type: 'text' };
 
@@ -74,7 +75,7 @@ class AddDashboardModal extends HTMLElement {
     async handleSubmit() {
         const name = this.state.name.trim();
         if (!name) {
-            this.state.error = 'Name cannot be empty';
+            this.state.error = i18n.t('error.name_required');
             this.render();
             return;
         }
@@ -88,7 +89,7 @@ class AddDashboardModal extends HTMLElement {
             dashboardStore.setEditMode(true);
             this.close();
         } catch (error: any) {
-            this.state.error = error.message || 'Error creating dashboard';
+            this.state.error = i18n.t(String(error?.message || '').trim() || 'settings.save_error');
             this.state.loading = false;
             this.render();
         }

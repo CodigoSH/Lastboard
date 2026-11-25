@@ -42,7 +42,10 @@ func TestNameLimitsCountCharactersNotBytes(t *testing.T) {
 		if id == "" {
 			t.Fatalf("no id in %s", body)
 		}
-		if code, body := secretReq(t, "PATCH", server.URL+"/api/dashboards/"+id, cookie, `{"name":"`+fiftyJapanese+`"}`); code != 200 {
+		// Another 50 characters: the board made above already has fiftyJapanese, and
+		// an account's boards do not share a name.
+		fiftyOther := strings.Repeat("語", 49) + "x"
+		if code, body := secretReq(t, "PATCH", server.URL+"/api/dashboards/"+id, cookie, `{"name":"`+fiftyOther+`"}`); code != 200 {
 			t.Fatalf("renaming to 50 characters refused: %d %s", code, body)
 		}
 		if code, _ := secretReq(t, "PATCH", server.URL+"/api/dashboards/"+id, cookie, `{"name":"`+fiftyOneJapanese+`"}`); code != 400 {

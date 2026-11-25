@@ -1236,6 +1236,7 @@
   "auth.too_many_attempts": "Zu viele Versuche — gleich nochmal probieren",
   "error.username_taken": "Dieser Benutzername ist vergeben",
   "error.name_required": "Bitte gib einen Namen ein",
+  "error.dashboard_name_taken": "Du hast bereits ein Dashboard mit diesem Namen",
   "error.name_too_long": "Dieser Name ist zu lang",
   "error.cannot_delete_last_dashboard": "Mindestens ein Dashboard muss bleiben",
   "error.cannot_delete_superadmin": "Das Administratorkonto kann nicht gelöscht werden",

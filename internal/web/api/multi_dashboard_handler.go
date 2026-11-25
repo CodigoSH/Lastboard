@@ -97,6 +97,18 @@ func (h *MultiDashboardHandler) GetDashboards(w http.ResponseWriter, r *http.Req
 	json.NewEncoder(w).Encode(dashboards)
 }
 
+// nameTaken says whether another board of the account already has this name,
+// whatever its case. Two boards with one name look the same in the switcher and
+// in the manager, so a person cannot tell which one they are about to open or
+// delete. `except` is the board being renamed, which may keep its own name.
+func (h *MultiDashboardHandler) nameTaken(r *http.Request, userID int, name string, except int) bool {
+	var n int
+	err := h.DB.QueryRowContext(r.Context(),
+		`SELECT COUNT(*) FROM dashboards WHERE user_id = ? AND name = ? COLLATE NOCASE AND id <> ?`,
+		userID, name, except).Scan(&n)
+	return err == nil && n > 0
+}
+
 // CreateDashboard handles POST /api/dashboards
 func (h *MultiDashboardHandler) CreateDashboard(w http.ResponseWriter, r *http.Request) {
 	r.Body = http.MaxBytesReader(w, r.Body, 4*1024)
@@ -117,6 +129,11 @@ func (h *MultiDashboardHandler) CreateDashboard(w http.ResponseWriter, r *http.R
 	}
 	if utf8.RuneCountInString(name) > maxBoardNameChars {
 		http.Error(w, "error.name_too_long", http.StatusBadRequest)
+		return
+	}
+
+	if h.nameTaken(r, userID, name, 0) {
+		http.Error(w, "error.dashboard_name_taken", http.StatusConflict)
 		return
 	}
 
@@ -277,6 +294,11 @@ func (h *MultiDashboardHandler) RenameDashboard(w http.ResponseWriter, r *http.R
 	}
 	if utf8.RuneCountInString(name) > maxBoardNameChars {
 		http.Error(w, "error.name_too_long", http.StatusBadRequest)
+		return
+	}
+
+	if h.nameTaken(r, userID, name, dashID) {
+		http.Error(w, "error.dashboard_name_taken", http.StatusConflict)
 		return
 	}
 

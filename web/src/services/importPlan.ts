@@ -140,3 +140,13 @@ export function bookmarkRequest(dashboardId: number, sectionId: number, it: Plan
         }),
     };
 }
+
+/** The name, or the name with " (2)", " (3)"… when the account already has a board by that name (case aside). */
+export function freeBoardName(name: string, taken: string[]): string {
+    const used = new Set(taken.map(t => t.toLowerCase()));
+    if (!used.has(name.toLowerCase())) return name;
+    for (let n = 2; ; n++) {
+        const candidate = `${name} (${n})`;
+        if (!used.has(candidate.toLowerCase())) return candidate;
+    }
+}

@@ -1236,6 +1236,7 @@
   "auth.too_many_attempts": "試行回数が多すぎます。しばらくしてからお試しください",
   "error.username_taken": "そのユーザー名は使われています",
   "error.name_required": "名前が必要です",
+  "error.dashboard_name_taken": "その名前のダッシュボードはすでにあります",
   "error.name_too_long": "名前が長すぎます",
   "error.cannot_delete_last_dashboard": "ダッシュボードは最低1つ必要です",
   "error.cannot_delete_superadmin": "管理者アカウントは削除できません",

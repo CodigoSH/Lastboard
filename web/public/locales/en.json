@@ -1236,6 +1236,7 @@
   "auth.too_many_attempts": "Too many attempts — try again shortly",
   "error.username_taken": "That username is taken",
   "error.name_required": "It needs a name",
+  "error.dashboard_name_taken": "You already have a dashboard with that name",
   "error.name_too_long": "That name is too long",
   "error.cannot_delete_last_dashboard": "You need at least one dashboard",
   "error.cannot_delete_superadmin": "The administrator account can't be deleted",

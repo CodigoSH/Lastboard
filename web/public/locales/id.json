@@ -1236,6 +1236,7 @@
   "auth.too_many_attempts": "Terlalu banyak percobaan — coba lagi nanti",
   "error.username_taken": "Nama pengguna itu sudah dipakai",
   "error.name_required": "Perlu sebuah nama",
+  "error.dashboard_name_taken": "Anda sudah punya dasbor dengan nama itu",
   "error.name_too_long": "Nama itu terlalu panjang",
   "error.cannot_delete_last_dashboard": "Harus ada minimal satu dasbor",
   "error.cannot_delete_superadmin": "Akun administrator tidak dapat dihapus",
