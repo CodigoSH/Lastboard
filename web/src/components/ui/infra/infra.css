@@ -321,8 +321,9 @@ svg { display: block; flex: none; }
     gap: 8px;
     height: 34px;
     padding: 0 10px;
-    min-width: 220px;
-    flex: 1 1 220px;
+    /* 270px leaves the placeholder its words beside the Ctrl K hint; at a phone's width the hint is gone and 220 is enough (below). */
+    min-width: 270px;
+    flex: 1 1 270px;
     max-width: 360px;
     border: 1px solid var(--card-border);
     border-radius: 9px;
@@ -496,6 +497,7 @@ button.tr.is-sel { background: var(--surface-active); }
     /* A phone has no Ctrl K, and the hint costs the box a third of its words. The header's gaps shrink so the close button stays beside the refresh one. */
     .phead { padding: 8px 14px; gap: 8px; }
     .search kbd { display: none; }
+    .search { min-width: 220px; flex-basis: 220px; }
     .pbody { padding-inline: 14px; }
     .psum { border: 0; padding: 0; width: 100%; order: 5; }
     .live3 { grid-template-columns: 1fr; }
