@@ -189,6 +189,8 @@ class DemoService {
     async createDashboard(name: string): Promise<Dashboard> {
         await this.simulateDelay();
         const dashboards = this.getDashboards();
+        // As on the server: an account's boards do not share a name.
+        if (dashboards.some(d => d.name.toLowerCase() === name.toLowerCase())) throw new Error('error.dashboard_name_taken');
         const dash: Dashboard = {
             id: Date.now(),
             name,
@@ -205,6 +207,10 @@ class DemoService {
         await this.simulateDelay();
         const dashboards = this.getDashboards();
         const dash = dashboards.find(d => d.id === id);
+        if (dash && dash.name.toLowerCase() !== name.toLowerCase()
+            && dashboards.some(d => d.id !== id && d.name.toLowerCase() === name.toLowerCase())) {
+            throw new Error('error.dashboard_name_taken');
+        }
         if (dash) dash.name = name;
         this.saveDashboards(dashboards);
     }
