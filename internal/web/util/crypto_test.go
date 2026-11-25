@@ -1,6 +1,8 @@
 package util
 
 import (
+	"net/http"
+	"net/http/httptest"
 	"testing"
 	"time"
 )
@@ -294,5 +296,38 @@ func TestParseSessionReadsTheFormerPayload(t *testing.T) {
 	// A payload that only looks like the new one is not read as an id.
 	if id, name, _ := ParseSession("#abc:1"); id != 0 || name != "#abc" {
 		t.Errorf("a malformed id must not be taken for one: (%d, %q)", id, name)
+	}
+}
+
+// A proxy says how the visitor arrived in a header, and the word is not always "https": Traefik, which Pangolin is
+// built on, writes "wss" on the request of a WebSocket over TLS, and a chain of proxies writes a list. Reading only
+// "https" told an administrator on HTTPS that somebody was using plain HTTP, from the telemetry socket.
+func TestTheProxysProtocolIsReadForWhatItSays(t *testing.T) {
+	for _, c := range []struct {
+		header, value string
+		want          bool
+	}{
+		{"X-Forwarded-Proto", "https", true},
+		{"X-Forwarded-Proto", "wss", true},
+		{"X-Forwarded-Proto", "HTTPS", true},
+		{"X-Forwarded-Proto", "https, http", true},
+		{"X-Forwarded-Proto", " wss ,http", true},
+		{"CloudFront-Forwarded-Proto", "https", true},
+		{"X-Forwarded-Proto", "http", false},
+		{"X-Forwarded-Proto", "ws", false},
+		{"X-Forwarded-Proto", "http, https", false},
+		{"X-Forwarded-Proto", "", false},
+		{"X-Forwarded-Proto", "javascript", false},
+	} {
+		r := httptest.NewRequest(http.MethodGet, "/ws", nil)
+		if c.value != "" {
+			r.Header.Set(c.header, c.value)
+		}
+		if got := IsSecureRequest(r); got != c.want {
+			t.Errorf("%s: %q read as secure=%v, want %v", c.header, c.value, got, c.want)
+		}
+	}
+	if IsSecureRequest(httptest.NewRequest(http.MethodGet, "/", nil)) {
+		t.Error("a request with no header and no TLS was read as secure")
 	}
 }

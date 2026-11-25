@@ -26,10 +26,16 @@ func IsSecureRequest(r *http.Request) bool {
 	if r.TLS != nil {
 		return true
 	}
-	if proto := r.Header.Get("X-Forwarded-Proto"); proto == "https" {
-		return true
-	}
-	if proto := r.Header.Get("CloudFront-Forwarded-Proto"); proto == "https" {
+	return secureProto(r.Header.Get("X-Forwarded-Proto")) || secureProto(r.Header.Get("CloudFront-Forwarded-Proto"))
+}
+
+// secureProto reads the protocol a proxy says the visitor used. A proxy writes the word of the connection it
+// received: "https", and "wss" for a WebSocket over TLS, which is what Traefik (so Pangolin) sends on the
+// socket's request. A chain of proxies writes a list, "https, http", and the first is the visitor's.
+func secureProto(v string) bool {
+	first, _, _ := strings.Cut(v, ",")
+	switch strings.ToLower(strings.TrimSpace(first)) {
+	case "https", "wss":
 		return true
 	}
 	return false

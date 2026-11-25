@@ -130,6 +130,11 @@ func TestPlainHTTPFromAnotherMachineIsNoticed(t *testing.T) {
 	if srv.insecureSeen.Load() {
 		t.Fatal("somebody signed in over HTTPS through a proxy was noticed as using plain HTTP")
 	}
+	// The telemetry socket of that same person: Traefik, so Pangolin, calls its request "wss".
+	request(true, "wss")
+	if srv.insecureSeen.Load() {
+		t.Fatal("a WebSocket over TLS through a proxy was noticed as plain HTTP")
+	}
 	request(true, "")
 	if !srv.insecureSeen.Load() {
 		t.Error("somebody signed in on plain HTTP from the LAN was not noticed")
