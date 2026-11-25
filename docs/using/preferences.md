@@ -49,7 +49,7 @@ The administrator manages who can access the instance, and what each account may
 
 Each row shows the account's name, its **label** (or its role, when it has none) and, in small type, the name of its permission profile.
 
-- **Add User** — opens one window to create an account. **Edit** on a row opens the same window filled with that account's current choices. Editing changes the name and, if you type one, the password, which ends the account's open sessions. Your own account is changed from **My Profile**, never from here. **Delete** asks for your password.
+- **Add User** — opens one window to create an account. **Edit** on a row opens the same window filled with that account's current choices. Editing changes the name and, if you type one, the password, which ends the account's open sessions. Your own account is changed from **My Profile**, never from here. **Delete** asks for your password. A username is 2 to 32 letters, digits, `_` or `-`, and no two accounts have names that differ only in capital letters: `Ana` is refused when `ana` exists.
 - **Roles** — an instance has exactly one **Admin**: the account created by the Setup Wizard. Every account added afterwards is a **Member**, and there is no way to promote one. If you need to hand the instance over, change the admin account's own username and password rather than creating a second administrator.
 
 An account that signs in with a second step shows a **2FA** tag in the list. If somebody lost both their phone and their recovery codes, open their account and choose **Remove two-step sign-in**: they sign in with the password alone until they turn it on again.

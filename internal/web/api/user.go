@@ -1,6 +1,7 @@
 package api
 
 import (
+	"context"
 	"database/sql"
 	"encoding/json"
 	"errors"
@@ -255,6 +256,16 @@ func (h *UserHandler) UpdateProfile(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
+		taken, err := usernameInUse(r.Context(), h.DB, input.Username, middleware.GetUserIDFromContext(r))
+		if err != nil {
+			slog.Error("Failed to check a username", "error", err)
+			http.Error(w, "general.db_error", http.StatusInternalServerError)
+			return
+		}
+		if taken {
+			http.Error(w, "error.username_taken", http.StatusConflict)
+			return
+		}
 		usernameChanged = true
 	}
 	if input.Username == "" {
@@ -479,6 +490,17 @@ func (h *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	taken, err := usernameInUse(r.Context(), h.DB, input.Username, 0)
+	if err != nil {
+		slog.Error("Failed to check a username", "error", err)
+		http.Error(w, "general.db_error", http.StatusInternalServerError)
+		return
+	}
+	if taken {
+		http.Error(w, "error.username_taken", http.StatusConflict)
+		return
+	}
+
 	// Default Avatar Logic
 	defaultAvatar := "/images/default-avatar.svg"
 
@@ -565,6 +587,22 @@ func (h *UserHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 	if err := validateUsername(input.Username); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
+	}
+
+	// Only a changed name is judged: an account whose name already shares its
+	// letters with another one (an older version allowed it) can still be saved.
+	var current string
+	if err := h.DB.QueryRowContext(r.Context(), "SELECT username FROM users WHERE id = ?", input.ID).Scan(&current); err == nil && current != input.Username {
+		taken, err := usernameInUse(r.Context(), h.DB, input.Username, input.ID)
+		if err != nil {
+			slog.Error("Failed to check a username", "error", err)
+			http.Error(w, "general.db_error", http.StatusInternalServerError)
+			return
+		}
+		if taken {
+			http.Error(w, "error.username_taken", http.StatusConflict)
+			return
+		}
 	}
 
 	var res sql.Result
@@ -717,6 +755,21 @@ func validateUsername(username string) error {
 		}
 	}
 	return nil
+}
+
+// usernameInUse says whether another account already has this name, whatever its
+// case. `admin` and `ADMIN` would be two people who look like one on every screen
+// and in every list, and a phone's keyboard capitalising the first letter would
+// be the way somebody signed in to the wrong one. `exceptID` is the account being
+// renamed. Pairs that an older version let exist are left as they are: only a
+// new or changed name is judged, and signing in still compares names exactly.
+func usernameInUse(ctx context.Context, db *sql.DB, name string, exceptID int) (bool, error) {
+	var n int
+	if err := db.QueryRowContext(ctx,
+		`SELECT COUNT(*) FROM users WHERE username = ? COLLATE NOCASE AND id <> ?`, name, exceptID).Scan(&n); err != nil {
+		return false, err
+	}
+	return n > 0, nil
 }
 
 func validatePassword(plain string) error {
