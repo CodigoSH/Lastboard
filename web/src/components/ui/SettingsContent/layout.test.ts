@@ -28,3 +28,16 @@ describe('Preferences on a narrow screen', () => {
         for (const h of headers) expect({ h: h.slice(0, 120), wraps: /flex-wrap:\s*wrap/.test(h) }).toEqual({ h: h.slice(0, 120), wraps: true });
     });
 });
+
+describe('Preferences for a screen reader', () => {
+    it('every slider has a label that points at it', () => {
+        // A range input with only a visible caption beside it is announced as "slider" and nothing else.
+        for (const { file, code } of sources) {
+            for (const input of code.match(/<input type="range"[^>]*/g) ?? []) {
+                const id = input.match(/id="([^"]+)"/)?.[1];
+                expect({ file, input: input.slice(0, 40), id: !!id }).toEqual({ file, input: input.slice(0, 40), id: true });
+                expect({ file, id, labelled: code.includes(`for="${id}"`) }).toEqual({ file, id, labelled: true });
+            }
+        }
+    });
+});
