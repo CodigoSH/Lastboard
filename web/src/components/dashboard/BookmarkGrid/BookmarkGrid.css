@@ -234,6 +234,8 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    /* Each name takes the direction of its own first letter, so a Latin name on a right-to-left page is cut at its end, not its start. */
+    unicode-bidi: plaintext;
     text-align: center;
     margin: 0;
     font-family: var(--font-mono, monospace);
@@ -307,6 +309,8 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    /* Each name takes the direction of its own first letter, so a Latin name on a right-to-left page is cut at its end, not its start. */
+    unicode-bidi: plaintext;
     box-sizing: border-box;
     /* The same transition as a section's pill. The pill takes the pointer like a
        section's does, so a name cut short by the width shows in full as a tooltip
@@ -569,6 +573,8 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    /* Each name takes the direction of its own first letter, so a Latin name on a right-to-left page is cut at its end, not its start. */
+    unicode-bidi: plaintext;
 
     /* Typography Polish */
     font-family: var(--font-sans);
@@ -679,6 +685,8 @@
     max-width: calc(100% - 24px);
     overflow: hidden;
     text-overflow: ellipsis;
+    /* Each name takes the direction of its own first letter, so a Latin name on a right-to-left page is cut at its end, not its start. */
+    unicode-bidi: plaintext;
     white-space: nowrap;
     box-sizing: border-box;
 
