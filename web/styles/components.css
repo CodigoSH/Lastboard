@@ -188,6 +188,8 @@ input:-webkit-autofill:active {
     padding: 1px 4px;
     border-radius: 2px;
     text-transform: uppercase;
+    /* One line: the label is wider than the avatar it sits on, and broke in two. */
+    white-space: nowrap;
     z-index: 2;
     transition: all 0.2s;
     pointer-events: none;

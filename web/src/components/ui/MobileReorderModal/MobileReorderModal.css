@@ -34,7 +34,7 @@
 .header-title {
     font-size: 16px;
     font-weight: 600;
-    color: var(--text, #fff);
+    color: var(--text-main, #fff);
 }
 
 .btn-close {
@@ -48,7 +48,7 @@
     border-radius: 6px;
     transition: color 0.15s;
 }
-.btn-close:hover { color: var(--text, #fff); }
+.btn-close:hover { color: var(--text-main, #fff); }
 
 .list {
     flex: 1;
@@ -147,7 +147,7 @@
 .item-label {
     flex: 1;
     font-size: 14px;
-    color: var(--text, #fff);
+    color: var(--text-main, #fff);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -166,7 +166,7 @@
     border-radius: 6px;
     transition: color 0.15s, background 0.15s;
 }
-.eye-btn:hover { color: var(--text, #fff); }
+.eye-btn:hover { color: var(--text-main, #fff); }
 .eye-btn[aria-pressed="false"] { color: var(--text-dim, rgba(255,255,255,0.35)); }
 
 .drag-handle {
@@ -211,4 +211,4 @@
     cursor: pointer;
     transition: color 0.15s, border-color 0.15s;
 }
-.btn-cancel:hover { color: var(--text, #fff); border-color: var(--text-dim, rgba(255,255,255,0.4)); }
+.btn-cancel:hover { color: var(--text-main, #fff); border-color: var(--text-dim, rgba(255,255,255,0.4)); }

@@ -531,6 +531,8 @@ dialog::backdrop {
     padding: 1px clamp(3px, 0.8cqi, 4px);
     border-radius: 2px;
     text-transform: uppercase;
+    /* One line: the label is wider than the avatar it sits on, and broke in two. */
+    white-space: nowrap;
 }
 
 .settings-content__profile-name {
