@@ -55,6 +55,14 @@ TRUST_PROXY=true
 
 The native installer asks about it in plain words — *Behind a reverse proxy or a tunnel?* — and then how many a request passes through; running it again to update keeps what you answered before.
 
+**Changing it on a native installation.** The answer lives in the service file, as a line `Environment="TRUST_PROXY=false"` in `/etc/systemd/system/lastboard.service`. Change `false` to `true` (and `TRUST_PROXY_HOPS` if more than one proxy is in front), then load it and restart:
+
+```bash
+sudo systemctl daemon-reload && sudo systemctl restart lastboard
+```
+
+Running the installer again and answering *yes* does the same, and keeps the rest. Either way the notice in **Settings → About** goes away after the restart. On Docker the setting is an environment variable of the container instead.
+
 **Lastboard notices a proxy nobody declared.** With the flag off, a request from this machine or the local network that carries `X-Forwarded-For`, `X-Real-Ip` or `Forwarded` is what a proxy sends, so the log says so once and **Settings → About** lists **A proxy is in front and was not declared** for the administrator. It changes nothing by itself. The same header from the internet is ignored: anybody can type it.
 
 With the flag on, Lastboard also reads `X-Forwarded-Host`, so a proxy that rewrites the address it forwards to does not get the telemetry widget's live connection refused. See [The telemetry widget shows only dashes](../help/troubleshooting.md#the-telemetry-widget-shows-only-dashes).

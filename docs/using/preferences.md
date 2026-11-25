@@ -1,6 +1,6 @@
 # Settings
 
-All personalization and system options live in the **Settings** panel, opened from the icon in the top navigation bar. While it is open the address reads `/?view=settings`, so reloading keeps it open and that address brings it up from a link; the browser's Back button closes it and leaves you on your board.
+All personalization and system options live in the **Settings** panel, opened from the icon in the top navigation bar. While it is open the address names the section too, as in `/?view=settings&tab=about`, so reloading (an update ends in one) keeps it open on the same section and that address brings it up from a link; the browser's Back button closes it and leaves you on your board.
 
 Two of the sections — **Users** and **Advanced** — belong to the administrator and are not drawn at all for anybody else. **Monitoring**, **Notifications**, **Proxmox** and **Docker / Podman** are every account's own: each one sees its own, never anyone else's. A Member account sees **My Profile**, **Look & Feel**, **Personalization**, **Monitoring**, **Notifications**, **Proxmox**, **Docker / Podman**, **Data** and **About** — the ones its permissions allow — and nothing hints that the rest exist.
 
@@ -142,7 +142,7 @@ It also says where your icons come from — how many of your bookmarks this serv
   - **Alert channels failing** — the last alert to a channel did not get through, with the reason; **Open Notifications** takes you there.
   - **Telemetry cannot connect** — the proxy in front changes the address the server is reached at, so the live data of the [telemetry widget](../widgets/telemetry.md) is refused. See [The telemetry widget shows only dashes](../help/troubleshooting.md#the-telemetry-widget-shows-only-dashes).
   - **A proxy is in front and was not declared** — requests arrive with the headers a proxy adds while `TRUST_PROXY` is off, so every visitor gets the proxy's address. See [Configuration → TRUST_PROXY](../getting-started/configuration.md#trust_proxy).
-  - **Reached without HTTPS** — someone opened Lastboard over plain `http://` from another machine: session cookies are not marked secure, and passkeys need HTTPS.
+  - **Reached without HTTPS** — somebody signed in used Lastboard over plain `http://` from another machine since it last started: session cookies are not marked secure, and passkeys need HTTPS. A request nobody is behind (a proxy's health probe, a status check of this server by its own address) does not count, and neither does one that arrives through a proxy that says it was HTTPS. The log says once where the first one came from.
   - **A new version is out**, with a link to the update.
 - **Server details** — a discreet button in the corner of the version card (administrator only) that opens a window with the machine (CPU, memory, temperature, disk, uptime), the installation (version, database size and schema, Lastboard's own memory, platform) and the configuration (proxy in front and its hops, sign-in proxy, HTTPS). **Copy for support** copies the lines a bug report needs — version, platform, schema, proxy and HTTPS — with no addresses or names in them. Where the browser offers no clipboard (plain `http://` from another machine), the text is shown selected instead, ready to copy by hand.
 - **Beta channel** — opt in to beta releases, which arrive earlier and may be unstable.
